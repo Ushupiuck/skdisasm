@@ -1,5 +1,5 @@
 	padding off	; we don't want AS padding out dc.b instructions
-	listing purecode	; Want listing file, but only the final code in expanded macros
+	listing on	; Want listing file, but only the final code in expanded macros
 	supmode on	; we don't need warnings about privileged instructions
 	page	0	; Don't want form feeds
 
