@@ -50,9 +50,9 @@ dmaFillVRAM macro byte,addr,length
 	move.w	#$9780,(a5) ; VRAM fill
 	move.l	#$40000080|(((addr)&$3FFF)<<16)|(((addr)&$C000)>>14),(a5) ; Start at ...
 	move.w	#(byte)<<8,(VDP_data_port).l ; Fill with byte
-loop:	move.w	(a5),d1
+.loop:	move.w	(a5),d1
 	btst	#1,d1
-	bne.s	loop	; busy loop until the VDP is finished filling...
+	bne.s	.loop	; busy loop until the VDP is finished filling...
 	move.w	#$8F02,(a5) ; VRAM pointer increment: $0002
     endm
 
@@ -93,8 +93,8 @@ clearRAM macro addr,length
 ; tells the Z80 to stop, and waits for it to finish stopping (acquire bus)
 stopZ80 macro
 	move.w	#$100,(Z80_bus_request).l ; stop the Z80
-loop:	btst	#0,(Z80_bus_request).l
-	bne.s	loop ; loop until it says it's stopped
+.loop:	btst	#0,(Z80_bus_request).l
+	bne.s	.loop ; loop until it says it's stopped
     endm
 
 ; tells the Z80 to start again
@@ -257,4 +257,62 @@ palscriptloop	macro header
 ; macro to run the custom script routine
 palscriptrun	macro header
 	dc.w -$C
+    endm
+
+; Function to make a little endian (z80) pointer
+k68z80Pointer function addr,((((addr&$7FFF)+$8000)<<8)&$FF00)+(((addr&$7FFF)+$8000)>>8)
+
+little_endian function x,(x)<<8&$FF00|(x)>>8&$FF
+
+startBank macro {INTLABEL}
+	align	$8000
+__LABEL__ label *
+soundBankStart := __LABEL__
+soundBankName := "__LABEL__"
+    endm
+
+DebugSoundbanks := 0
+
+finishBank macro
+	if * > soundBankStart + $8000
+		fatal "soundBank \{soundBankName} must fit in $8000 bytes but was $\{*-soundBankStart}. Try moving something to the other bank."
+	elseif (DebugSoundbanks<>0)&&(MOMPASS=1)
+		message "soundBank \{soundBankName} has $\{$8000+soundBankStart-*} bytes free at end."
+	endif
+    endm
+
+; macro to declare an entry in an offset table rooted at a bank
+offsetBankTableEntry macro ptr
+	dc.ATTRIBUTE k68z80Pointer(ptr-soundBankStart)
+    endm
+
+; Special BINCLUDE wrapper function
+DACBINCLUDE macro file,{INTLABEL}
+__LABEL__ label *
+	BINCLUDE file
+__LABEL___Len  := little_endian(*-__LABEL__)
+__LABEL___Ptr  := k68z80Pointer(__LABEL__-soundBankStart)
+__LABEL___Bank := soundBankStart
+    endm
+
+; Setup macro for DAC samples.
+DAC_Setup macro rate,dacptr
+	dc.b	rate
+	dc.w	dacptr_Len
+	dc.w	dacptr_Ptr
+    endm
+
+; Setup a null entry for a DAC sample.
+DAC_Null_Setup macro rate
+	dc.b	rate
+	dc.w 	$0000,$0000
+    endm
+
+; Setup a chain-linked invalid entry for a DAC sample.
+; The sample's length is correctly stored for the sample,
+; while the pointer (usually) goes towards the DAC pointer
+; entry of another DAC sample setup.
+DAC_Null_Chain macro rate,linkptr
+	dc.b	rate
+	dc.w 	$0000,k68z80Pointer(linkptr+3-soundBankStart)
     endm

@@ -17,6 +17,16 @@
 		include "sonic3k.constants.asm"		; include some constants
 		include "s3.constants.asm"		; RAM addresses moved around between S3 and S&K
 ; ---------------------------------------------------------------------------
+; Include SMPS2ASM, for expressing SMPS bytecode in a portable and human-readable form.
+SonicDriverVer = 3 ; Tell SMPS2ASM that we are targetting Sonic 3's sound driver
+		include "Sound/_smps2asm_inc.asm"
+
+; TODO: Remove these when they're no longer needed.
+z80_UniVoiceBank = $17D8
+
+Size_of_Snd_Bank1 = $E60
+; This particular bank has its contents aligned to the end
+; ---------------------------------------------------------------------------
 
 Vectors:	dc.l	Vectors,	EntryPoint,	ErrorTrap,	ErrorTrap	; 0
 		dc.l	ErrorTrap,	ErrorTrap,	ErrorTrap,	ErrorTrap	; 4
@@ -1696,20 +1706,23 @@ SndDrvInit:
 		nop
 		move.w	#$100,(Z80_bus_request).l
 		move.w	#$100,(Z80_reset).l
+
 		lea	(Z80_SoundDriver).l,a0
 		lea	(Z80_RAM).l,a1
-		move.w	#$1BFE,d0
+		move.w	#$1C00-2,d0
 
 loc_1584:
 		move.b	(a0)+,(a1)+
 		dbf	d0,loc_1584
+
 		lea	(Z80_DefaultVariables).l,a0
 		lea	(Z80_RAM+$1C00).l,a1
-		move.w	#$F,d0
+		move.w	#Z80_DefaultVariables_End-Z80_DefaultVariables-1,d0
 
 loc_159A:
 		move.b	(a0)+,(a1)+
 		dbf	d0,loc_159A
+
 		btst	#6,(Graphics_flags).w
 		beq.s	loc_15B0
 		move.b	#1,(Z80_RAM+$1C02).l
@@ -1743,6 +1756,7 @@ Z80_DefaultVariables:
 		dc.b 0	; zFadeOutTimeout
 		dc.b 0	; zFadeDelay
 		dc.b 0	; zFadeDelayTimeout
+Z80_DefaultVariables_End:
 
 ; =============== S U B R O U T I N E =======================================
 
@@ -118045,913 +118059,777 @@ DemoDat_HCZ:	binclude "Levels/HCZ/Demodata/1.bin"
 DemoDat_MGZ:	binclude "Levels/MGZ/Demodata/1.bin"
 		even
 
-		org $C71A0
-Snd_Minib:	binclude "Sound/Music/Sonic 3/Sonic 3 Miniboss.bin"
-Snd_FinalBoss:	binclude "Sound/Music/Sonic 3/Final Boss.bin"
+; ===========================================================================
+; Music Banks
+; ===========================================================================
+	cnop -Size_of_Snd_Bank1, $8000	; aligned to end of bank
+
+; ---------------------------------------------------------------------------
+; Music Bank 1
+; ---------------------------------------------------------------------------
+Snd_Bank1_Start:
+Snd_Minib:	include "Sound/Music/Miniboss (Sonic 3).asm"
+Snd_FinalBoss:	include "Sound/Music/Final Boss.asm"
+Snd_Bank1_End
+
+	if Snd_Bank1_End - Snd_Bank1_Start > $8000
+		fatal "Snd_Bank1_Start must fit within $8000 bytes, but was $\{Snd_Bank1_End-Snd_Bank1_Start }. Try moving something to the other bank."
+	endif
+	if Snd_Bank1_End - Snd_Bank1_Start > Size_of_Snd_Bank1
+		fatal "Size_of_Snd_Bank1 = $\{Size_of_Snd_Bank1}, but you have $\{Snd_Bank1_End-Snd_Bank1_Start} bytes of music."
+	endif
+
+; ---------------------------------------------------------------------------
+; Music Bank 2
+; ---------------------------------------------------------------------------
+Snd_Bank2_Start:	startBank
+Snd_AIZ1:	include "Sound/Music/AIZ1.asm"
+Snd_AIZ2:	include "Sound/Music/AIZ2.asm"
+Snd_HCZ1:	include "Sound/Music/HCZ1.asm"
+Snd_HCZ2:	include "Sound/Music/HCZ2.asm"
+Snd_MGZ1:	include "Sound/Music/MGZ1.asm"
+Snd_MGZ2:	include "Sound/Music/MGZ2.asm"
+Snd_CNZ2:	include "Sound/Music/CNZ2.asm"
+Snd_CNZ1:	include "Sound/Music/CNZ1.asm"
+Snd_FBZ1:	include "Sound/Music/FBZ1 (Sonic 3).asm"
+Snd_FBZ2:	include "Sound/Music/FBZ2.asm"
+Snd_DDZ:	include "Sound/Music/DDZ.asm"
+
+	finishBank
+
+; ---------------------------------------------------------------------------
+; Music Bank 3
+; ---------------------------------------------------------------------------
+Snd_Bank3_Start:	startBank
+Snd_ICZ2:	include "Sound/Music/ICZ2.asm"
+Snd_ICZ1:	include "Sound/Music/ICZ1.asm"
+Snd_LBZ2:	include "Sound/Music/LBZ2.asm"
+Snd_LBZ1:	include "Sound/Music/LBZ1.asm"
+Snd_MHZ1:	include "Sound/Music/MHZ1.asm"
+Snd_MHZ2:	include "Sound/Music/MHZ2.asm"
+Snd_SOZ1:	include "Sound/Music/SOZ1.asm"
+Snd_SOZ2:	include "Sound/Music/SOZ2.asm"
+Snd_LRZ1:	include "Sound/Music/LRZ1.asm"
+Snd_LRZ2:	include "Sound/Music/LRZ2.asm"
+Snd_SSZ:	include "Sound/Music/SSZ (Sonic 3).asm"
+Snd_DEZ1:	include "Sound/Music/DEZ1.asm"
+Snd_DEZ2:	include "Sound/Music/DEZ2.asm"
+Snd_Minib_SK:	include "Sound/Music/Miniboss (Sonic & Knuckles).asm"
+Snd_Boss:	include "Sound/Music/Zone Boss.asm"
+Snd_PachBonus:	include "Sound/Music/Pachinko.asm"
+Snd_SpecialS:	include "Sound/Music/Special Stage.asm"
+Snd_Results:	include "Sound/Music/Level Outro.asm"
+Snd_Menu:	include "Sound/Music/Menu (Sonic 3).asm"
+
+	finishBank
+
+; ---------------------------------------------------------------------------
+; Music Bank 4
+; ---------------------------------------------------------------------------
+Snd_Bank4_Start:	startBank
+Snd_SlotBonus:	include "Sound/Music/Slots.asm"
+Snd_GumBonus:	include "Sound/Music/Gum Ball Machine.asm"
+Snd_Knux:	include "Sound/Music/Knuckles (Sonic 3).asm"
+Snd_ALZ:	include "Sound/Music/Azure Lake.asm"
+Snd_BPZ:	include "Sound/Music/Balloon Park.asm"
+Snd_DPZ:	include "Sound/Music/Desert Palace.asm"
+Snd_CGZ:	include "Sound/Music/Chrome Gadget.asm"
+Snd_EMZ:	include "Sound/Music/Endless Mine.asm"
+Snd_Title:	include "Sound/Music/Title (Sonic 3).asm"
+Snd_S3Credits:	include "Sound/Music/Credits (Sonic 3).asm"
+Snd_GameOver:	include "Sound/Music/Game Over.asm"
+Snd_Continue:	include "Sound/Music/Continue (Sonic 3).asm"
+Snd_1UP:	include "Sound/Music/1UP (Sonic 3).asm"
+Snd_Emerald:	include "Sound/Music/Chaos Emerald.asm"
+Snd_Invic:	include "Sound/Music/Invincible (Sonic 3).asm"
+Snd_2PMenu:	include "Sound/Music/Competition Menu.asm"
+Snd_Drown:	include "Sound/Music/Countdown.asm"
+Snd_PresSega:	include "Sound/Music/Game Complete (Sonic 3).asm"
+
+	finishBank
+
+; ---------------------------------------------------------------------------
+; ===========================================================================
+; DAC Banks
+; ===========================================================================
+; DAC Bank 1
+; ---------------------------------------------------------------------------
+DacBank1:			startBank
+
+DAC_Offsets:
+		offsetBankTableEntry.w	DAC_81_Setup
+		offsetBankTableEntry.w	DAC_82_Setup
+		offsetBankTableEntry.w	DAC_83_Setup
+		offsetBankTableEntry.w	DAC_84_Setup
+		offsetBankTableEntry.w	DAC_85_Setup
+		offsetBankTableEntry.w	DAC_86_Setup
+		offsetBankTableEntry.w	DAC_87_Setup
+		offsetBankTableEntry.w	DAC_88_Setup
+		offsetBankTableEntry.w	DAC_89_Setup
+		offsetBankTableEntry.w	DAC_8A_Setup
+		offsetBankTableEntry.w	DAC_8B_Setup
+		offsetBankTableEntry.w	DAC_8C_Setup
+		offsetBankTableEntry.w	DAC_8D_Setup
+		offsetBankTableEntry.w	DAC_8E_Setup
+		offsetBankTableEntry.w	DAC_8F_Setup
+
+		offsetBankTableEntry.w	DAC_90_Setup
+		offsetBankTableEntry.w	DAC_91_Setup
+		offsetBankTableEntry.w	DAC_92_Setup
+		offsetBankTableEntry.w	DAC_93_Setup
+		offsetBankTableEntry.w	DAC_94_Setup
+		offsetBankTableEntry.w	DAC_95_Setup
+		offsetBankTableEntry.w	DAC_96_Setup
+		offsetBankTableEntry.w	DAC_97_Setup
+		offsetBankTableEntry.w	DAC_98_Setup
+		offsetBankTableEntry.w	DAC_99_Setup
+		offsetBankTableEntry.w	DAC_9A_Setup
+		offsetBankTableEntry.w	DAC_9B_Setup
+		offsetBankTableEntry.w	DAC_9C_Setup
+		offsetBankTableEntry.w	DAC_9D_Setup
+		offsetBankTableEntry.w	DAC_9E_Setup
+		offsetBankTableEntry.w	DAC_9F_Setup
+
+		offsetBankTableEntry.w	DAC_A0_Setup
+		offsetBankTableEntry.w	DAC_A1_Setup
+		offsetBankTableEntry.w	DAC_A2_Setup
+		offsetBankTableEntry.w	DAC_A3_Setup
+		offsetBankTableEntry.w	DAC_A4_Setup
+		offsetBankTableEntry.w	DAC_A5_Setup
+		offsetBankTableEntry.w	DAC_A6_Setup
+		offsetBankTableEntry.w	DAC_A7_Setup
+		offsetBankTableEntry.w	DAC_A8_Setup
+		offsetBankTableEntry.w	DAC_A9_Setup
+		offsetBankTableEntry.w	DAC_AA_Setup
+		offsetBankTableEntry.w	DAC_AB_Setup
+		offsetBankTableEntry.w	DAC_AC_Setup
+		offsetBankTableEntry.w	DAC_AD_Setup
+		offsetBankTableEntry.w	DAC_AE_Setup
+		offsetBankTableEntry.w	DAC_AF_Setup
+
+		offsetBankTableEntry.w	DAC_B0_Setup
+		offsetBankTableEntry.w	DAC_B1_Setup
+		offsetBankTableEntry.w	DAC_B2_Setup
+		offsetBankTableEntry.w	DAC_B3_Setup
+		offsetBankTableEntry.w	DAC_B4_Setup
+		offsetBankTableEntry.w	DAC_B5_Setup
+		offsetBankTableEntry.w	DAC_B6_Setup
+		offsetBankTableEntry.w	DAC_B7_Setup
+		offsetBankTableEntry.w	DAC_B8_B9_Setup
+		offsetBankTableEntry.w	DAC_B8_B9_Setup
+		offsetBankTableEntry.w	DAC_BA_Setup
+		offsetBankTableEntry.w	DAC_BB_Setup
+		offsetBankTableEntry.w	DAC_BC_Setup
+		offsetBankTableEntry.w	DAC_BD_Setup
+		offsetBankTableEntry.w	DAC_BE_Setup
+		offsetBankTableEntry.w	DAC_BF_Setup
+
+		offsetBankTableEntry.w	DAC_C0_Setup
+		offsetBankTableEntry.w	DAC_C1_Setup
+		offsetBankTableEntry.w	DAC_C2_Setup
+		offsetBankTableEntry.w	DAC_C3_Setup
+		offsetBankTableEntry.w	DAC_C4_Setup
+
+DAC_81_Setup:			DAC_Setup $04,DAC_81_Data
+DAC_82_Setup:			DAC_Setup $0E,DAC_82_83_84_85_Data
+DAC_83_Setup:			DAC_Setup $14,DAC_82_83_84_85_Data
+DAC_84_Setup:			DAC_Setup $1A,DAC_82_83_84_85_Data
+DAC_85_Setup:			DAC_Setup $20,DAC_82_83_84_85_Data
+DAC_86_Setup:			DAC_Setup $04,DAC_86_Data
+DAC_87_Setup:			DAC_Setup $04,DAC_87_Data
+DAC_88_Setup:			DAC_Setup $06,DAC_88_Data
+DAC_89_Setup:			DAC_Setup $0A,DAC_89_Data
+DAC_8A_Setup:			DAC_Setup $14,DAC_8A_8B_Data
+DAC_8B_Setup:			DAC_Setup $1B,DAC_8A_8B_Data
+DAC_8C_Setup:			DAC_Setup $08,DAC_8C_Data
+DAC_8D_Setup:			DAC_Setup $0B,DAC_8D_8E_Data
+DAC_8E_Setup:			DAC_Setup $11,DAC_8D_8E_Data
+DAC_8F_Setup:			DAC_Setup $08,DAC_8F_Data
+DAC_90_Setup:			DAC_Setup $03,DAC_90_91_92_93_Data
+DAC_91_Setup:			DAC_Setup $07,DAC_90_91_92_93_Data
+DAC_92_Setup:			DAC_Setup $0A,DAC_90_91_92_93_Data
+DAC_93_Setup:			DAC_Setup $0E,DAC_90_91_92_93_Data
+DAC_94_Setup:			DAC_Setup $06,DAC_94_95_96_97_Data
+DAC_95_Setup:			DAC_Setup $0A,DAC_94_95_96_97_Data
+DAC_96_Setup:			DAC_Setup $0D,DAC_94_95_96_97_Data
+DAC_97_Setup:			DAC_Setup $12,DAC_94_95_96_97_Data
+DAC_98_Setup:			DAC_Setup $0B,DAC_98_99_9A_Data
+DAC_99_Setup:			DAC_Setup $13,DAC_98_99_9A_Data
+DAC_9A_Setup:			DAC_Setup $16,DAC_98_99_9A_Data
+DAC_9B_Setup:			DAC_Null_Setup $0C
+DAC_A2_Setup:			DAC_Null_Setup $0A
+DAC_A3_Setup:			DAC_Null_Setup $18
+DAC_A4_Setup:			DAC_Null_Setup $18
+DAC_A5_Setup:			DAC_Null_Setup $0C
+DAC_A6_Setup:			DAC_Null_Setup $09
+DAC_A7_Setup:			DAC_Null_Setup $18
+DAC_A8_Setup:			DAC_Null_Setup $18
+DAC_A9_Setup:			DAC_Null_Setup $0C
+DAC_AA_Setup:			DAC_Null_Setup $0A
+DAC_AB_Setup:			DAC_Null_Setup $0D
+DAC_AC_Setup:			DAC_Null_Setup $06
+DAC_AD_Setup:			DAC_Null_Setup $10
+DAC_AE_Setup:			DAC_Null_Chain $18,DAC_AD_Setup
+DAC_AF_Setup:			DAC_Null_Setup $09
+DAC_B0_Setup:			DAC_Null_Chain $12,DAC_AF_Setup
+DAC_B1_Setup:			DAC_Null_Setup $18
+DAC_B2_Setup:			DAC_Null_Setup $16
+DAC_B3_Setup:			DAC_Null_Chain $20,DAC_B2_Setup
+DAC_B4_Setup:			DAC_Null_Setup $0C
+DAC_B5_Setup:			DAC_Null_Setup $0C
+DAC_B6_Setup:			DAC_Null_Setup $0C
+DAC_B7_Setup:			DAC_Null_Setup $18
+DAC_B8_B9_Setup:		DAC_Null_Setup $0C
+DAC_BA_Setup:			DAC_Null_Setup $18
+DAC_BB_Setup:			DAC_Null_Setup $18
+DAC_BC_Setup:			DAC_Null_Setup $18
+DAC_BD_Setup:			DAC_Null_Setup $0C
+DAC_BE_Setup:			DAC_Null_Setup $0C
+DAC_BF_Setup:			DAC_Null_Setup $1C
+DAC_C0_Setup:			DAC_Null_Setup $0B
+DAC_C1_Setup:			DAC_Null_Chain $0F,DAC_B4_Setup
+DAC_C2_Setup:			DAC_Null_Chain $11,DAC_C1_Setup
+DAC_C3_Setup:			DAC_Null_Chain $12,DAC_C2_Setup
+DAC_C4_Setup:			DAC_Null_Chain $0B,DAC_C3_Setup
+DAC_9C_Setup:			DAC_Null_Setup $0A
+DAC_9D_Setup:			DAC_Null_Setup $18
+DAC_9E_Setup:			DAC_Null_Setup $18
+DAC_9F_Setup:			DAC_Null_Setup $0C
+DAC_A0_Setup:			DAC_Null_Setup $0C
+DAC_A1_Setup:			DAC_Null_Setup $0A
+; ---------------------------------------------------------------------------
+
+DAC_86_Data:			DACBINCLUDE "Sound/DAC/86.bin"
+DAC_81_Data:			DACBINCLUDE "Sound/DAC/81.bin"
+DAC_82_83_84_85_Data:		DACBINCLUDE "Sound/DAC/82-85.bin"
+DAC_94_95_96_97_Data:		DACBINCLUDE "Sound/DAC/94-97.bin"
+DAC_90_91_92_93_Data:		DACBINCLUDE "Sound/DAC/90-93.bin"
+DAC_88_Data:			DACBINCLUDE "Sound/DAC/88.bin"
+DAC_8A_8B_Data:			DACBINCLUDE "Sound/DAC/8A-8B.bin"
+DAC_8C_Data:			DACBINCLUDE "Sound/DAC/8C.bin"
+DAC_8D_8E_Data:			DACBINCLUDE "Sound/DAC/8D-8E.bin"
+DAC_87_Data:			DACBINCLUDE "Sound/DAC/87.bin"
+DAC_8F_Data:			DACBINCLUDE "Sound/DAC/8F.bin"
+DAC_89_Data:			DACBINCLUDE "Sound/DAC/89.bin"
+DAC_98_99_9A_Data:		DACBINCLUDE "Sound/DAC/98-9A.bin"
+
+	finishBank
+
 		align $1000
-Snd_AIZ1:	binclude "Sound/Music/AIZ1.bin"
-Snd_AIZ2:	binclude "Sound/Music/AIZ2.bin"
-Snd_HCZ1:	binclude "Sound/Music/HCZ1.bin"
-Snd_HCZ2:	binclude "Sound/Music/HCZ2.bin"
-Snd_MGZ1:	binclude "Sound/Music/MGZ1.bin"
-Snd_MGZ2:	binclude "Sound/Music/MGZ2.bin"
-Snd_CNZ2:	binclude "Sound/Music/CNZ2.bin"
-Snd_CNZ1:	binclude "Sound/Music/CNZ1.bin"
-Snd_FBZ1:	binclude "Sound/Music/Sonic 3/FBZ1.bin"
-Snd_FBZ2:	binclude "Sound/Music/Sonic 3/FBZ2.bin"
-Snd_DDZ:	binclude "Sound/Music/Sonic 3/DDZ.bin"
-		align $1000
-Snd_ICZ2:	binclude "Sound/Music/ICZ2.bin"
-Snd_ICZ1:	binclude "Sound/Music/ICZ1.bin"
-Snd_LBZ2:	binclude "Sound/Music/LBZ2.bin"
-Snd_LBZ1:	binclude "Sound/Music/LBZ1.bin"
-Snd_MHZ1:	binclude "Sound/Music/Sonic 3/MHZ1.bin"
-Snd_MHZ2:	binclude "Sound/Music/Sonic 3/MHZ2.bin"
-Snd_SOZ1:	binclude "Sound/Music/Sonic 3/SOZ1.bin"
-Snd_SOZ2:	binclude "Sound/Music/Sonic 3/SOZ2.bin"
-Snd_LRZ1:	binclude "Sound/Music/Sonic 3/LRZ1.bin"
-Snd_LRZ2:	binclude "Sound/Music/Sonic 3/LRZ2.bin"
-Snd_SSZ:	binclude "Sound/Music/Sonic 3/SSZ.bin"
-Snd_DEZ1:	binclude "Sound/Music/Sonic 3/DEZ1.bin"
-Snd_DEZ2:	binclude "Sound/Music/Sonic 3/DEZ2.bin"
-Snd_Minib_SK:	binclude "Sound/Music/Sonic 3/Miniboss.bin"
-Snd_Boss:	binclude "Sound/Music/Sonic 3/Zone Boss.bin"
-Snd_PachBonus:	binclude "Sound/Music/Sonic 3/Pachinko.bin"
-Snd_SpecialS:	binclude "Sound/Music/Sonic 3/Special Stage.bin"
-Snd_Results:	binclude "Sound/Music/Sonic 3/Level Outro.bin"
-Snd_Menu:	binclude "Sound/Music/Sonic 3/Menu.bin"
-		align $1000
-Snd_SlotBonus:	binclude "Sound/Music/Sonic 3/Slots.bin"
-Snd_GumBonus:	binclude "Sound/Music/Gum Ball Machine.bin"
-Snd_Knux:	binclude "Sound/Music/Sonic 3/Sonic 3 Knuckles.bin"
-Snd_ALZ:	binclude "Sound/Music/Azure Lake.bin"
-Snd_BPZ:	binclude "Sound/Music/Balloon Park.bin"
-Snd_DPZ:	binclude "Sound/Music/Desert Palace.bin"
-Snd_CGZ:	binclude "Sound/Music/Chrome Gadget.bin"
-Snd_EMZ:	binclude "Sound/Music/Endless Mine.bin"
-Snd_Title:	binclude "Sound/Music/Sonic 3/Sonic 3 Title.bin"
-Snd_S3Credits:	binclude "Sound/Music/Sonic 3 Credits.bin"
-Snd_GameOver:	binclude "Sound/Music/Sonic 3/Game Over.bin"
-Snd_Continue:	binclude "Sound/Music/Sonic 3/Sonic 3 Continue.bin"
-Snd_1UP:	binclude "Sound/Music/Sonic 3/Sonic 3 1UP.bin"
-Snd_Emerald:	binclude "Sound/Music/Sonic 3/Chaos Emerald.bin"
-Snd_Invic:	binclude "Sound/Music/Sonic 3/Sonic 3 Invincible.bin"
-Snd_2PMenu:	binclude "Sound/Music/Competition Menu.bin"
-Snd_Drown:	binclude "Sound/Music/Countdown.bin"
-Snd_PresSega:	binclude "Sound/Music/Sonic 3/Sonic 3 Game Complete.bin"
-		align $1000
-DacBank1:	dc.w  $8880, $8D80, $9280, $9780, $9C80, $A180, $A680, $AB80, $B080, $B580, $BA80, $BF80
-		dc.w  $C480, $C980, $CE80, $D380, $D880, $DD80, $E280, $E780, $EC80, $F180, $F680, $FB80
-		dc.w    $81,  $581,  $A81, $B981, $BE81, $C381, $C881, $CD81, $D281,  $F81, $1481, $1981
-		dc.w  $1E81, $2381, $2881, $2D81, $3281, $3781, $3C81, $4181, $4681, $4B81, $5081, $5581
-		dc.w  $5A81, $5F81, $6481, $6981, $6E81, $7381, $7881, $7D81, $7D81, $8281, $8781, $8C81
-		dc.w  $9181, $9681, $9B81, $A081, $A581, $AA81, $AF81, $B481
-DAC_81_Setup:	dc.b 4
-		dc.w $7E07
-		dc.w $A684
-DAC_82_Setup:	dc.b $E
-		dc.w $6D04
-		dc.w $248C
-DAC_83_Setup:	dc.b $14
-		dc.w $6D04
-		dc.w $248C
-DAC_84_Setup:	dc.b $1A
-		dc.w $6D04
-		dc.w $248C
-DAC_85_Setup:	dc.b $20
-		dc.w $6D04
-		dc.w $248C
-DAC_86_Setup:	dc.b 4
-		dc.w $CF02
-		dc.w $D781
-DAC_87_Setup:	dc.b 4
-		dc.w $1C07
-		dc.w $7CB8
-DAC_88_Setup:	dc.b 6
-		dc.w $2712
-		dc.w $EA0
-DAC_89_Setup:	dc.b $A
-		dc.w $FD09
-		dc.w $87C4
-DAC_8A_Setup:	dc.b $14
-		dc.w $6001
-		dc.w $35B2
-DAC_8B_Setup:	dc.b $1B
-		dc.w $6001
-		dc.w $35B2
-DAC_8C_Setup:	dc.b 8
-		dc.w $6000
-		dc.w $95B3
-DAC_8D_Setup:	dc.b $B
-		dc.w $8704
-		dc.w $F5B3
-DAC_8E_Setup:	dc.b $11
-		dc.w $8704
-		dc.w $F5B3
-DAC_8F_Setup:	dc.b 8
-		dc.w $EF04
-		dc.w $98BF
-DAC_90_Setup:	dc.b 3
-		dc.w $2206
-		dc.w $EC99
-DAC_91_Setup:	dc.b 7
-		dc.w $2206
-		dc.w $EC99
-DAC_92_Setup:	dc.b $A
-		dc.w $2206
-		dc.w $EC99
-DAC_93_Setup:	dc.b $E
-		dc.w $2206
-		dc.w $EC99
-DAC_94_Setup:	dc.b 6
-		dc.w $5B09
-		dc.w $9190
-DAC_95_Setup:	dc.b $A
-		dc.w $5B09
-		dc.w $9190
-DAC_96_Setup:	dc.b $D
-		dc.w $5B09
-		dc.w $9190
-DAC_97_Setup:	dc.b $12
-		dc.w $5B09
-		dc.w $9190
-DAC_98_Setup:	dc.b $B
-		dc.w $680C
-		dc.w $84CE
-DAC_99_Setup:	dc.b $13
-		dc.w $680C
-		dc.w $84CE
-DAC_9A_Setup:	dc.b $16
-		dc.w $680C
-		dc.w $84CE
-DAC_9B_Setup:	dc.b $C
-		dc.w 0
-		dc.w 0
-DAC_A2_Setup:	dc.b $A
-		dc.w 0
-		dc.w 0
-DAC_A3_Setup:	dc.b $18
-		dc.w 0
-		dc.w 0
-DAC_A4_Setup:	dc.b $18
-		dc.w 0
-		dc.w 0
-DAC_A5_Setup:	dc.b $C
-		dc.w 0
-		dc.w 0
-DAC_A6_Setup:	dc.b 9
-		dc.w 0
-		dc.w 0
-DAC_A7_Setup:	dc.b $18
-		dc.w 0
-		dc.w 0
-DAC_A8_Setup:	dc.b $18
-		dc.w 0
-		dc.w 0
-DAC_A9_Setup:	dc.b $C
-		dc.w 0
-		dc.w 0
-DAC_AA_Setup:	dc.b $A
-		dc.w 0
-		dc.w 0
-DAC_AB_Setup:	dc.b $D
-		dc.w 0
-		dc.w 0
-DAC_AC_Setup:	dc.b 6
-		dc.w 0
-		dc.w 0
-DAC_AD_Setup:	dc.b $10
-		dc.w 0
-		dc.w 0
-DAC_AE_Setup:	dc.b $18
-		dc.w 0
-		dc.w $4981
-DAC_AF_Setup:	dc.b 9
-		dc.w 0
-		dc.w 0
-DAC_B0_Setup:	dc.b $12
-		dc.w 0
-		dc.w $5381
-DAC_B1_Setup:	dc.b $18
-		dc.w 0
-		dc.w 0
-DAC_B2_Setup:	dc.b $16
-		dc.w 0
-		dc.w 0
-DAC_B3_Setup:	dc.b $20
-		dc.w 0
-		dc.w $6281
-DAC_B4_Setup:	dc.b $C
-		dc.w 0
-		dc.w 0
-DAC_B5_Setup:	dc.b $C
-		dc.w 0
-		dc.w 0
-DAC_B6_Setup:	dc.b $C
-		dc.w 0
-		dc.w 0
-DAC_B7_Setup:	dc.b $18
-		dc.w 0
-		dc.w 0
-DAC_B8_B9_Setup:dc.b $C
-		dc.w 0
-		dc.w 0
-DAC_BA_Setup:	dc.b $18
-		dc.w 0
-		dc.w 0
-DAC_BB_Setup:	dc.b $18
-		dc.w 0
-		dc.w 0
-DAC_BC_Setup:	dc.b $18
-		dc.w 0
-		dc.w 0
-DAC_BD_Setup:	dc.b $C
-		dc.w 0
-		dc.w 0
-DAC_BE_Setup:	dc.b $C
-		dc.w 0
-		dc.w 0
-DAC_BF_Setup:	dc.b $1C
-		dc.w 0
-		dc.w 0
-DAC_C0_Setup:	dc.b $B
-		dc.w 0
-		dc.w 0
-DAC_C1_Setup:	dc.b $F
-		dc.w 0
-		dc.w $6C81
-DAC_C2_Setup:	dc.b $11
-		dc.w 0
-		dc.w $A881
-DAC_C3_Setup:	dc.b $12
-		dc.w 0
-		dc.w $AD81
-DAC_C4_Setup:	dc.b $B
-		dc.w 0
-		dc.w $B281
-DAC_9C_Setup:	dc.b $A
-		dc.w 0
-		dc.w 0
-DAC_9D_Setup:	dc.b $18
-		dc.w 0
-		dc.w 0
-DAC_9E_Setup:	dc.b $18
-		dc.w 0
-		dc.w 0
-DAC_9F_Setup:	dc.b $C
-		dc.w 0
-		dc.w 0
-DAC_A0_Setup:	dc.b $C
-		dc.w 0
-		dc.w 0
-DAC_A1_Setup:	dc.b $A
-		dc.w 0
-		dc.w 0
-DAC_86_Data:	binclude "Sound/DAC/86.bin"
-DAC_81_Data:	binclude "Sound/DAC/81.bin"
-DAC_82_83_84_85_Data:
-		binclude "Sound/DAC/82-85.bin"
-DAC_94_95_96_97_Data:
-		binclude "Sound/DAC/94-97.bin"
-DAC_90_91_92_93_Data:
-		binclude "Sound/DAC/90-93.bin"
-DAC_88_Data:	binclude "Sound/DAC/88.bin"
-DAC_8A_8B_Data:	binclude "Sound/DAC/8A-8B.bin"
-DAC_8C_Data:	binclude "Sound/DAC/8C.bin"
-DAC_8D_8E_Data:	binclude "Sound/DAC/8D-8E.bin"
-DAC_87_Data:	binclude "Sound/DAC/87.bin"
-DAC_8F_Data:	binclude "Sound/DAC/8F.bin"
-DAC_89_Data:	binclude "Sound/DAC/89.bin"
-DAC_98_99_9A_Data:
-		binclude "Sound/DAC/98-9A.bin"
-		align $1000
-Z80_SoundDriver:binclude "Sound/Sonic 3 Z80 Sound Driver.bin"
-		align $1000
-DacBank2:	dc.w  $8880, $8D80, $9280, $9780, $9C80, $A180, $A680, $AB80, $B080, $B580, $BA80, $BF80
-		dc.w  $C480, $C980, $CE80, $D380, $D880, $DD80, $E280, $E780, $EC80, $F180, $F680, $FB80
-		dc.w    $81,  $581,  $A81, $B981, $BE81, $C381, $C881, $CD81, $D281,  $F81, $1481, $1981
-		dc.w  $1E81, $2381, $2881, $2D81, $3281, $3781, $3C81, $4181, $4681, $4B81, $5081, $5581
-		dc.w  $5A81, $5F81, $6481, $6981, $6E81, $7381, $7881, $7D81, $7D81, $8281, $8781, $8C81
-		dc.w  $9181, $9681, $9B81, $A081, $A581, $AA81, $AF81, $B481
-DAC_81_Setup2:	dc.b 4
-		dc.w 0
-		dc.w 0
-DAC_82_Setup2:	dc.b $E
-		dc.w 0
-		dc.w 0
-DAC_83_Setup2:	dc.b $14
-		dc.w 0
-		dc.w $9080
-DAC_84_Setup2:	dc.b $1A
-		dc.w 0
-		dc.w $9580
-DAC_85_Setup2:	dc.b $20
-		dc.w 0
-		dc.w $9A80
-DAC_86_Setup2:	dc.b 4
-		dc.w 0
-		dc.w 0
-DAC_87_Setup2:	dc.b 4
-		dc.w 0
-		dc.w 0
-DAC_88_Setup2:	dc.b 6
-		dc.w 0
-		dc.w 0
-DAC_89_Setup2:	dc.b $A
-		dc.w 0
-		dc.w 0
-DAC_8A_Setup2:	dc.b $14
-		dc.w 0
-		dc.w 0
-DAC_8B_Setup2:	dc.b $1B
-		dc.w 0
-		dc.w $B880
-DAC_8C_Setup2:	dc.b 8
-		dc.w 0
-		dc.w 0
-DAC_8D_Setup2:	dc.b $B
-		dc.w 0
-		dc.w 0
-DAC_8E_Setup2:	dc.b $11
-		dc.w 0
-		dc.w $C780
-DAC_8F_Setup2:	dc.b 8
-		dc.w 0
-		dc.w 0
-DAC_90_Setup2:	dc.b 3
-		dc.w 0
-		dc.w 0
-DAC_91_Setup2:	dc.b 7
-		dc.w 0
-		dc.w $D680
-DAC_92_Setup2:	dc.b $A
-		dc.w 0
-		dc.w $DB80
-DAC_93_Setup2:	dc.b $E
-		dc.w 0
-		dc.w $E080
-DAC_94_Setup2:	dc.b 6
-		dc.w 0
-		dc.w 0
-DAC_95_Setup2:	dc.b $A
-		dc.w 0
-		dc.w $EA80
-DAC_96_Setup2:	dc.b $D
-		dc.w 0
-		dc.w $EF80
-DAC_97_Setup2:	dc.b $12
-		dc.w 0
-		dc.w $F480
-DAC_98_Setup2:	dc.b $B
-		dc.w 0
-		dc.w 0
-DAC_99_Setup2:	dc.b $13
-		dc.w 0
-		dc.w $FE80
-DAC_9A_Setup2:	dc.b $16
-		dc.w 0
-		dc.w $381
-DAC_9B_Setup2:	dc.b $C
-		dc.w $2006
-		dc.w $D781
-DAC_A2_Setup2:	dc.b $A
-		dc.w $580D
-		dc.w $F9BB
-DAC_A3_Setup2:	dc.b $18
-		dc.w $9E02
-		dc.w $51C9
-DAC_A4_Setup2:	dc.b $18
-		dc.w $8A02
-		dc.w $EFCB
-DAC_A5_Setup2:	dc.b $C
-		dc.w $600C
-		dc.w $79CE
-DAC_A6_Setup2:	dc.b 9
-		dc.w $D606
-		dc.w $D9DA
-DAC_A7_Setup2:	dc.b $18
-		dc.w $F206
-		dc.w $AFE1
-DAC_A8_Setup2:	dc.b $18
-		dc.w $7A03
-		dc.w $A1E8
-DAC_A9_Setup2:	dc.b $C
-		dc.w $4F0A
-		dc.w $1BEC
-DAC_AA_Setup2:	dc.b $A
-		dc.w $8E06
-		dc.w $6AF6
-DAC_AB_Setup2:	dc.b $D
-		dc.w 0
-		dc.w 0
-DAC_AC_Setup2:	dc.b 6
-		dc.w 0
-		dc.w 0
-DAC_AD_Setup2:	dc.b $10
-		dc.w 0
-		dc.w 0
-DAC_AE_Setup2:	dc.b $18
-		dc.w 0
-		dc.w $4981
-DAC_AF_Setup2:	dc.b 9
-		dc.w 0
-		dc.w 0
-DAC_B0_Setup2:	dc.b $12
-		dc.w 0
-		dc.w $5381
-DAC_B1_Setup2:	dc.b $18
-		dc.w 0
-		dc.w 0
-DAC_B2_Setup2:	dc.b $16
-		dc.w 0
-		dc.w 0
-DAC_B3_Setup2:	dc.b $20
-		dc.w 0
-		dc.w $6281
-DAC_B4_Setup2:	dc.b $C
-		dc.w 0
-		dc.w 0
-DAC_B5_Setup2:	dc.b $C
-		dc.w 0
-		dc.w 0
-DAC_B6_Setup2:	dc.b $C
-		dc.w 0
-		dc.w 0
-DAC_B7_Setup2:	dc.b $18
-		dc.w 0
-		dc.w 0
-DAC_B8_B9_Setup2:
-		dc.b $C
-		dc.w 0
-		dc.w 0
-DAC_BA_Setup2:	dc.b $18
-		dc.w 0
-		dc.w 0
-DAC_BB_Setup2:	dc.b $18
-		dc.w 0
-		dc.w 0
-DAC_BC_Setup2:	dc.b $18
-		dc.w 0
-		dc.w 0
-DAC_BD_Setup2:	dc.b $C
-		dc.w 0
-		dc.w 0
-DAC_BE_Setup2:	dc.b $C
-		dc.w 0
-		dc.w 0
-DAC_BF_Setup2:	dc.b $1C
-		dc.w 0
-		dc.w 0
-DAC_C0_Setup2:	dc.b $B
-		dc.w 0
-		dc.w 0
-DAC_C1_Setup2:	dc.b $F
-		dc.w 0
-		dc.w $6C81
-DAC_C2_Setup2:	dc.b $11
-		dc.w 0
-		dc.w $A881
-DAC_C3_Setup2:	dc.b $12
-		dc.w 0
-		dc.w $AD81
-DAC_C4_Setup2:	dc.b $B
-		dc.w 0
-		dc.w $B281
-DAC_9C_Setup2:	dc.b $A
-		dc.w $3203
-		dc.w $F787
-DAC_9D_Setup2:	dc.b $18
-		dc.w $4902
-		dc.w $298B
-DAC_9E_Setup2:	dc.b $18
-		dc.w $8002
-		dc.w $728D
-DAC_9F_Setup2:	dc.b $C
-		dc.w $A512
-		dc.w $F28F
-DAC_A0_Setup2:	dc.b $C
-		dc.w $BA0D
-		dc.w $97A2
-DAC_A1_Setup2:	dc.b $A
-		dc.w $A80B
-		dc.w $51B0
-DAC_9B_Data:	binclude "Sound/DAC/9B.bin"
-DAC_9C_Data:	binclude "Sound/DAC/9C.bin"
-DAC_9D_Data:	binclude "Sound/DAC/9D.bin"
-DAC_9E_Data:	binclude "Sound/DAC/9E.bin"
-DAC_9F_Data:	binclude "Sound/DAC/9F.bin"
-DAC_A0_Data:	binclude "Sound/DAC/A0.bin"
-DAC_A1_Data:	binclude "Sound/DAC/A1.bin"
-DAC_A2_Data:	binclude "Sound/DAC/A2.bin"
-DAC_A3_Data:	binclude "Sound/DAC/A3.bin"
-DAC_A4_Data:	binclude "Sound/DAC/A4.bin"
-DAC_A5_Data:	binclude "Sound/DAC/A5.bin"
-DAC_A6_Data:	binclude "Sound/DAC/A6.bin"
-DAC_A7_Data:	binclude "Sound/DAC/A7.bin"
-DAC_A8_Data:	binclude "Sound/DAC/A8.bin"
-DAC_A9_Data:	binclude "Sound/DAC/A9.bin"
-DAC_AA_Data:	binclude "Sound/DAC/AA.bin"
-		align $1000
-DacBank3:	dc.w  $8880, $8D80, $9280, $9780, $9C80, $A180, $A680, $AB80, $B080, $B580, $BA80, $BF80
-		dc.w  $C480, $C980, $CE80, $D380, $D880, $DD80, $E280, $E780, $EC80, $F180, $F680, $FB80
-		dc.w    $81,  $581,  $A81, $B981, $BE81, $C381, $C881, $CD81, $D281,  $F81, $1481, $1981
-		dc.w  $1E81, $2381, $2881, $2D81, $3281, $3781, $3C81, $4181, $4681, $4B81, $5081, $5581
-		dc.w  $5A81, $5F81, $6481, $6981, $6E81, $7381, $7881, $7D81, $7D81, $8281, $8781, $8C81
-		dc.w  $9181, $9681, $9B81, $A081, $A581, $AA81, $AF81, $B481
-DAC_81_Setup3:	dc.b 4
-		dc.w 0
-		dc.w 0
-DAC_82_Setup3:	dc.b $E
-		dc.w 0
-		dc.w 0
-DAC_83_Setup3:	dc.b $14
-		dc.w 0
-		dc.w $9080
-DAC_84_Setup3:	dc.b $1A
-		dc.w 0
-		dc.w $9580
-DAC_85_Setup3:	dc.b $20
-		dc.w 0
-		dc.w $9A80
-DAC_86_Setup3:	dc.b 4
-		dc.w 0
-		dc.w 0
-DAC_87_Setup3:	dc.b 4
-		dc.w 0
-		dc.w 0
-DAC_88_Setup3:	dc.b 6
-		dc.w 0
-		dc.w 0
-DAC_89_Setup3:	dc.b $A
-		dc.w 0
-		dc.w 0
-DAC_8A_Setup3:	dc.b $14
-		dc.w 0
-		dc.w 0
-DAC_8B_Setup3:	dc.b $1B
-		dc.w 0
-		dc.w $B880
-DAC_8C_Setup3:	dc.b 8
-		dc.w 0
-		dc.w 0
-DAC_8D_Setup3:	dc.b $B
-		dc.w 0
-		dc.w 0
-DAC_8E_Setup3:	dc.b $11
-		dc.w 0
-		dc.w $C780
-DAC_8F_Setup3:	dc.b 8
-		dc.w 0
-		dc.w 0
-DAC_90_Setup3:	dc.b 3
-		dc.w 0
-		dc.w 0
-DAC_91_Setup3:	dc.b 7
-		dc.w 0
-		dc.w $D680
-DAC_92_Setup3:	dc.b $A
-		dc.w 0
-		dc.w $DB80
-DAC_93_Setup3:	dc.b $E
-		dc.w 0
-		dc.w $E080
-DAC_94_Setup3:	dc.b 6
-		dc.w 0
-		dc.w 0
-DAC_95_Setup3:	dc.b $A
-		dc.w 0
-		dc.w $EA80
-DAC_96_Setup3:	dc.b $D
-		dc.w 0
-		dc.w $EF80
-DAC_97_Setup3:	dc.b $12
-		dc.w 0
-		dc.w $F480
-DAC_98_Setup3:	dc.b $B
-		dc.w 0
-		dc.w 0
-DAC_99_Setup3:	dc.b $13
-		dc.w 0
-		dc.w $FE80
-DAC_9A_Setup3:	dc.b $16
-		dc.w 0
-		dc.w $381
-DAC_9B_Setup3:	dc.b $C
-		dc.w 0
-		dc.w 0
-DAC_A2_Setup3:	dc.b $A
-		dc.w 0
-		dc.w 0
-DAC_A3_Setup3:	dc.b $18
-		dc.w 0
-		dc.w 0
-DAC_A4_Setup3:	dc.b $18
-		dc.w 0
-		dc.w 0
-DAC_A5_Setup3:	dc.b $C
-		dc.w 0
-		dc.w 0
-DAC_A6_Setup3:	dc.b 9
-		dc.w 0
-		dc.w 0
-DAC_A7_Setup3:	dc.b $18
-		dc.w 0
-		dc.w 0
-DAC_A8_Setup3:	dc.b $18
-		dc.w 0
-		dc.w 0
-DAC_A9_Setup3:	dc.b $C
-		dc.w 0
-		dc.w 0
-DAC_AA_Setup3:	dc.b $A
-		dc.w 0
-		dc.w 0
-DAC_AB_Setup3:	dc.b $D
-		dc.w $409
-		dc.w $D781
-DAC_AC_Setup3:	dc.b 6
-		dc.w $8105
-		dc.w $DB8A
-DAC_AD_Setup3:	dc.b $10
-		dc.w $BC01
-		dc.w $5C90
-DAC_AE_Setup3:	dc.b $18
-		dc.w $BC01
-		dc.w $5C90
-DAC_AF_Setup3:	dc.b 9
-		dc.w $6C03
-		dc.w $1892
-DAC_B0_Setup3:	dc.b $12
-		dc.w $6C03
-		dc.w $1892
-DAC_B1_Setup3:	dc.b $18
-		dc.w $850B
-		dc.w $E0A8
-DAC_B2_Setup3:	dc.b $16
-		dc.w $4808
-		dc.w $65B4
-DAC_B3_Setup3:	dc.b $20
-		dc.w $4808
-		dc.w $65B4
-DAC_B4_Setup3:	dc.b $C
-		dc.w $FD05
-		dc.w $ADBC
-DAC_B5_Setup3:	dc.b $C
-		dc.w $4006
-		dc.w $AAC2
-DAC_B6_Setup3:	dc.b $C
-		dc.w $5505
-		dc.w $EAC8
-DAC_B7_Setup3:	dc.b $18
-		dc.w $B104
-		dc.w $3FCE
-DAC_B8_B9_Setup3:
-		dc.b $C
-		dc.w $3A06
-		dc.w $F0D2
-DAC_BA_Setup3:	dc.b $18
-		dc.w $B304
-		dc.w $2AD9
-DAC_BB_Setup3:	dc.b $18
-		dc.w $B601
-		dc.w $DDDD
-DAC_BC_Setup3:	dc.b $18
-		dc.w $B708
-		dc.w $93DF
-DAC_BD_Setup3:	dc.b $C
-		dc.w $BE05
-		dc.w $4AE8
-DAC_BE_Setup3:	dc.b $C
-		dc.w $1007
-		dc.w $8EE
-DAC_BF_Setup3:	dc.b $1C
-		dc.w $DC01
-		dc.w $18F5
-DAC_C0_Setup3:	dc.b $B
-		dc.w $3608
-		dc.w $F4F6
-DAC_C1_Setup3:	dc.b $F
-		dc.w $FD05
-		dc.w $ADBC
-DAC_C2_Setup3:	dc.b $11
-		dc.w $FD05
-		dc.w $ADBC
-DAC_C3_Setup3:	dc.b $12
-		dc.w $FD05
-		dc.w $ADBC
-DAC_C4_Setup3:	dc.b $B
-		dc.w $FD05
-		dc.w $ADBC
-DAC_9C_Setup3:	dc.b $A
-		dc.w 0
-		dc.w 0
-DAC_9D_Setup3:	dc.b $18
-		dc.w 0
-		dc.w 0
-DAC_9E_Setup3:	dc.b $18
-		dc.w 0
-		dc.w 0
-DAC_9F_Setup3:	dc.b $C
-		dc.w 0
-		dc.w 0
-DAC_A0_Setup3:	dc.b $C
-		dc.w 0
-		dc.w 0
-DAC_A1_Setup3:	dc.b $A
-		dc.w 0
-		dc.w 0
-DAC_AB_Data:	binclude "Sound/DAC/AB.bin"
-DAC_AC_Data:	binclude "Sound/DAC/AC.bin"
-DAC_AD_AE_Data:	binclude "Sound/DAC/AD-AE.bin"
-DAC_AF_Data:	binclude "Sound/DAC/AF.bin"
-DAC_B0_Data:	binclude "Sound/DAC/B0.bin"
-DAC_B1_Data:	binclude "Sound/DAC/B1.bin"
-DAC_B2_B3_Data:	binclude "Sound/DAC/Sonic 3 B2-B3.bin"
-DAC_B4_C1_C2_C3_C4_Data:
-		binclude "Sound/DAC/B4C1-C4.bin"
-DAC_B5_Data:	binclude "Sound/DAC/B5.bin"
-DAC_B6_Data:	binclude "Sound/DAC/B6.bin"
-DAC_B7_Data:	binclude "Sound/DAC/B7.bin"
-DAC_B8_B9_Data:	binclude "Sound/DAC/B8-B9.bin"
-DAC_BA_Data:	binclude "Sound/DAC/BA.bin"
-DAC_BB_Data:	binclude "Sound/DAC/BB.bin"
-DAC_BC_Data:	binclude "Sound/DAC/BC.bin"
-DAC_BD_Data:	binclude "Sound/DAC/BD.bin"
-DAC_BE_Data:	binclude "Sound/DAC/BE.bin"
-DAC_BF_Data:	binclude "Sound/DAC/BF.bin"
-DAC_C0_Data:	binclude "Sound/DAC/C0.bin"
-		align $1000
+
+Z80_SoundDriver:
+		binclude "Sound/Sonic 3 Z80 Sound Driver.bin"
+
+; ---------------------------------------------------------------------------
+; Dac Bank 2
+; ---------------------------------------------------------------------------
+DacBank2:	startBank
+		offsetBankTableEntry.w	DAC_81_Setup2
+		offsetBankTableEntry.w	DAC_82_Setup2
+		offsetBankTableEntry.w	DAC_83_Setup2
+		offsetBankTableEntry.w	DAC_84_Setup2
+		offsetBankTableEntry.w	DAC_85_Setup2
+		offsetBankTableEntry.w	DAC_86_Setup2
+		offsetBankTableEntry.w	DAC_87_Setup2
+		offsetBankTableEntry.w	DAC_88_Setup2
+		offsetBankTableEntry.w	DAC_89_Setup2
+		offsetBankTableEntry.w	DAC_8A_Setup2
+		offsetBankTableEntry.w	DAC_8B_Setup2
+		offsetBankTableEntry.w	DAC_8C_Setup2
+		offsetBankTableEntry.w	DAC_8D_Setup2
+		offsetBankTableEntry.w	DAC_8E_Setup2
+		offsetBankTableEntry.w	DAC_8F_Setup2
+
+		offsetBankTableEntry.w	DAC_90_Setup2
+		offsetBankTableEntry.w	DAC_91_Setup2
+		offsetBankTableEntry.w	DAC_92_Setup2
+		offsetBankTableEntry.w	DAC_93_Setup2
+		offsetBankTableEntry.w	DAC_94_Setup2
+		offsetBankTableEntry.w	DAC_95_Setup2
+		offsetBankTableEntry.w	DAC_96_Setup2
+		offsetBankTableEntry.w	DAC_97_Setup2
+		offsetBankTableEntry.w	DAC_98_Setup2
+		offsetBankTableEntry.w	DAC_99_Setup2
+		offsetBankTableEntry.w	DAC_9A_Setup2
+		offsetBankTableEntry.w	DAC_9B_Setup2
+		offsetBankTableEntry.w	DAC_9C_Setup2
+		offsetBankTableEntry.w	DAC_9D_Setup2
+		offsetBankTableEntry.w	DAC_9E_Setup2
+		offsetBankTableEntry.w	DAC_9F_Setup2
+
+		offsetBankTableEntry.w	DAC_A0_Setup2
+		offsetBankTableEntry.w	DAC_A1_Setup2
+		offsetBankTableEntry.w	DAC_A2_Setup2
+		offsetBankTableEntry.w	DAC_A3_Setup2
+		offsetBankTableEntry.w	DAC_A4_Setup2
+		offsetBankTableEntry.w	DAC_A5_Setup2
+		offsetBankTableEntry.w	DAC_A6_Setup2
+		offsetBankTableEntry.w	DAC_A7_Setup2
+		offsetBankTableEntry.w	DAC_A8_Setup2
+		offsetBankTableEntry.w	DAC_A9_Setup2
+		offsetBankTableEntry.w	DAC_AA_Setup2
+		offsetBankTableEntry.w	DAC_AB_Setup2
+		offsetBankTableEntry.w	DAC_AC_Setup2
+		offsetBankTableEntry.w	DAC_AD_Setup2
+		offsetBankTableEntry.w	DAC_AE_Setup2
+		offsetBankTableEntry.w	DAC_AF_Setup2
+
+		offsetBankTableEntry.w	DAC_B0_Setup2
+		offsetBankTableEntry.w	DAC_B1_Setup2
+		offsetBankTableEntry.w	DAC_B2_Setup2
+		offsetBankTableEntry.w	DAC_B3_Setup2
+		offsetBankTableEntry.w	DAC_B4_Setup2
+		offsetBankTableEntry.w	DAC_B5_Setup2
+		offsetBankTableEntry.w	DAC_B6_Setup2
+		offsetBankTableEntry.w	DAC_B7_Setup2
+		offsetBankTableEntry.w	DAC_B8_B9_Setup2
+		offsetBankTableEntry.w	DAC_B8_B9_Setup2
+		offsetBankTableEntry.w	DAC_BA_Setup2
+		offsetBankTableEntry.w	DAC_BB_Setup2
+		offsetBankTableEntry.w	DAC_BC_Setup2
+		offsetBankTableEntry.w	DAC_BD_Setup2
+		offsetBankTableEntry.w	DAC_BE_Setup2
+		offsetBankTableEntry.w	DAC_BF_Setup2
+
+		offsetBankTableEntry.w	DAC_C0_Setup2
+		offsetBankTableEntry.w	DAC_C1_Setup2
+		offsetBankTableEntry.w	DAC_C2_Setup2
+		offsetBankTableEntry.w	DAC_C3_Setup2
+		offsetBankTableEntry.w	DAC_C4_Setup2
+
+DAC_81_Setup2:			DAC_Null_Setup $04
+DAC_82_Setup2:			DAC_Null_Setup $0E
+DAC_83_Setup2:			DAC_Null_Chain $14,DAC_82_Setup2
+DAC_84_Setup2:			DAC_Null_Chain $1A,DAC_83_Setup2
+DAC_85_Setup2:			DAC_Null_Chain $20,DAC_84_Setup2
+DAC_86_Setup2:			DAC_Null_Setup $04
+DAC_87_Setup2:			DAC_Null_Setup $04
+DAC_88_Setup2:			DAC_Null_Setup $06
+DAC_89_Setup2:			DAC_Null_Setup $0A
+DAC_8A_Setup2:			DAC_Null_Setup $14
+DAC_8B_Setup2:			DAC_Null_Chain $1B,DAC_8A_Setup2
+DAC_8C_Setup2:			DAC_Null_Setup $08
+DAC_8D_Setup2:			DAC_Null_Setup $0B
+DAC_8E_Setup2:			DAC_Null_Chain $11,DAC_8D_Setup2
+DAC_8F_Setup2:			DAC_Null_Setup $08
+DAC_90_Setup2:			DAC_Null_Setup $03
+DAC_91_Setup2:			DAC_Null_Chain $07,DAC_90_Setup2
+DAC_92_Setup2:			DAC_Null_Chain $0A,DAC_91_Setup2
+DAC_93_Setup2:			DAC_Null_Chain $0E,DAC_92_Setup2
+DAC_94_Setup2:			DAC_Null_Setup $06
+DAC_95_Setup2:			DAC_Null_Chain $0A,DAC_94_Setup2
+DAC_96_Setup2:			DAC_Null_Chain $0D,DAC_95_Setup2
+DAC_97_Setup2:			DAC_Null_Chain $12,DAC_96_Setup2
+DAC_98_Setup2:			DAC_Null_Setup $0B
+DAC_99_Setup2:			DAC_Null_Chain $13,DAC_98_Setup2
+DAC_9A_Setup2:			DAC_Null_Chain $16,DAC_99_Setup2
+DAC_9B_Setup2:			DAC_Setup $0C,DAC_9B_Data
+DAC_A2_Setup2:			DAC_Setup $0A,DAC_A2_Data
+DAC_A3_Setup2:			DAC_Setup $18,DAC_A3_Data
+DAC_A4_Setup2:			DAC_Setup $18,DAC_A4_Data
+DAC_A5_Setup2:			DAC_Setup $0C,DAC_A5_Data
+DAC_A6_Setup2:			DAC_Setup $09,DAC_A6_Data
+DAC_A7_Setup2:			DAC_Setup $18,DAC_A7_Data
+DAC_A8_Setup2:			DAC_Setup $18,DAC_A8_Data
+DAC_A9_Setup2:			DAC_Setup $0C,DAC_A9_Data
+DAC_AA_Setup2:			DAC_Setup $0A,DAC_AA_Data
+DAC_AB_Setup2:			DAC_Null_Setup $0D
+DAC_AC_Setup2:			DAC_Null_Setup $06
+DAC_AD_Setup2:			DAC_Null_Setup $10
+DAC_AE_Setup2:			DAC_Null_Chain $18,DAC_AD_Setup2
+DAC_AF_Setup2:			DAC_Null_Setup $09
+DAC_B0_Setup2:			DAC_Null_Chain $12,DAC_AF_Setup2
+DAC_B1_Setup2:			DAC_Null_Setup $18
+DAC_B2_Setup2:			DAC_Null_Setup $16
+DAC_B3_Setup2:			DAC_Null_Chain $20,DAC_B2_Setup2
+DAC_B4_Setup2:			DAC_Null_Setup $0C
+DAC_B5_Setup2:			DAC_Null_Setup $0C
+DAC_B6_Setup2:			DAC_Null_Setup $0C
+DAC_B7_Setup2:			DAC_Null_Setup $18
+DAC_B8_B9_Setup2:		DAC_Null_Setup $0C
+DAC_BA_Setup2:			DAC_Null_Setup $18
+DAC_BB_Setup2:			DAC_Null_Setup $18
+DAC_BC_Setup2:			DAC_Null_Setup $18
+DAC_BD_Setup2:			DAC_Null_Setup $0C
+DAC_BE_Setup2:			DAC_Null_Setup $0C
+DAC_BF_Setup2:			DAC_Null_Setup $1C
+DAC_C0_Setup2:			DAC_Null_Setup $0B
+DAC_C1_Setup2:			DAC_Null_Chain $0F,DAC_B4_Setup2
+DAC_C2_Setup2:			DAC_Null_Chain $11,DAC_C1_Setup2
+DAC_C3_Setup2:			DAC_Null_Chain $12,DAC_C2_Setup2
+DAC_C4_Setup2:			DAC_Null_Chain $0B,DAC_C3_Setup2
+DAC_9C_Setup2:			DAC_Setup $0A,DAC_9C_Data
+DAC_9D_Setup2:			DAC_Setup $18,DAC_9D_Data
+DAC_9E_Setup2:			DAC_Setup $18,DAC_9E_Data
+DAC_9F_Setup2:			DAC_Setup $0C,DAC_9F_Data
+DAC_A0_Setup2:			DAC_Setup $0C,DAC_A0_Data
+DAC_A1_Setup2:			DAC_Setup $0A,DAC_A1_Data
+
+DAC_9B_Data:			DACBINCLUDE "Sound/DAC/9B.bin"
+DAC_9C_Data:			DACBINCLUDE "Sound/DAC/9C.bin"
+DAC_9D_Data:			DACBINCLUDE "Sound/DAC/9D.bin"
+DAC_9E_Data:			DACBINCLUDE "Sound/DAC/9E.bin"
+DAC_9F_Data:			DACBINCLUDE "Sound/DAC/9F.bin"
+DAC_A0_Data:			DACBINCLUDE "Sound/DAC/A0.bin"
+DAC_A1_Data:			DACBINCLUDE "Sound/DAC/A1.bin"
+DAC_A2_Data:			DACBINCLUDE "Sound/DAC/A2.bin"
+DAC_A3_Data:			DACBINCLUDE "Sound/DAC/A3.bin"
+DAC_A4_Data:			DACBINCLUDE "Sound/DAC/A4.bin"
+DAC_A5_Data:			DACBINCLUDE "Sound/DAC/A5.bin"
+DAC_A6_Data:			DACBINCLUDE "Sound/DAC/A6.bin"
+DAC_A7_Data:			DACBINCLUDE "Sound/DAC/A7.bin"
+DAC_A8_Data:			DACBINCLUDE "Sound/DAC/A8.bin"
+DAC_A9_Data:			DACBINCLUDE "Sound/DAC/A9.bin"
+DAC_AA_Data:			DACBINCLUDE "Sound/DAC/AA.bin"
+
+	finishBank
+
+; ---------------------------------------------------------------------------
+; Dac Bank 3
+; ---------------------------------------------------------------------------
+DacBank3:	startBank
+		offsetBankTableEntry.w	DAC_81_Setup3
+		offsetBankTableEntry.w	DAC_82_Setup3
+		offsetBankTableEntry.w	DAC_83_Setup3
+		offsetBankTableEntry.w	DAC_84_Setup3
+		offsetBankTableEntry.w	DAC_85_Setup3
+		offsetBankTableEntry.w	DAC_86_Setup3
+		offsetBankTableEntry.w	DAC_87_Setup3
+		offsetBankTableEntry.w	DAC_88_Setup3
+		offsetBankTableEntry.w	DAC_89_Setup3
+		offsetBankTableEntry.w	DAC_8A_Setup3
+		offsetBankTableEntry.w	DAC_8B_Setup3
+		offsetBankTableEntry.w	DAC_8C_Setup3
+		offsetBankTableEntry.w	DAC_8D_Setup3
+		offsetBankTableEntry.w	DAC_8E_Setup3
+		offsetBankTableEntry.w	DAC_8F_Setup3
+
+		offsetBankTableEntry.w	DAC_90_Setup3
+		offsetBankTableEntry.w	DAC_91_Setup3
+		offsetBankTableEntry.w	DAC_92_Setup3
+		offsetBankTableEntry.w	DAC_93_Setup3
+		offsetBankTableEntry.w	DAC_94_Setup3
+		offsetBankTableEntry.w	DAC_95_Setup3
+		offsetBankTableEntry.w	DAC_96_Setup3
+		offsetBankTableEntry.w	DAC_97_Setup3
+		offsetBankTableEntry.w	DAC_98_Setup3
+		offsetBankTableEntry.w	DAC_99_Setup3
+		offsetBankTableEntry.w	DAC_9A_Setup3
+		offsetBankTableEntry.w	DAC_9B_Setup3
+		offsetBankTableEntry.w	DAC_9C_Setup3
+		offsetBankTableEntry.w	DAC_9D_Setup3
+		offsetBankTableEntry.w	DAC_9E_Setup3
+		offsetBankTableEntry.w	DAC_9F_Setup3
+
+		offsetBankTableEntry.w	DAC_A0_Setup3
+		offsetBankTableEntry.w	DAC_A1_Setup3
+		offsetBankTableEntry.w	DAC_A2_Setup3
+		offsetBankTableEntry.w	DAC_A3_Setup3
+		offsetBankTableEntry.w	DAC_A4_Setup3
+		offsetBankTableEntry.w	DAC_A5_Setup3
+		offsetBankTableEntry.w	DAC_A6_Setup3
+		offsetBankTableEntry.w	DAC_A7_Setup3
+		offsetBankTableEntry.w	DAC_A8_Setup3
+		offsetBankTableEntry.w	DAC_A9_Setup3
+		offsetBankTableEntry.w	DAC_AA_Setup3
+		offsetBankTableEntry.w	DAC_AB_Setup3
+		offsetBankTableEntry.w	DAC_AC_Setup3
+		offsetBankTableEntry.w	DAC_AD_Setup3
+		offsetBankTableEntry.w	DAC_AE_Setup3
+		offsetBankTableEntry.w	DAC_AF_Setup3
+
+		offsetBankTableEntry.w	DAC_B0_Setup3
+		offsetBankTableEntry.w	DAC_B1_Setup3
+		offsetBankTableEntry.w	DAC_B2_Setup3
+		offsetBankTableEntry.w	DAC_B3_Setup3
+		offsetBankTableEntry.w	DAC_B4_Setup3
+		offsetBankTableEntry.w	DAC_B5_Setup3
+		offsetBankTableEntry.w	DAC_B6_Setup3
+		offsetBankTableEntry.w	DAC_B7_Setup3
+		offsetBankTableEntry.w	DAC_B8_B9_Setup3
+		offsetBankTableEntry.w	DAC_B8_B9_Setup3
+		offsetBankTableEntry.w	DAC_BA_Setup3
+		offsetBankTableEntry.w	DAC_BB_Setup3
+		offsetBankTableEntry.w	DAC_BC_Setup3
+		offsetBankTableEntry.w	DAC_BD_Setup3
+		offsetBankTableEntry.w	DAC_BE_Setup3
+		offsetBankTableEntry.w	DAC_BF_Setup3
+
+		offsetBankTableEntry.w	DAC_C0_Setup3
+		offsetBankTableEntry.w	DAC_C1_Setup3
+		offsetBankTableEntry.w	DAC_C2_Setup3
+		offsetBankTableEntry.w	DAC_C3_Setup3
+		offsetBankTableEntry.w	DAC_C4_Setup3
+
+DAC_81_Setup3:			DAC_Null_Setup $04
+DAC_82_Setup3:			DAC_Null_Setup $0E
+DAC_83_Setup3:			DAC_Null_Chain $14,DAC_82_Setup3
+DAC_84_Setup3:			DAC_Null_Chain $1A,DAC_83_Setup3
+DAC_85_Setup3:			DAC_Null_Chain $20,DAC_84_Setup3
+DAC_86_Setup3:			DAC_Null_Setup $04
+DAC_87_Setup3:			DAC_Null_Setup $04
+DAC_88_Setup3:			DAC_Null_Setup $06
+DAC_89_Setup3:			DAC_Null_Setup $0A
+DAC_8A_Setup3:			DAC_Null_Setup $14
+DAC_8B_Setup3:			DAC_Null_Chain $1B,DAC_8A_Setup3
+DAC_8C_Setup3:			DAC_Null_Setup $08
+DAC_8D_Setup3:			DAC_Null_Setup $0B
+DAC_8E_Setup3:			DAC_Null_Chain $11,DAC_8D_Setup3
+DAC_8F_Setup3:			DAC_Null_Setup $08
+DAC_90_Setup3:			DAC_Null_Setup $03
+DAC_91_Setup3:			DAC_Null_Chain $07,DAC_90_Setup3
+DAC_92_Setup3:			DAC_Null_Chain $0A,DAC_91_Setup3
+DAC_93_Setup3:			DAC_Null_Chain $0E,DAC_92_Setup3
+DAC_94_Setup3:			DAC_Null_Setup $06
+DAC_95_Setup3:			DAC_Null_Chain $0A,DAC_94_Setup3
+DAC_96_Setup3:			DAC_Null_Chain $0D,DAC_95_Setup3
+DAC_97_Setup3:			DAC_Null_Chain $12,DAC_96_Setup3
+DAC_98_Setup3:			DAC_Null_Setup $0B
+DAC_99_Setup3:			DAC_Null_Chain $13,DAC_98_Setup3
+DAC_9A_Setup3:			DAC_Null_Chain $16,DAC_99_Setup3
+DAC_9B_Setup3:			DAC_Null_Setup $0C
+DAC_A2_Setup3:			DAC_Null_Setup $0A
+DAC_A3_Setup3:			DAC_Null_Setup $18
+DAC_A4_Setup3:			DAC_Null_Setup $18
+DAC_A5_Setup3:			DAC_Null_Setup $0C
+DAC_A6_Setup3:			DAC_Null_Setup $09
+DAC_A7_Setup3:			DAC_Null_Setup $18
+DAC_A8_Setup3:			DAC_Null_Setup $18
+DAC_A9_Setup3:			DAC_Null_Setup $0C
+DAC_AA_Setup3:			DAC_Null_Setup $0A
+DAC_AB_Setup3:			DAC_Setup $0D,DAC_AB_Data
+DAC_AC_Setup3:			DAC_Setup $06,DAC_AC_Data
+DAC_AD_Setup3:			DAC_Setup $10,DAC_AD_AE_Data
+DAC_AE_Setup3:			DAC_Setup $18,DAC_AD_AE_Data
+DAC_AF_Setup3:			DAC_Setup $09,DAC_AF_Data
+DAC_B0_Setup3:			DAC_Setup $12,DAC_AF_Data
+DAC_B1_Setup3:			DAC_Setup $18,DAC_B1_Data
+DAC_B2_Setup3:			DAC_Setup $16,DAC_B2_B3_Data
+DAC_B3_Setup3:			DAC_Setup $20,DAC_B2_B3_Data
+DAC_B4_Setup3:			DAC_Setup $0C,DAC_B4_C1_C2_C3_C4_Data
+DAC_B5_Setup3:			DAC_Setup $0C,DAC_B5_Data
+DAC_B6_Setup3:			DAC_Setup $0C,DAC_B6_Data
+DAC_B7_Setup3:			DAC_Setup $18,DAC_B7_Data
+DAC_B8_B9_Setup3:		DAC_Setup $0C,DAC_B8_B9_Data
+DAC_BA_Setup3:			DAC_Setup $18,DAC_BA_Data
+DAC_BB_Setup3:			DAC_Setup $18,DAC_BB_Data
+DAC_BC_Setup3:			DAC_Setup $18,DAC_BC_Data
+DAC_BD_Setup3:			DAC_Setup $0C,DAC_BD_Data
+DAC_BE_Setup3:			DAC_Setup $0C,DAC_BE_Data
+DAC_BF_Setup3:			DAC_Setup $1C,DAC_BF_Data
+DAC_C0_Setup3:			DAC_Setup $0B,DAC_C0_Data
+DAC_C1_Setup3:			DAC_Setup $0F,DAC_B4_C1_C2_C3_C4_Data
+DAC_C2_Setup3:			DAC_Setup $11,DAC_B4_C1_C2_C3_C4_Data
+DAC_C3_Setup3:			DAC_Setup $12,DAC_B4_C1_C2_C3_C4_Data
+DAC_C4_Setup3:			DAC_Setup $0B,DAC_B4_C1_C2_C3_C4_Data
+DAC_9C_Setup3:			DAC_Null_Setup $0A
+DAC_9D_Setup3:			DAC_Null_Setup $18
+DAC_9E_Setup3:			DAC_Null_Setup $18
+DAC_9F_Setup3:			DAC_Null_Setup $0C
+DAC_A0_Setup3:			DAC_Null_Setup $0C
+DAC_A1_Setup3:			DAC_Null_Setup $0A
+
+DAC_AB_Data:			DACBINCLUDE "Sound/DAC/AB.bin"
+DAC_AC_Data:			DACBINCLUDE "Sound/DAC/AC.bin"
+DAC_AD_AE_Data:			DACBINCLUDE "Sound/DAC/AD-AE.bin"
+DAC_AF_Data:			DACBINCLUDE "Sound/DAC/AF.bin"
+DAC_B0_Data:			DACBINCLUDE "Sound/DAC/B0.bin"
+DAC_B1_Data:			DACBINCLUDE "Sound/DAC/B1.bin"
+DAC_B2_B3_Data:			DACBINCLUDE "Sound/DAC/B2-B3 (Sonic 3).bin"
+DAC_B4_C1_C2_C3_C4_Data:	DACBINCLUDE "Sound/DAC/B4C1-C4.bin"
+DAC_B5_Data:			DACBINCLUDE "Sound/DAC/B5.bin"
+DAC_B6_Data:			DACBINCLUDE "Sound/DAC/B6.bin"
+DAC_B7_Data:			DACBINCLUDE "Sound/DAC/B7.bin"
+DAC_B8_B9_Data:			DACBINCLUDE "Sound/DAC/B8-B9.bin"
+DAC_BA_Data:			DACBINCLUDE "Sound/DAC/BA.bin"
+DAC_BB_Data:			DACBINCLUDE "Sound/DAC/BB.bin"
+DAC_BC_Data:			DACBINCLUDE "Sound/DAC/BC.bin"
+DAC_BD_Data:			DACBINCLUDE "Sound/DAC/BD.bin"
+DAC_BE_Data:			DACBINCLUDE "Sound/DAC/BE.bin"
+DAC_BF_Data:			DACBINCLUDE "Sound/DAC/BF.bin"
+DAC_C0_Data:			DACBINCLUDE "Sound/DAC/C0.bin"
+
+	finishBank
+
+; ===========================================================================
+; Sound Bank
+; ===========================================================================
+SndBank:			startBank
+
 SEGA_PCM:	binclude "Sound/Sega PCM.bin"
 		align 2
-Sound_33:	binclude "Sound/SFX/33.bin"
-Sound_34:	binclude "Sound/SFX/34.bin"
-Sound_35:	binclude "Sound/SFX/35.bin"
-Sound_36:	binclude "Sound/SFX/36.bin"
-Sound_37:	binclude "Sound/SFX/37.bin"
-Sound_38:	binclude "Sound/SFX/38.bin"
-Sound_39:	binclude "Sound/SFX/39.bin"
-Sound_3A:	binclude "Sound/SFX/3A.bin"
-Sound_3B:	binclude "Sound/SFX/3B.bin"
-Sound_3C:	binclude "Sound/SFX/3C.bin"
-Sound_3D:	binclude "Sound/SFX/3D.bin"
-Sound_3E:	binclude "Sound/SFX/3E.bin"
-Sound_3F:	binclude "Sound/SFX/3F.bin"
-Sound_40:	binclude "Sound/SFX/40.bin"
-Sound_41:	binclude "Sound/SFX/41.bin"
-Sound_42:	binclude "Sound/SFX/42.bin"
-Sound_43:	binclude "Sound/SFX/43.bin"
-Sound_44:	binclude "Sound/SFX/44.bin"
-Sound_45:	binclude "Sound/SFX/45.bin"
-Sound_46:	binclude "Sound/SFX/46.bin"
-Sound_47:	binclude "Sound/SFX/47.bin"
-Sound_48:	binclude "Sound/SFX/48.bin"
-Sound_49:	binclude "Sound/SFX/49.bin"
-Sound_4A:	binclude "Sound/SFX/4A.bin"
-Sound_4B:	binclude "Sound/SFX/4B.bin"
-Sound_4C:	binclude "Sound/SFX/4C.bin"
-Sound_4D:	binclude "Sound/SFX/4D.bin"
-Sound_4E:	binclude "Sound/SFX/4E.bin"
-Sound_4F:	binclude "Sound/SFX/4F.bin"
-Sound_50:	binclude "Sound/SFX/50.bin"
-Sound_51:	binclude "Sound/SFX/51.bin"
-Sound_52:	binclude "Sound/SFX/52.bin"
-Sound_53:	binclude "Sound/SFX/53.bin"
-Sound_54:	binclude "Sound/SFX/54.bin"
-Sound_55:	binclude "Sound/SFX/55.bin"
-Sound_56:	binclude "Sound/SFX/56.bin"
-Sound_57:	binclude "Sound/SFX/57.bin"
-Sound_58:	binclude "Sound/SFX/58.bin"
-Sound_59:	binclude "Sound/SFX/59.bin"
-Sound_5A:	binclude "Sound/SFX/5A.bin"
-Sound_5B:	binclude "Sound/SFX/5B.bin"
-Sound_5C:	binclude "Sound/SFX/5C.bin"
-Sound_5D:	binclude "Sound/SFX/5D.bin"
-Sound_5E:	binclude "Sound/SFX/5E.bin"
-Sound_5F:	binclude "Sound/SFX/5F.bin"
-Sound_60:	binclude "Sound/SFX/60.bin"
-Sound_61:	binclude "Sound/SFX/61.bin"
-Sound_62:	binclude "Sound/SFX/62.bin"
-Sound_63:	binclude "Sound/SFX/63.bin"
-Sound_64:	binclude "Sound/SFX/64.bin"
-Sound_65:	binclude "Sound/SFX/65.bin"
-Sound_66:	binclude "Sound/SFX/66.bin"
-Sound_67:	binclude "Sound/SFX/67.bin"
-Sound_68:	binclude "Sound/SFX/68.bin"
-Sound_69:	binclude "Sound/SFX/69.bin"
-Sound_6A:	binclude "Sound/SFX/6A.bin"
-Sound_6B:	binclude "Sound/SFX/6B.bin"
-Sound_6C:	binclude "Sound/SFX/6C.bin"
-Sound_6D:	binclude "Sound/SFX/6D.bin"
-Sound_6E:	binclude "Sound/SFX/6E.bin"
-Sound_6F:	binclude "Sound/SFX/6F.bin"
-Sound_70:	binclude "Sound/SFX/70.bin"
-Sound_71:	binclude "Sound/SFX/71.bin"
-Sound_72:	binclude "Sound/SFX/72.bin"
-Sound_73:	binclude "Sound/SFX/73.bin"
-Sound_74:	binclude "Sound/SFX/74.bin"
-Sound_75:	binclude "Sound/SFX/75.bin"
-Sound_76:	binclude "Sound/SFX/76.bin"
-Sound_77:	binclude "Sound/SFX/77.bin"
-Sound_78:	binclude "Sound/SFX/78.bin"
-Sound_79:	binclude "Sound/SFX/79.bin"
-Sound_7A:	binclude "Sound/SFX/7A.bin"
-Sound_7B:	binclude "Sound/SFX/7B.bin"
-Sound_7C:	binclude "Sound/SFX/7C.bin"
-Sound_7D:	binclude "Sound/SFX/7D.bin"
-Sound_7E:	binclude "Sound/SFX/7E.bin"
-Sound_7F:	binclude "Sound/SFX/7F.bin"
-Sound_80:	binclude "Sound/SFX/80.bin"
-Sound_81:	binclude "Sound/SFX/81.bin"
-Sound_82:	binclude "Sound/SFX/82.bin"
-Sound_83:	binclude "Sound/SFX/83.bin"
-Sound_84:	binclude "Sound/SFX/84.bin"
-Sound_85:	binclude "Sound/SFX/85.bin"
-Sound_86:	binclude "Sound/SFX/86.bin"
-Sound_87:	binclude "Sound/SFX/87.bin"
-Sound_88:	binclude "Sound/SFX/88.bin"
-Sound_89:	binclude "Sound/SFX/89.bin"
-Sound_8A:	binclude "Sound/SFX/8A.bin"
-Sound_8B:	binclude "Sound/SFX/8B.bin"
-Sound_8C:	binclude "Sound/SFX/8C.bin"
-Sound_8D:	binclude "Sound/SFX/8D.bin"
-Sound_8E:	binclude "Sound/SFX/8E.bin"
-Sound_8F:	binclude "Sound/SFX/8F.bin"
-Sound_90:	binclude "Sound/SFX/90.bin"
-Sound_91:	binclude "Sound/SFX/91.bin"
-Sound_92:	binclude "Sound/SFX/92.bin"
-Sound_93:	binclude "Sound/SFX/93.bin"
-Sound_94:	binclude "Sound/SFX/94.bin"
-Sound_95:	binclude "Sound/SFX/95.bin"
-Sound_96:	binclude "Sound/SFX/96.bin"
-Sound_97:	binclude "Sound/SFX/97.bin"
-Sound_98:	binclude "Sound/SFX/98.bin"
-Sound_99:	binclude "Sound/SFX/99.bin"
-Sound_9A:	binclude "Sound/SFX/9A.bin"
-Sound_9B:	binclude "Sound/SFX/Sonic 3 9B.bin"
-Sound_9C:	binclude "Sound/SFX/9C.bin"
-Sound_9D:	binclude "Sound/SFX/9D.bin"
-Sound_9E:	binclude "Sound/SFX/9E.bin"
-Sound_9F:	binclude "Sound/SFX/9F.bin"
-Sound_A0:	binclude "Sound/SFX/A0.bin"
-Sound_A1:	binclude "Sound/SFX/A1.bin"
-Sound_A2:	binclude "Sound/SFX/A2.bin"
-Sound_A3:	binclude "Sound/SFX/A3.bin"
-Sound_A4:	binclude "Sound/SFX/A4.bin"
-Sound_A5:	binclude "Sound/SFX/A5.bin"
-Sound_A6:	binclude "Sound/SFX/A6.bin"
-Sound_A7:	binclude "Sound/SFX/A7.bin"
-Sound_A8:	binclude "Sound/SFX/A8.bin"
-Sound_A9:	binclude "Sound/SFX/A9.bin"
-Sound_AA:	binclude "Sound/SFX/AA.bin"
-Sound_AB:	binclude "Sound/SFX/AB.bin"
-Sound_AC:	binclude "Sound/SFX/AC.bin"
-Sound_AD:	binclude "Sound/SFX/Sonic 3 AD.bin"
-Sound_AE:	binclude "Sound/SFX/AE.bin"
-Sound_AF:	binclude "Sound/SFX/AF.bin"
-Sound_B0:	binclude "Sound/SFX/B0.bin"
-Sound_B1:	binclude "Sound/SFX/B1.bin"
-Sound_B2:	binclude "Sound/SFX/B2.bin"
-Sound_B3:	binclude "Sound/SFX/B3.bin"
-Sound_B4:	binclude "Sound/SFX/B4.bin"
-Sound_B5:	binclude "Sound/SFX/B5.bin"
-Sound_B6:	binclude "Sound/SFX/B6.bin"
-Sound_B7:	binclude "Sound/SFX/B7.bin"
-Sound_B8:	binclude "Sound/SFX/B8.bin"
-Sound_B9:	binclude "Sound/SFX/B9.bin"
-Sound_BA:	binclude "Sound/SFX/BA.bin"
-Sound_BB:	binclude "Sound/SFX/BB.bin"
-Sound_BC:	binclude "Sound/SFX/BC.bin"
-Sound_BD:	binclude "Sound/SFX/BD.bin"
-Sound_BE:	binclude "Sound/SFX/BE.bin"
-Sound_BF:	binclude "Sound/SFX/BF.bin"
-Sound_C0:	binclude "Sound/SFX/C0.bin"
-Sound_C1:	binclude "Sound/SFX/C1.bin"
-Sound_C2:	binclude "Sound/SFX/C2.bin"
-Sound_C3:	binclude "Sound/SFX/C3.bin"
-Sound_C4:	binclude "Sound/SFX/C4.bin"
-Sound_C5:	binclude "Sound/SFX/C5.bin"
-Sound_C6:	binclude "Sound/SFX/C6.bin"
-Sound_C7:	binclude "Sound/SFX/C7.bin"
-Sound_C8:	binclude "Sound/SFX/C8.bin"
-Sound_C9:	binclude "Sound/SFX/C9.bin"
-Sound_CA:	binclude "Sound/SFX/CA.bin"
-Sound_CB:	binclude "Sound/SFX/CB.bin"
-Sound_CC:	binclude "Sound/SFX/CC.bin"
-Sound_CD:	binclude "Sound/SFX/CD.bin"
-Sound_CE:	binclude "Sound/SFX/CE.bin"
-Sound_CF:	binclude "Sound/SFX/CF.bin"
-Sound_D0:	binclude "Sound/SFX/D0.bin"
-Sound_D1:	binclude "Sound/SFX/D1.bin"
-Sound_D2:	binclude "Sound/SFX/D2.bin"
-Sound_D3:	binclude "Sound/SFX/D3.bin"
-Sound_D4:	binclude "Sound/SFX/D4.bin"
-Sound_D5:	binclude "Sound/SFX/D5.bin"
-Sound_D6:	binclude "Sound/SFX/D6.bin"
-Sound_D7:	binclude "Sound/SFX/D7.bin"
-Sound_D8:	binclude "Sound/SFX/D8.bin"
-Sound_D9:	binclude "Sound/SFX/D9.bin"
-Sound_DA:	binclude "Sound/SFX/DA.bin"
-Sound_DB:	binclude "Sound/SFX/DB.bin"
+Sound_33:	include "Sound/SFX/33.asm"
+Sound_34:	include "Sound/SFX/34.asm"
+Sound_35:	include "Sound/SFX/35.asm"
+Sound_36:	include "Sound/SFX/36.asm"
+Sound_37:	include "Sound/SFX/37.asm"
+Sound_38:	include "Sound/SFX/38.asm"
+Sound_39:	include "Sound/SFX/39.asm"
+Sound_3A:	include "Sound/SFX/3A.asm"
+Sound_3B:	include "Sound/SFX/3B.asm"
+Sound_3C:	include "Sound/SFX/3C.asm"
+Sound_3D:	include "Sound/SFX/3D.asm"
+Sound_3E:	include "Sound/SFX/3E.asm"
+Sound_3F:	include "Sound/SFX/3F.asm"
+Sound_40:	include "Sound/SFX/40.asm"
+Sound_41:	include "Sound/SFX/41.asm"
+Sound_42:	include "Sound/SFX/42.asm"
+Sound_43:	include "Sound/SFX/43.asm"
+Sound_44:	include "Sound/SFX/44.asm"
+Sound_45:	include "Sound/SFX/45.asm"
+Sound_46:	include "Sound/SFX/46.asm"
+Sound_47:	include "Sound/SFX/47.asm"
+Sound_48:	include "Sound/SFX/48.asm"
+Sound_49:	include "Sound/SFX/49.asm"
+Sound_4A:	include "Sound/SFX/4A.asm"
+Sound_4B:	include "Sound/SFX/4B.asm"
+Sound_4C:	include "Sound/SFX/4C.asm"
+Sound_4D:	include "Sound/SFX/4D.asm"
+Sound_4E:	include "Sound/SFX/4E.asm"
+Sound_4F:	include "Sound/SFX/4F.asm"
+Sound_50:	include "Sound/SFX/50.asm"
+Sound_51:	include "Sound/SFX/51.asm"
+Sound_52:	include "Sound/SFX/52.asm"
+Sound_53:	include "Sound/SFX/53.asm"
+Sound_54:	include "Sound/SFX/54.asm"
+Sound_55:	include "Sound/SFX/55.asm"
+Sound_56:	include "Sound/SFX/56.asm"
+Sound_57:	include "Sound/SFX/57.asm"
+Sound_58:	include "Sound/SFX/58.asm"
+Sound_59:	include "Sound/SFX/59.asm"
+Sound_5A:	include "Sound/SFX/5A.asm"
+Sound_5B:	include "Sound/SFX/5B.asm"
+Sound_5C:	include "Sound/SFX/5C.asm"
+Sound_5D:	include "Sound/SFX/5D.asm"
+Sound_5E:	include "Sound/SFX/5E.asm"
+Sound_5F:	include "Sound/SFX/5F.asm"
+Sound_60:	include "Sound/SFX/60.asm"
+Sound_61:	include "Sound/SFX/61.asm"
+Sound_62:	include "Sound/SFX/62.asm"
+Sound_63:	include "Sound/SFX/63.asm"
+Sound_64:	include "Sound/SFX/64.asm"
+Sound_65:	include "Sound/SFX/65.asm"
+Sound_66:	include "Sound/SFX/66.asm"
+Sound_67:	include "Sound/SFX/67.asm"
+Sound_68:	include "Sound/SFX/68.asm"
+Sound_69:	include "Sound/SFX/69.asm"
+Sound_6A:	include "Sound/SFX/6A.asm"
+Sound_6B:	include "Sound/SFX/6B.asm"
+Sound_6C:	include "Sound/SFX/6C.asm"
+Sound_6D:	include "Sound/SFX/6D.asm"
+Sound_6E:	include "Sound/SFX/6E.asm"
+Sound_6F:	include "Sound/SFX/6F.asm"
+Sound_70:	include "Sound/SFX/70.asm"
+Sound_71:	include "Sound/SFX/71.asm"
+Sound_72:	include "Sound/SFX/72.asm"
+Sound_73:	include "Sound/SFX/73.asm"
+Sound_74:	include "Sound/SFX/74.asm"
+Sound_75:	include "Sound/SFX/75.asm"
+Sound_76:	include "Sound/SFX/76.asm"
+Sound_77:	include "Sound/SFX/77.asm"
+Sound_78:	include "Sound/SFX/78.asm"
+Sound_79:	include "Sound/SFX/79.asm"
+Sound_7A:	include "Sound/SFX/7A.asm"
+Sound_7B:	include "Sound/SFX/7B.asm"
+Sound_7C:	include "Sound/SFX/7C.asm"
+Sound_7D:	include "Sound/SFX/7D.asm"
+Sound_7E:	include "Sound/SFX/7E.asm"
+Sound_7F:	include "Sound/SFX/7F.asm"
+Sound_80:	include "Sound/SFX/80.asm"
+Sound_81:	include "Sound/SFX/81.asm"
+Sound_82:	include "Sound/SFX/82.asm"
+Sound_83:	include "Sound/SFX/83.asm"
+Sound_84:	include "Sound/SFX/84.asm"
+Sound_85:	include "Sound/SFX/85.asm"
+Sound_86:	include "Sound/SFX/86.asm"
+Sound_87:	include "Sound/SFX/87.asm"
+Sound_88:	include "Sound/SFX/88.asm"
+Sound_89:	include "Sound/SFX/89.asm"
+Sound_8A:	include "Sound/SFX/8A.asm"
+Sound_8B:	include "Sound/SFX/8B.asm"
+Sound_8C:	include "Sound/SFX/8C.asm"
+Sound_8D:	include "Sound/SFX/8D.asm"
+Sound_8E:	include "Sound/SFX/8E.asm"
+Sound_8F:	include "Sound/SFX/8F.asm"
+Sound_90:	include "Sound/SFX/90.asm"
+Sound_91:	include "Sound/SFX/91.asm"
+Sound_92:	include "Sound/SFX/92.asm"
+Sound_93:	include "Sound/SFX/93.asm"
+Sound_94:	include "Sound/SFX/94.asm"
+Sound_95:	include "Sound/SFX/95.asm"
+Sound_96:	include "Sound/SFX/96.asm"
+Sound_97:	include "Sound/SFX/97.asm"
+Sound_98:	include "Sound/SFX/98.asm"
+Sound_99:	include "Sound/SFX/99.asm"
+Sound_9A:	include "Sound/SFX/9A.asm"
+Sound_9B:	include "Sound/SFX/9B (Sonic 3).asm"
+Sound_9C:	include "Sound/SFX/9C.asm"
+Sound_9D:	include "Sound/SFX/9D.asm"
+Sound_9E:	include "Sound/SFX/9E.asm"
+Sound_9F:	include "Sound/SFX/9F.asm"
+Sound_A0:	include "Sound/SFX/A0.asm"
+Sound_A1:	include "Sound/SFX/A1.asm"
+Sound_A2:	include "Sound/SFX/A2.asm"
+Sound_A3:	include "Sound/SFX/A3.asm"
+Sound_A4:	include "Sound/SFX/A4.asm"
+Sound_A5:	include "Sound/SFX/A5.asm"
+Sound_A6:	include "Sound/SFX/A6.asm"
+Sound_A7:	include "Sound/SFX/A7.asm"
+Sound_A8:	include "Sound/SFX/A8.asm"
+Sound_A9:	include "Sound/SFX/A9.asm"
+Sound_AA:	include "Sound/SFX/AA.asm"
+Sound_AB:	include "Sound/SFX/AB.asm"
+Sound_AC:	include "Sound/SFX/AC.asm"
+Sound_AD:	include "Sound/SFX/AD (Sonic 3).asm"
+Sound_AE:	include "Sound/SFX/AE.asm"
+Sound_AF:	include "Sound/SFX/AF.asm"
+Sound_B0:	include "Sound/SFX/B0.asm"
+Sound_B1:	include "Sound/SFX/B1.asm"
+Sound_B2:	include "Sound/SFX/B2.asm"
+Sound_B3:	include "Sound/SFX/B3.asm"
+Sound_B4:	include "Sound/SFX/B4.asm"
+Sound_B5:	include "Sound/SFX/B5.asm"
+Sound_B6:	include "Sound/SFX/B6.asm"
+Sound_B7:	include "Sound/SFX/B7.asm"
+Sound_B8:	include "Sound/SFX/B8.asm"
+Sound_B9:	include "Sound/SFX/B9.asm"
+Sound_BA:	include "Sound/SFX/BA.asm"
+Sound_BB:	include "Sound/SFX/BB.asm"
+Sound_BC:	include "Sound/SFX/BC.asm"
+Sound_BD:	include "Sound/SFX/BD.asm"
+Sound_BE:	include "Sound/SFX/BE.asm"
+Sound_BF:	include "Sound/SFX/BF.asm"
+Sound_C0:	include "Sound/SFX/C0.asm"
+Sound_C1:	include "Sound/SFX/C1.asm"
+Sound_C2:	include "Sound/SFX/C2.asm"
+Sound_C3:	include "Sound/SFX/C3.asm"
+Sound_C4:	include "Sound/SFX/C4.asm"
+Sound_C5:	include "Sound/SFX/C5.asm"
+Sound_C6:	include "Sound/SFX/C6.asm"
+Sound_C7:	include "Sound/SFX/C7.asm"
+Sound_C8:	include "Sound/SFX/C8.asm"
+Sound_C9:	include "Sound/SFX/C9.asm"
+Sound_CA:	include "Sound/SFX/CA.asm"
+Sound_CB:	include "Sound/SFX/CB.asm"
+Sound_CC:	include "Sound/SFX/CC.asm"
+Sound_CD:	include "Sound/SFX/CD.asm"
+Sound_CE:	include "Sound/SFX/CE.asm"
+Sound_CF:	include "Sound/SFX/CF.asm"
+Sound_D0:	include "Sound/SFX/D0.asm"
+Sound_D1:	include "Sound/SFX/D1.asm"
+Sound_D2:	include "Sound/SFX/D2.asm"
+Sound_D3:	include "Sound/SFX/D3.asm"
+Sound_D4:	include "Sound/SFX/D4.asm"
+Sound_D5:	include "Sound/SFX/D5.asm"
+Sound_D6:	include "Sound/SFX/D6.asm"
+Sound_D7:	include "Sound/SFX/D7.asm"
+Sound_D8:	include "Sound/SFX/D8.asm"
+Sound_D9:	include "Sound/SFX/D9.asm"
+Sound_DA:	include "Sound/SFX/DA.asm"
+Sound_DB:	include "Sound/SFX/DB.asm"
+
+	finishBank
+
 		align $8000
 ArtUnc_Sonic:	binclude "General/Sprites/Sonic/Art/Sonic.bin"
 		even
