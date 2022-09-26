@@ -15,7 +15,6 @@
 		include "sonic3k.macrosetup.asm"	; include a few basic macros
 		include "sonic3k.macros.asm"		; include some simplifying macros and functions
 		include "sonic3k.constants.asm"		; include some constants
-		include "s3.constants.asm"		; RAM addresses moved around between S3 and S&K
 ; ---------------------------------------------------------------------------
 ; Include SMPS2ASM, for expressing SMPS bytecode in a portable and human-readable form.
 SonicDriverVer = 3 ; Tell SMPS2ASM that we are targetting Sonic 3's sound driver
@@ -35,7 +34,7 @@ Vectors:	dc.l	Vectors,	EntryPoint,	ErrorTrap,	ErrorTrap	; 0
 		dc.l	ErrorTrap,	ErrorTrap,	ErrorTrap,	ErrorTrap	; 16
 		dc.l	ErrorTrap,	ErrorTrap,	ErrorTrap,	ErrorTrap	; 20
 		dc.l	ErrorTrap,	ErrorTrap,	ErrorTrap,	ErrorTrap	; 24
-		dc.l	JmpTo_HInt,	ErrorTrap,	VInt,		ErrorTrap	; 28
+		dc.l	H_int_jump,	ErrorTrap,	V_int_jump,	ErrorTrap	; 28
 		dc.l	ErrorTrap,	ErrorTrap,	ErrorTrap,	ErrorTrap	; 32
 		dc.l	ErrorTrap,	ErrorTrap,	ErrorTrap,	ErrorTrap	; 36
 		dc.l	ErrorTrap,	ErrorTrap,	ErrorTrap,	ErrorTrap	; 40
@@ -61,7 +60,7 @@ CartRAMStartLoc:dc.l $00200001
 CartRAMEndLoc:	dc.l $002003FF
 Modem_Info:	dc.b "  "
 		dc.b "          "
-Unknown_Header:	dc.w 1
+Unknown_Header:	dc.w 0
 		dc.b "      "
 		dc.w $20, 0
 		dc.l $3FFFFF
@@ -148,7 +147,7 @@ Init_InputPSG:
 		move	#$2700,sr
 
 Init_SkipPowerOn:
-		bra.s	Test_CountryCode
+		bra.s	Test_LockOn
 ; ---------------------------------------------------------------------------
 SetupValues:	dc.w $8000, $3FFF, $100
 		dc.l Z80_RAM
@@ -224,235 +223,27 @@ Z80StartupCodeEnd:
 PSGInitValues:	dc.b $9F, $BF, $DF, $FF	; values for PSG channel volumes
 ; ---------------------------------------------------------------------------
 
-Test_CountryCode:
+Test_LockOn:
 		tst.w	(VDP_control_port).l
-		clr.l	d0
-		move.b	(HW_Version).l,d0
-		lsr.b	#6,d0
-		andi.b	#3,d0
-		lea	asc_440(pc),a0
-		move.b	(a0,d0.w),d0
-		tst.b	d0
-		beq.w	loc_408
-		lea	(Country_Code).l,a0
-		move.w	#$F,d1
-
-loc_330:
-		cmp.b	(a0),d0
-		beq.w	Test_Checksum
-		addq.l	#1,a0
-		dbf	d1,loc_330
-		lea	(VDP_data_port).l,a4
-		lea	(VDP_control_port).l,a5
-		move.w	#-$7E9C,(a5)
-		move.w	#-$7DD0,(a5)
-		move.w	#-$737F,(a5)
-		move.w	#-$70FE,(a5)
-		move.w	#-$6FFF,(a5)
-		move.l	#-$3FFE0000,(a5)
-		move.w	#$EEE,(a4)
-		move.l	#$40000000,(a5)
-		lea	byte_4C2(pc),a0
-		move.w	#$3A,d0
-		move.l	#$10000000,d2
-
-loc_37A:
-		move.w	#7,d6
-
-loc_37E:
-		move.b	(a0)+,d1
-		move.l	#0,d4
-		move.w	#7,d5
-
-loc_38A:
-		rol.l	#4,d2
-		ror.b	#1,d1
-		bcc.s	loc_392
-		or.l	d2,d4
-
-loc_392:
-		dbf	d5,loc_38A
-		move.l	d4,(a4)
-		dbf	d6,loc_37E
-		dbf	d0,loc_37A
-		move.b	#8,d1
-		lea	byte_458(pc),a0
-		move.b	(a0)+,d0
-		bsr.w	sub_40A
-		lea	(Country_Code).l,a1
-
-loc_3B4:
-		cmpi.b	#$20,(a1)
-		beq.s	loc_3FC
-		lea	word_444(pc),a2
-
-loc_3BE:
-		move.w	(a2)+,d4
-		tst.b	d4
-		beq.s	loc_3F8
-		cmp.b	(a1),d4
-		bne.s	loc_3F4
-		cmpi.b	#$20,1(a1)
-		bne.s	loc_3E4
-		cmpa.l	#$1F0,a1
-		beq.s	loc_3E4
-		lea	byte_475(pc),a0
-		move.b	(a0)+,d0
-		addq.w	#1,d1
-		bsr.w	sub_40A
-
-loc_3E4:
-		lea	asc_440(pc),a0
-		adda.l	(a2)+,a0
-		move.b	(a0)+,d0
-		addq.w	#1,d1
-		bsr.w	sub_40A
-		bra.s	loc_3F8
-; ---------------------------------------------------------------------------
-
-loc_3F4:
-		addq.l	#4,a2
-		bra.s	loc_3BE
-; ---------------------------------------------------------------------------
-
-loc_3F8:
-		addq.l	#1,a1
-		bra.s	loc_3B4
-; ---------------------------------------------------------------------------
-
-loc_3FC:
-		lea	byte_478(pc),a0
-		move.b	(a0)+,d0
-		addq.w	#1,d1
-		bsr.w	sub_40A
-
-loc_408:
-		bra.s	loc_408
-
-; =============== S U B R O U T I N E =======================================
-
-
-sub_40A:
-		move.b	d1,d2
-		andi.l	#$FF,d2
-		swap	d2
-		lsl.l	#7,d2
-		move.b	d0,d3
-		andi.l	#$FF,d3
-		swap	d3
-		asl.l	#1,d3
-		add.l	d3,d2
-		addi.l	#$40000003,d2
-		move.l	d2,(a5)
-
-loc_42C:
-		tst.b	(a0)
-		beq.s	locret_43E
-		move.b	(a0)+,d2
-		subi.b	#$20,d2
-		andi.w	#$FF,d2
-		move.w	d2,(a4)
-		bra.s	loc_42C
-; ---------------------------------------------------------------------------
-
-locret_43E:
-		rts
-; End of function sub_40A
-
-; ---------------------------------------------------------------------------
-asc_440:	dc.b "J",0
-		dc.b "UE"
-word_444:	dc.w $4A, 0
-		dc.w $42, $55, 0
-		dc.w $53, $45, 0
-		dc.w $61, 0
-byte_458:	dc.b 6
-		dc.b "DEVELOPED FOR USE ONLY WITH",0
-byte_475:	dc.b $12
-		dc.b "&",0
-byte_478:	dc.b $F
-		dc.b "SYSTEMS.",0
-		dc.b $C
-		dc.b "NTSC MEGA DRIVE",0
-		dc.b $D
-		dc.b "NTSC GENESIS",0
-		dc.b 4
-		dc.b "PAL AND FRENCH SECAM MEGA DRIVE",0
-byte_4C2:	dc.b    0,   0,   0,   0,   0,   0,   0,   0, $18, $18, $18, $18,   0, $18, $18,   0
-		dc.b  $36, $36, $48,   0,   0,   0,   0,   0, $12, $12, $7F, $12, $7F, $24, $24,   0
-		dc.b    8, $3F, $48, $3E,   9, $7E,   8,   0, $71, $52, $74,   8, $17, $25, $47,   0
-		dc.b  $18, $24, $18, $29, $45, $46, $39,   0, $30, $30, $40,   0,   0,   0,   0,   0
-		dc.b   $C, $10, $20, $20, $20, $10,  $C,   0, $30,   8,   4,   4,   4,   8, $30,   0
-		dc.b    0,   8, $2A, $1C, $2A,   8,   0,   0,   8,   8,   8, $7F,   8,   8,   8,   0
-		dc.b    0,   0,   0,   0,   0, $30, $30, $40,   0,   0,   0, $7F,   0,   0,   0,   0
-		dc.b    0,   0,   0,   0,   0, $30, $30,   0,   1,   2,   4,   8, $10, $20, $40,   0
-		dc.b  $1E, $33, $33, $33, $33, $33, $1E,   0, $18, $38, $18, $18, $18, $18, $3C,   0
-		dc.b  $3E, $63, $63,  $E, $38, $60, $7F,   0, $3E, $63,   3, $1E,   3, $63, $3E,   0
-		dc.b    6,  $E, $1E, $36, $66, $7F,   6,   0, $7E, $60, $7E, $63,   3, $63, $3E,   0
-		dc.b  $3E, $63, $60, $7E, $63, $63, $3E,   0, $3F, $63,   6,   6,  $C,  $C, $18,   0
-		dc.b  $3E, $63, $63, $3E, $63, $63, $3E,   0, $3E, $63, $63, $3F,   3, $63, $3E,   0
-		dc.b    0, $18, $18,   0,   0, $18, $18,   0,   0, $18, $18,   0,   0, $18, $18, $20
-		dc.b    3,  $C, $30, $40, $30,  $C,   3,   0,   0,   0, $7F,   0, $7F,   0,   0,   0
-		dc.b  $60, $18,   6,   1,   6, $18, $60,   0, $3E, $63,   3, $1E, $18,   0, $18,   0
-		dc.b  $3C, $42, $39, $49, $49, $49, $36,   0, $1C, $1C, $36, $36, $7F, $63, $63,   0
-		dc.b  $7E, $63, $63, $7E, $63, $63, $7E,   0, $3E, $73, $60, $60, $60, $73, $3E,   0
-		dc.b  $7E, $63, $63, $63, $63, $63, $7E,   0, $3F, $30, $30, $3E, $30, $30, $3F,   0
-		dc.b  $3F, $30, $30, $3E, $30, $30, $30,   0, $3E, $73, $60, $67, $63, $73, $3E,   0
-		dc.b  $66, $66, $66, $7E, $66, $66, $66,   0, $18, $18, $18, $18, $18, $18, $18,   0
-		dc.b   $C,  $C,  $C,  $C, $CC, $CC, $78,   0, $63, $66, $6C, $78, $6C, $66, $63,   0
-		dc.b  $60, $60, $60, $60, $60, $60, $7F,   0, $63, $77, $7F, $6B, $6B, $63, $63,   0
-		dc.b  $63, $73, $7B, $7F, $6F, $67, $63,   0, $3E, $63, $63, $63, $63, $63, $3E,   0
-		dc.b  $7E, $63, $63, $7E, $60, $60, $60,   0, $3E, $63, $63, $63, $6F, $63, $3F,   0
-		dc.b  $7E, $63, $63, $7E, $68, $66, $67,   0, $3E, $63, $70, $3E,   7, $63, $3E,   0
-		dc.b  $7E, $18, $18, $18, $18, $18, $18,   0, $66, $66, $66, $66, $66, $66, $3C,   0
-		dc.b  $63, $63, $63, $36, $36, $1C, $1C,   0, $6B, $6B, $6B, $6B, $6B, $7F, $36,   0
-		dc.b  $63, $63, $36, $1C, $36, $63, $63,   0, $66, $66, $66, $3C, $18, $18, $18,   0
-		dc.b  $7F,   7,  $E, $1C, $38, $70, $7F,   0
-; ---------------------------------------------------------------------------
-
-Test_Checksum:
+		move.w	#$4EF9,(V_int_jump).w	; machine code for jmp
+		move.l	#VInt,(V_int_addr).w
+		move.w	#$4EF9,(H_int_jump).w
+		move.l	#HInt,(H_int_addr).w
+-
 		move.w	(VDP_control_port).l,d1
 		btst	#1,d1
-		bne.s	Test_Checksum
-		btst	#6,(HW_Expansion_Control).l
-		beq.s	loc_6BC
-		cmpi.l	#Ref_Checksum_String,(Checksum_string).w
-		beq.w	Test_Checksum_Done
+		bne.s	-	; wait till a DMA is completed
+		lea	((RAM_start&$FFFFFF)).l,a6
+		moveq	#0,d7
+		move.w	#bytesToLcnt($FE00),d6
+-
+		move.l	d7,(a6)+
+		dbf	d6,-
 
-loc_6BC:
-		movea.l	#ErrorTrap,a0
-		movea.l	#ROMEndLoc,a1
-		move.l	(a1),d0
 		moveq	#0,d1
-		add.w	(a0)+,d1
-		cmp.l	a0,d0
-		nop
-		nop
-		movea.l	#$18E,a1
-		cmp.w	(a1),d1
-		nop
-		nop
-		lea	(System_stack).w,a6
-		moveq	#0,d7
-		move.w	#$7F,d6
-
-loc_6EA:
-		move.l	d7,(a6)+
-		dbf	d6,loc_6EA
-		move.b	(HW_Version).l,d0
-		andi.b	#$C0,d0
-		move.b	d0,(Graphics_flags).w
-		move.l	#Ref_Checksum_String,(Checksum_string).w
-
-Test_Checksum_Done:
+; SonicAndKnucklesStartup:
+		move.w	d1,(SK_alone_flag).w
 		bsr.w	DetectPAL
-		lea	($FF0000).l,a6
-		moveq	#0,d7
-		move.w	#$3F7F,d6
-
-loc_716:
-		move.l	d7,(a6)+
-		dbf	d6,loc_716
 		bsr.w	Init_VDP
 		bsr.w	SndDrvInit
 		bsr.w	Init_Controllers
@@ -492,55 +283,31 @@ GameModes:	dc.l Sega_Screen		;   0
 JumpToSegaScreen:
 		move.b	#0,(Game_mode).w
 		rts
-; ---------------------------------------------------------------------------
-
-ChecksumError2:
-		move.l	d1,-(sp)
-		bsr.w	Init_VDP
-		move.l	(sp)+,d1
-
-ChecksumError2_Loop:
-		move.l	#$C0000000,(VDP_control_port).l
-		move.w	d7,(VDP_data_port).l
-		addq.w	#1,d7
-		bra.s	ChecksumError2_Loop
-; ---------------------------------------------------------------------------
-
-ChecksumError:
-		move.l	#$C0000000,(VDP_control_port).l
-		moveq	#$3F,d7
-
-loc_7C8:
-		move.w	#$E,(VDP_data_port).l
-		dbf	d7,loc_7C8
-
-ChecksumError_Loop:
-		bra.s	ChecksumError_Loop
 
 ; =============== S U B R O U T I N E =======================================
 
 
 DetectPAL:
 		lea	(VDP_control_port).l,a5
-		move.w	#$8174,(a5)
+		move.w	#$8174,(a5)		; VDP Command $8174 - Display on, VInt on, DMA on, PAL off
 		moveq	#0,d0
 
-loc_7E2:
+$$waitForVBlankStart:
 		move.w	(a5),d1
 		andi.w	#8,d1
-		beq.s	loc_7E2
+		beq.s	$$waitForVBlankStart
 
-loc_7EA:
+$$waitForVBlankEnd:
 		move.w	(a5),d1
 		andi.w	#8,d1
-		bne.s	loc_7EA
+		bne.s	$$waitForVBlankEnd	; Wait for VBlank to run once
 
-loc_7F2:
+$$waitForNextVBlank:
 		addq.w	#1,d0
 		move.w	(a5),d1
 		andi.w	#8,d1
-		beq.s	loc_7F2
-		move.w	d0,(V_blank_cycles).w
+		beq.s	$$waitForNextVBlank
+		move.w	d0,(V_blank_cycles).w	; Count cycles between VBlanks (likely to detect PAL systems and/or for other timing mechanisms
 		rts
 ; End of function DetectPAL
 
@@ -551,24 +318,22 @@ VInt:
 		movem.l	d0-a6,-(sp)
 		tst.b	(V_int_routine).w
 		beq.w	VInt_0_Main
-
-loc_810:
+-
 		move.w	(VDP_control_port).l,d0
 		andi.w	#8,d0
-		beq.s	loc_810
-		move.l	#$40000010,(VDP_control_port).l
+		beq.s	-	; wait until vertical blanking is taking place
+
+		move.l	#vdpComm($0000,VSRAM,WRITE),(VDP_control_port).l
 		move.l	(V_scroll_value).w,(VDP_data_port).l
 		btst	#6,(Graphics_flags).w
-		beq.s	loc_83E
+		beq.s	+	; branch if it's not a PAL system
 		move.w	#$700,d0
-
-loc_83A:
-		dbf	d0,loc_83A
-
-loc_83E:
+-
+		dbf	d0,-	; otherwise, waste a bit of time here
++
 		move.b	(V_int_routine).w,d0
 		move.b	#0,(V_int_routine).w
-		move.w	#1,(H_int_flag).w
+		move.w	#1,(H_int_flag).w		; Allow H Interrupt code to run
 		andi.w	#$3E,d0
 		move.w	VInt_Table(pc,d0.w),d0
 		jsr	VInt_Table(pc,d0.w)
@@ -601,6 +366,8 @@ VInt_0:
 
 VInt_0_Main:
 		addq.w	#1,(Lag_frame_count).w
+
+		; branch if a level or demo is running
 		cmpi.b	#$88,(Game_mode).w
 		beq.s	VInt_0_Level
 		cmpi.b	#$8C,(Game_mode).w
@@ -609,14 +376,7 @@ VInt_0_Main:
 		beq.s	VInt_0_Level
 		cmpi.b	#$C,(Game_mode).w
 		beq.s	VInt_0_Level
-		move.w	#$100,(Z80_bus_request).l
-
-loc_8B2:
-		btst	#0,(Z80_bus_request).l
-		bne.s	loc_8B2
-		bsr.w	sndDriverInput
-		move.w	#0,(Z80_bus_request).l
-		bra.s	VInt_Done
+		bra.s	VInt_Done	; otherwise, return from V-int
 ; ---------------------------------------------------------------------------
 
 VInt_0_Level:
@@ -624,132 +384,79 @@ VInt_0_Level:
 		beq.w	VInt_0_NoWater
 		move.w	(VDP_control_port).l,d0
 		btst	#6,(Graphics_flags).w
-		beq.s	loc_8E8
+		beq.s	+	; branch if it isn't a PAL system
 		move.w	#$700,d0
-
-loc_8E4:
-		dbf	d0,loc_8E4
-
-loc_8E8:
+-
+		dbf	d0,-	; otherwise waste a bit of time here
++
 		move.w	#1,(H_int_flag).w
-		move.w	#$100,(Z80_bus_request).l
-
-loc_8F6:
-		btst	#0,(Z80_bus_request).l
-		bne.s	loc_8F6
+		stopZ80
 		tst.b	(Water_full_screen_flag).w
 		bne.s	VInt_0_FullyUnderwater
-		lea	(VDP_control_port).l,a5
-		move.l	#-$6BFF6CC0,(a5)
-		move.l	#-$69016B00,(a5)
-		move.w	#-$6881,(a5)
-		move.w	#-$4000,(a5)
-		move.w	#$80,(DMA_trigger_word).w
-		move.w	(DMA_trigger_word).w,(a5)
+		dma68kToVDP Normal_palette,$0000,$80,CRAM
 		bra.s	VInt_0_Water_Cont
 ; ---------------------------------------------------------------------------
 
 VInt_0_FullyUnderwater:
-		lea	(VDP_control_port).l,a5
-		move.l	#-$6BFF6CC0,(a5)
-		move.l	#-$69076AC0,(a5)
-		move.w	#-$6881,(a5)
-		move.w	#-$4000,(a5)
-		move.w	#$80,(DMA_trigger_word).w
-		move.w	(DMA_trigger_word).w,(a5)
+		dma68kToVDP Water_palette,$0000,$80,CRAM
 
 VInt_0_Water_Cont:
 		move.w	(H_int_counter_command).w,(a5)
-		bsr.w	sndDriverInput
-		move.w	#0,(Z80_bus_request).l
+		startZ80
 		bra.w	VInt_Done
 ; ---------------------------------------------------------------------------
 
 VInt_0_NoWater:
 		move.w	(VDP_control_port).l,d0
 		btst	#6,(Graphics_flags).w
-		beq.s	loc_97A
+		beq.s	+	; branch if it isn't a PAL system
 		move.w	#$700,d0
-
-loc_976:
-		dbf	d0,loc_976
-
-loc_97A:
+-
+		dbf	d0,-	; otherwise, waste a bit of time here
++
 		move.w	#1,(H_int_flag).w
 		move.w	(H_int_counter_command).w,(VDP_control_port).l
-		move.w	#$100,(Z80_bus_request).l
+		stopZ80
 
-loc_990:
-		btst	#0,(Z80_bus_request).l
-		bne.s	loc_990
 		tst.w	(Competition_mode).w
 		beq.s	VInt_0_Done
-		move.l	#$40000010,(VDP_control_port).l
+		move.l	#vdpComm($0000,VSRAM,WRITE),(VDP_control_port).l
 		move.l	(V_scroll_value).w,(VDP_data_port).l
 		tst.w	(Use_normal_sprite_table).w
-		beq.s	loc_9DE
-		lea	(VDP_control_port).l,a5
-		move.l	#-$6BFE6CC0,(a5)
-		move.l	#-$69036B00,(a5)
-		move.w	#-$6881,(a5)
-		move.w	#$7800,(a5)
-		move.w	#$83,(DMA_trigger_word).w
-		move.w	(DMA_trigger_word).w,(a5)
+		beq.s	+
+		dma68kToVDP Sprite_table_buffer,$F800,$280,VRAM
 		bra.s	VInt_0_Done
-; ---------------------------------------------------------------------------
-
-loc_9DE:
-		lea	(VDP_control_port).l,a5
-		move.l	#-$6BFE6CC0,(a5)
-		move.l	#-$69436AC0,(a5)
-		move.w	#-$6881,(a5)
-		move.w	#$7800,(a5)
-		move.w	#$83,(DMA_trigger_word).w
-		move.w	(DMA_trigger_word).w,(a5)
++
+		dma68kToVDP Sprite_table_buffer_2,$F800,$280,VRAM
 
 VInt_0_Done:
-		bsr.w	sndDriverInput
-		move.w	#0,(Z80_bus_request).l
+		startZ80
 		bra.w	VInt_Done
 ; ---------------------------------------------------------------------------
 
 VInt_2:
 		bsr.w	Do_ControllerPal
-		lea	(VDP_control_port).l,a5
-		move.l	#-$6BFE6C40,(a5)
-		move.l	#-$690F6B00,(a5)
-		move.w	#-$6881,(a5)
-		move.w	#$7000,(a5)
-		move.w	#$83,(DMA_trigger_word).w
-		move.w	(DMA_trigger_word).w,(a5)
-		jsr	(SegaScr_VInt).l
 		tst.w	(Demo_timer).w
-		beq.w	locret_A4C
+		beq.w	+
 		subq.w	#1,(Demo_timer).w
-
-locret_A4C:
++
 		rts
 ; ---------------------------------------------------------------------------
 
 VInt_14:
 		move.b	(V_int_run_count+3).w,d0
 		andi.w	#$F,d0
-		bne.s	loc_A76
-		move.w	#$100,(Z80_bus_request).l
+		bne.s	+	; run the following code once every 16 frames
 
-loc_A60:
-		btst	#0,(Z80_bus_request).l
-		bne.s	loc_A60
+		stopZ80
 		bsr.w	Poll_Controllers
-		move.w	#0,(Z80_bus_request).l
-
-loc_A76:
+		startZ80
++
 		tst.w	(Demo_timer).w
-		beq.w	locret_A82
+		beq.w	+
 		subq.w	#1,(Demo_timer).w
-
-locret_A82:
-		rts
++
+		jmp	(Set_Kos_Bookmark).l
 ; ---------------------------------------------------------------------------
 
 VInt_4:
@@ -758,10 +465,9 @@ VInt_4:
 		move.w	(Ctrl_1).w,(Ctrl_1_title).w
 		bsr.w	Process_Nem_Queue
 		tst.w	(Demo_timer).w
-		beq.w	locret_AA2
+		beq.w	+
 		subq.w	#1,(Demo_timer).w
-
-locret_AA2:
++
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -772,91 +478,70 @@ VInt_6:
 
 VInt_10:
 		cmpi.b	#$34,(Game_mode).w
-		beq.w	VInt_1C
+		beq.w	VInt_1C		; If in a special stage, branch
 
 VInt_8:
-		move.w	#$100,(Z80_bus_request).l
-
-loc_ABC:
-		btst	#0,(Z80_bus_request).l
-		bne.s	loc_ABC
+		stopZ80
 		bsr.w	Poll_Controllers
+		tst.b	(Hyper_Sonic_flash_timer).w
+		beq.s	VInt_8_NoFlash
+
+		; flash screen white when Hyper Sonic's double jump move is used
+		subq.b	#1,(Hyper_Sonic_flash_timer).w
+		lea	(VDP_data_port).l,a6
+		move.l	#vdpComm($0000,CRAM,WRITE),(VDP_control_port).l
+		move.w	#$EEE,d0
+		move.w	#$1F,d1
+-
+		move.w	d0,(a6)
+		dbf	d1,-	; fill entire first and second palette lines with white
+		move.w	#0,(a6)	; keep backdrop black
+		move.w	#$1E,d1
+-
+		move.w	d0,(a6)
+		dbf	d1,-	; fill remaining colours with white
+		bra.s	VInt_8_Cont
+; ---------------------------------------------------------------------------
+
+VInt_8_NoFlash:
 		tst.b	(Water_full_screen_flag).w
-		bne.s	loc_AF6
-		lea	(VDP_control_port).l,a5
-		move.l	#-$6BFF6CC0,(a5)
-		move.l	#-$69016B00,(a5)
-		move.w	#-$6881,(a5)
-		move.w	#-$4000,(a5)
-		move.w	#$80,(DMA_trigger_word).w
-		move.w	(DMA_trigger_word).w,(a5)
-		bra.s	loc_B1A
-; ---------------------------------------------------------------------------
-
-loc_AF6:
-		lea	(VDP_control_port).l,a5
-		move.l	#-$6BFF6CC0,(a5)
-		move.l	#-$69076AC0,(a5)
-		move.w	#-$6881,(a5)
-		move.w	#-$4000,(a5)
-		move.w	#$80,(DMA_trigger_word).w
-		move.w	(DMA_trigger_word).w,(a5)
-
-loc_B1A:
+		bne.s	+
+		dma68kToVDP Normal_palette,$0000,$80,CRAM
+		bra.s	++
++
+		dma68kToVDP Water_palette,$0000,$80,CRAM
++
 		move.w	(H_int_counter_command).w,(a5)
-		lea	(VDP_control_port).l,a5
-		move.l	#-$6BFE6C40,(a5)
-		move.l	#-$690F6B00,(a5)
-		move.w	#-$6881,(a5)
-		move.w	#$7000,(a5)
-		move.w	#$83,(DMA_trigger_word).w
-		move.w	(DMA_trigger_word).w,(a5)
+
+VInt_8_Cont:
+		dma68kToVDP H_scroll_buffer,$F000,$380,VRAM
 		tst.w	(Competition_mode).w
-		beq.s	loc_B84
+		beq.s	++
 		tst.w	(Switch_sprite_table).w
-		beq.s	loc_B58
+		beq.s	+
 		clr.w	(Switch_sprite_table).w
-		eori.w	#-1,(Use_normal_sprite_table).w
-
-loc_B58:
+		eori.w	#$FFFF,(Use_normal_sprite_table).w	; a not.w would've accomplished the same thing ...
++
 		tst.w	(Use_normal_sprite_table).w
-		bne.s	loc_B84
-		lea	(VDP_control_port).l,a5
-		move.l	#-$6BFE6CC0,(a5)
-		move.l	#-$69436AC0,(a5)
-		move.w	#-$6881,(a5)
-		move.w	#$7800,(a5)
-		move.w	#$83,(DMA_trigger_word).w
-		move.w	(DMA_trigger_word).w,(a5)
-		bra.s	loc_BA8
-; ---------------------------------------------------------------------------
-
-loc_B84:
-		lea	(VDP_control_port).l,a5
-		move.l	#-$6BFE6CC0,(a5)
-		move.l	#-$69036B00,(a5)
-		move.w	#-$6881,(a5)
-		move.w	#$7800,(a5)
-		move.w	#$83,(DMA_trigger_word).w
-		move.w	(DMA_trigger_word).w,(a5)
-
-loc_BA8:
+		bne.s	+
+		dma68kToVDP Sprite_table_buffer_2,$F800,$280,VRAM
+		bra.s	++
++
+		dma68kToVDP Sprite_table_buffer,$F800,$280,VRAM
++
 		bsr.w	Process_DMA_Queue
 		move.l	(V_scroll_value_P2).w,(V_scroll_value_P2_copy).w
 		jsr	(SpecialVInt_Function).l
 		jsr	(VInt_DrawLevel).l
-		bsr.w	sndDriverInput
-		move.w	#0,(Z80_bus_request).l
+		startZ80
 		move	#$2300,sr
 		tst.b	(Water_flag).w
-		beq.s	loc_BE8
-		cmpi.b	#$5C,(H_int_counter).w
-		bcc.s	loc_BE8
+		beq.s	+
+		cmpi.b	#92,(H_int_counter).w	; is H-int occuring on or below line 92?
+		bhs.s	+	; if it is, branch
 		move.b	#1,(Do_Updates_in_H_int).w
 		jmp	(Set_Kos_Bookmark).l
-; ---------------------------------------------------------------------------
-
-loc_BE8:
++
 		bsr.s	Do_Updates
 		jmp	(Set_Kos_Bookmark).l
 
@@ -868,86 +553,43 @@ Do_Updates:
 		move.w	#0,(Lag_frame_count).w
 		bsr.w	Process_Nem_Queue_2
 		tst.w	(Demo_timer).w
-		beq.w	locret_C0C
+		beq.w	+
 		subq.w	#1,(Demo_timer).w
-
-locret_C0C:
++
 		rts
 ; End of function Do_Updates
 
 ; ---------------------------------------------------------------------------
 
 VInt_A_C:
-		move.w	#$100,(Z80_bus_request).l
-
-loc_C16:
-		btst	#0,(Z80_bus_request).l
-		bne.s	loc_C16
+		stopZ80
 		bsr.w	Poll_Controllers
 		tst.b	(Water_full_screen_flag).w
-		bne.s	loc_C50
-		lea	(VDP_control_port).l,a5
-		move.l	#-$6BFF6CC0,(a5)
-		move.l	#-$69016B00,(a5)
-		move.w	#-$6881,(a5)
-		move.w	#-$4000,(a5)
-		move.w	#$80,(DMA_trigger_word).w
-		move.w	(DMA_trigger_word).w,(a5)
-		bra.s	loc_C74
-; ---------------------------------------------------------------------------
-
-loc_C50:
-		lea	(VDP_control_port).l,a5
-		move.l	#-$6BFF6CC0,(a5)
-		move.l	#-$69076AC0,(a5)
-		move.w	#-$6881,(a5)
-		move.w	#-$4000,(a5)
-		move.w	#$80,(DMA_trigger_word).w
-		move.w	(DMA_trigger_word).w,(a5)
-
-loc_C74:
+		bne.s	+
+		dma68kToVDP Normal_palette,$0000,$80,CRAM
+		bra.s	++
++
+		dma68kToVDP Water_palette,$0000,$80,CRAM
++
 		move.w	(H_int_counter_command).w,(a5)
-		lea	(VDP_control_port).l,a5
-		move.l	#-$6BFE6C40,(a5)
-		move.l	#-$690F6B00,(a5)
-		move.w	#-$6881,(a5)
-		move.w	#$7000,(a5)
-		move.w	#$83,(DMA_trigger_word).w
-		move.w	(DMA_trigger_word).w,(a5)
+		dma68kToVDP H_scroll_buffer,$F000,$380,VRAM
 		tst.w	(Competition_mode).w
-		beq.s	loc_CDE
+		beq.s	++
 		tst.w	(Switch_sprite_table).w
-		beq.s	loc_CB2
+		beq.s	+
 		clr.w	(Switch_sprite_table).w
-		eori.w	#-1,(Use_normal_sprite_table).w
-
-loc_CB2:
+		eori.w	#$FFFF,(Use_normal_sprite_table).w
++
 		tst.w	(Use_normal_sprite_table).w
-		bne.s	loc_CDE
-		lea	(VDP_control_port).l,a5
-		move.l	#-$6BFE6CC0,(a5)
-		move.l	#-$69436AC0,(a5)
-		move.w	#-$6881,(a5)
-		move.w	#$7800,(a5)
-		move.w	#$83,(DMA_trigger_word).w
-		move.w	(DMA_trigger_word).w,(a5)
-		bra.s	loc_D02
-; ---------------------------------------------------------------------------
-
-loc_CDE:
-		lea	(VDP_control_port).l,a5
-		move.l	#-$6BFE6CC0,(a5)
-		move.l	#-$69036B00,(a5)
-		move.w	#-$6881,(a5)
-		move.w	#$7800,(a5)
-		move.w	#$83,(DMA_trigger_word).w
-		move.w	(DMA_trigger_word).w,(a5)
-
-loc_D02:
+		bne.s	+
+		dma68kToVDP Sprite_table_buffer_2,$F800,$280,VRAM
+		bra.s	++
++
+		dma68kToVDP Sprite_table_buffer,$F800,$280,VRAM
++
 		bsr.w	Process_DMA_Queue
 		move.l	(V_scroll_value_P2).w,(V_scroll_value_P2_copy).w
-		jsr	(sndDriverInput).l
-		move.w	#0,(Z80_bus_request).l
+		startZ80
 		bsr.w	Process_Nem_Queue
 		jmp	(Set_Kos_Bookmark).l
 ; ---------------------------------------------------------------------------
@@ -965,93 +607,48 @@ VInt_12:
 ; ---------------------------------------------------------------------------
 
 VInt_18:
-		move.w	#$100,(Z80_bus_request).l
-
-loc_D44:
-		btst	#0,(Z80_bus_request).l
-		bne.s	loc_D44
+		stopZ80
 		bsr.w	Poll_Controllers
-		lea	(VDP_control_port).l,a5
-		move.l	#-$6BFF6CC0,(a5)
-		move.l	#-$69016B00,(a5)
-		move.w	#-$6881,(a5)
-		move.w	#-$4000,(a5)
-		move.w	#$80,(DMA_trigger_word).w
-		move.w	(DMA_trigger_word).w,(a5)
-		lea	(VDP_control_port).l,a5
-		move.l	#-$6BFE6CC0,(a5)
-		move.l	#-$69036B00,(a5)
-		move.w	#-$6881,(a5)
-		move.w	#$7800,(a5)
-		move.w	#$83,(DMA_trigger_word).w
-		move.w	(DMA_trigger_word).w,(a5)
-		lea	(VDP_control_port).l,a5
-		move.l	#-$6BFE6C40,(a5)
-		move.l	#-$690F6B00,(a5)
-		move.w	#-$6881,(a5)
-		move.w	#$7000,(a5)
-		move.w	#$83,(DMA_trigger_word).w
-		move.w	(DMA_trigger_word).w,(a5)
-		bclr	#0,(_unkFA88).w
-		beq.s	loc_DEA
-		lea	(VDP_control_port).l,a5
-		move.l	#-$6BEF6D00,(a5)
-		move.l	#-$696F6B00,(a5)
-		move.w	#-$6881,(a5)
-		move.w	#$4000,(a5)
-		move.w	#$83,(DMA_trigger_word).w
-		move.w	(DMA_trigger_word).w,(a5)
 
-loc_DEA:
+		dma68kToVDP Normal_palette,$0000,$80,CRAM
+		dma68kToVDP Sprite_table_buffer,$F800,$280,VRAM
+		dma68kToVDP H_scroll_buffer,$F000,$380,VRAM
+
+		bclr	#0,(_unkFA88).w
+		beq.s	+
+		dma68kToVDP $FF2000,$C000,$2000,VRAM
++
 		bsr.w	Process_DMA_Queue
-		bsr.w	sndDriverInput
-		move.w	#0,(Z80_bus_request).l
+		startZ80
 		rts
 ; ---------------------------------------------------------------------------
 
 VInt_16:
-		move.w	#$100,(Z80_bus_request).l
-
-loc_E04:
-		btst	#0,(Z80_bus_request).l
-		bne.s	loc_E04
+		stopZ80
 		bsr.w	Poll_Controllers
-		lea	(VDP_control_port).l,a5
-		move.l	#-$6BFF6CC0,(a5)
-		move.l	#-$69016B00,(a5)
-		move.w	#-$6881,(a5)
-		move.w	#-$4000,(a5)
-		move.w	#$80,(DMA_trigger_word).w
-		move.w	(DMA_trigger_word).w,(a5)
-		lea	(VDP_control_port).l,a5
-		move.l	#-$6BFE6CC0,(a5)
-		move.l	#-$69036B00,(a5)
-		move.w	#-$6881,(a5)
-		move.w	#$7800,(a5)
-		move.w	#$83,(DMA_trigger_word).w
-		move.w	(DMA_trigger_word).w,(a5)
-		lea	(VDP_control_port).l,a5
-		move.l	#-$6BFE6C40,(a5)
-		move.l	#-$690F6B00,(a5)
-		move.w	#-$6881,(a5)
-		move.w	#$7000,(a5)
-		move.w	#$83,(DMA_trigger_word).w
-		move.w	(DMA_trigger_word).w,(a5)
+
+		dma68kToVDP Normal_palette,$0000,$80,CRAM
+		dma68kToVDP Sprite_table_buffer,$F800,$280,VRAM
+		dma68kToVDP H_scroll_buffer,$F000,$380,VRAM
+
 		bsr.w	Process_DMA_Queue
-		bsr.w	sndDriverInput
-		move.w	#0,(Z80_bus_request).l
+		startZ80
 		bsr.w	Process_Nem_Queue
 		tst.w	(Demo_timer).w
-		beq.w	locret_E9E
+		beq.w	+
 		subq.w	#1,(Demo_timer).w
-
-locret_E9E:
-		rts
++
+		jmp	(Set_Kos_Bookmark).l
 ; ---------------------------------------------------------------------------
 
 VInt_1A:
 		bsr.w	Do_ControllerPal
+		move.w	(Ctrl_1).w,(Ctrl_1_title).w
 		bsr.w	Process_Nem_Queue
+		tst.w	(Demo_timer).w
+		beq.w	+
+		subq.w	#1,(Demo_timer).w
++
 		jmp	(Set_Kos_Bookmark).l
 ; ---------------------------------------------------------------------------
 
@@ -1060,10 +657,9 @@ VInt_1C:
 		bsr.w	Do_ControllerPal
 		bsr.w	Update_SSMap
 		tst.w	(Demo_timer).w
-		beq.w	loc_EC6
+		beq.w	+
 		subq.w	#1,(Demo_timer).w
-
-loc_EC6:
++
 		jmp	(Set_Kos_Bookmark).l
 ; ---------------------------------------------------------------------------
 
@@ -1078,58 +674,24 @@ VInt_1E:
 
 
 Do_ControllerPal:
-		move.w	#$100,(Z80_bus_request).l
-
-loc_EE6:
-		btst	#0,(Z80_bus_request).l
-		bne.s	loc_EE6
+		stopZ80
 		bsr.w	Poll_Controllers
 		tst.b	(Water_full_screen_flag).w
-		bne.s	loc_F20
-		lea	(VDP_control_port).l,a5
-		move.l	#-$6BFF6CC0,(a5)
-		move.l	#-$69016B00,(a5)
-		move.w	#-$6881,(a5)
-		move.w	#-$4000,(a5)
-		move.w	#$80,(DMA_trigger_word).w
-		move.w	(DMA_trigger_word).w,(a5)
-		bra.s	loc_F44
-; ---------------------------------------------------------------------------
-
-loc_F20:
-		lea	(VDP_control_port).l,a5
-		move.l	#-$6BFF6CC0,(a5)
-		move.l	#-$69076AC0,(a5)
-		move.w	#-$6881,(a5)
-		move.w	#-$4000,(a5)
-		move.w	#$80,(DMA_trigger_word).w
-		move.w	(DMA_trigger_word).w,(a5)
-
-loc_F44:
-		lea	(VDP_control_port).l,a5
-		move.l	#-$6BFE6CC0,(a5)
-		move.l	#-$69036B00,(a5)
-		move.w	#-$6881,(a5)
-		move.w	#$7800,(a5)
-		move.w	#$83,(DMA_trigger_word).w
-		move.w	(DMA_trigger_word).w,(a5)
-		lea	(VDP_control_port).l,a5
-		move.l	#-$6BFE6C40,(a5)
-		move.l	#-$690F6B00,(a5)
-		move.w	#-$6881,(a5)
-		move.w	#$7000,(a5)
-		move.w	#$83,(DMA_trigger_word).w
-		move.w	(DMA_trigger_word).w,(a5)
+		bne.s	+
+		dma68kToVDP Normal_palette,$0000,$80,CRAM
+		bra.s	++
++
+		dma68kToVDP Water_palette,$0000,$80,CRAM
++
+		dma68kToVDP Sprite_table_buffer,$F800,$280,VRAM
+		dma68kToVDP H_scroll_buffer,$F000,$380,VRAM
 		bsr.w	Process_DMA_Queue
-		bsr.w	sndDriverInput
-		move.w	#0,(Z80_bus_request).l
+		startZ80
 		rts
 ; End of function Do_ControllerPal
 
 ; ---------------------------------------------------------------------------
-
-JmpTo_HInt:
-		jmp	(H_int_jump).w
+; Horizontal interrupt handler for Competition Mode
 ; ---------------------------------------------------------------------------
 
 HInt:
@@ -1138,59 +700,40 @@ HInt:
 		move.w	#0,(H_int_flag).w
 		move.l	a5,-(sp)
 		move.l	d0,-(sp)
-
-loc_FB4:
+-
 		move.w	(VDP_control_port).l,d0
-		andi.w	#4,d0
-		beq.s	loc_FB4
+		andi.w	#4,d0	; is horizontal blanking occuring?
+		beq.s	-	; if not, wait until it is
+
 		move.w	(VDP_reg_1_command).w,d0
-		andi.b	#-$41,d0
-		move.w	d0,(VDP_control_port).l
-		move.l	#$40000010,(VDP_control_port).l
+		andi.b	#$BF,d0
+		move.w	d0,(VDP_control_port).l	; blank the display
+		move.l	#vdpComm($0000,VSRAM,WRITE),(VDP_control_port).l
 		move.l	(V_scroll_value_P2_copy).w,(VDP_data_port).l
-		move.w	#$100,(Z80_bus_request).l
-
-loc_FE8:
-		btst	#0,(Z80_bus_request).l
-		bne.s	loc_FE8
+		stopZ80
 		tst.w	(Use_normal_sprite_table).w
-		beq.s	loc_101E
-		lea	(VDP_control_port).l,a5
-		move.l	#-$6BFE6CC0,(a5)
-		move.l	#-$69426A80,(a5)
-
-loc_100A:
-		move.w	#-$6881,(a5)
-		move.w	#$7800,(a5)
-		move.w	#$83,(DMA_trigger_word).w
-		move.w	(DMA_trigger_word).w,(a5)
-		bra.s	loc_1042
-; ---------------------------------------------------------------------------
-
-loc_101E:
-		lea	(VDP_control_port).l,a5
-		move.l	#-$6BFE6CC0,(a5)
-		move.l	#-$69416A40,(a5)
-		move.w	#-$6881,(a5)
-		move.w	#$7800,(a5)
-		move.w	#$83,(DMA_trigger_word).w
-		move.w	(DMA_trigger_word).w,(a5)
-
-loc_1042:
-		move.w	#0,(Z80_bus_request).l
-
-loc_104A:
+		beq.s	+
+		dma68kToVDP Sprite_table_buffer_P2,$F800,$280,VRAM
+		bra.s	++
++
+		dma68kToVDP Sprite_table_buffer_P2_2,$F800,$280,VRAM
++
+		startZ80
+-
 		move.w	(VDP_control_port).l,d0
-		andi.w	#4,d0
-		beq.s	loc_104A
+		andi.w	#4,d0	; is a horizontal blank occuring?
+		beq.s	-	; if not, wait
 		move.w	(VDP_reg_1_command).w,d0
 		ori.b	#$40,d0
-		move.w	d0,(VDP_control_port).l
+		move.w	d0,(VDP_control_port).l	; enable display
 		move.l	(sp)+,d0
 		movea.l	(sp)+,a5
 
 HInt_Done:
 		rte
+
+; ---------------------------------------------------------------------------
+; Used for water levels apart from Hydrocity, for uneven water surfaces
 ; ---------------------------------------------------------------------------
 
 HInt3:
@@ -1198,44 +741,41 @@ HInt3:
 		beq.s	HInt3_Done
 		move.w	#0,(H_int_flag).w
 		movem.l	d0-d1/a0-a2,-(sp)
-		lea	(VDP_data_port).l,a1
-		move.w	#$8AFF,VDP_control_port-VDP_data_port(a1)
-		move.w	#$100,(Z80_bus_request).l
 
-loc_108E:
-		btst	#0,(Z80_bus_request).l
-		bne.s	loc_108E
+		lea	(VDP_data_port).l,a1
+		move.w	#$8AFF,VDP_control_port-VDP_data_port(a1)		; Reset HInt timing
+		stopZ80
 		movea.l	(Water_palette_data_addr).w,a2
 		moveq	#$C,d0
+-
+		dbf	d0,-	; waste a few cycles here
 
-loc_109E:
-		dbf	d0,loc_109E
 		move.w	(a2)+,d1
 		move.b	(H_int_counter).w,d0
-		subi.b	#-$38,d0
-		bcs.s	loc_10B2
+		subi.b	#200,d0	; is H-int occuring below line 200?
+		bcs.s	$$transferColors	; if it is, branch
 		sub.b	d0,d1
-		bcs.s	loc_10D6
+		bcs.s	$$skipTransfer
 
-loc_10B2:
+$$transferColors:
 		move.w	(a2)+,d0
 		lea	(Water_palette).w,a0
 		adda.w	d0,a0
-		addi.w	#-$4000,d0
+		addi.w	#$C000,d0
 		swap	d0
-		move.l	d0,VDP_control_port-VDP_data_port(a1)
-		move.l	(a0)+,(a1)
-		move.w	(a0)+,(a1)
+		move.l	d0,VDP_control_port-VDP_data_port(a1)	; write to CRAM at appropriate address
+		move.l	(a0)+,(a1)	; transfer two colors
+		move.w	(a0)+,(a1)	; transfer the third color
 		nop
 		nop
 		moveq	#$24,d0
 
-loc_10CE:
-		dbf	d0,loc_10CE
-		dbf	d1,loc_10B2
+$$wasteSomeCycles:
+		dbf	d0,$$wasteSomeCycles
+		dbf	d1,$$transferColors	; repeat for number of colors
 
-loc_10D6:
-		move.w	#0,(Z80_bus_request).l
+$$skipTransfer:
+		startZ80
 		movem.l	(sp)+,d0-d1/a0-a2
 		tst.b	(Do_Updates_in_H_int).w
 		bne.s	HInt3_Do_Updates
@@ -1250,37 +790,38 @@ HInt3_Do_Updates:
 		jsr	(Do_Updates).l
 		movem.l	(sp)+,d0-a6
 		rte
+
+; ---------------------------------------------------------------------------
+; Identical to HInt3 except it transfers colors from the above water palette
+; Seems to be unused
 ; ---------------------------------------------------------------------------
 
 HInt5:
-		tst.w	(H_int_flag).w
+		tst.w	(H_int_flag).w		; Seems to be a compliment to HInt 3, but doesn't seem to be used
 		beq.s	HInt5_Done
 		move.w	#0,(H_int_flag).w
 		movem.l	d0-d1/a0-a2,-(sp)
+
 		lea	(VDP_data_port).l,a1
 		move.w	#$8AFF,VDP_control_port-VDP_data_port(a1)
-		move.w	#$100,(Z80_bus_request).l
-
-loc_1122:
-		btst	#0,(Z80_bus_request).l
-		bne.s	loc_1122
+		stopZ80
 		movea.l	(Water_palette_data_addr).w,a2
 		moveq	#$C,d0
+-
+		dbf	d0,-
 
-loc_1132:
-		dbf	d0,loc_1132
 		move.w	(a2)+,d1
 		move.b	(H_int_counter).w,d0
-		subi.b	#-$38,d0
-		bcs.s	loc_1146
+		subi.b	#200,d0
+		bcs.s	$$transferColors
 		sub.b	d0,d1
-		bcs.s	loc_116A
+		bcs.s	$$skipTransfer
 
-loc_1146:
+$$transferColors:
 		move.w	(a2)+,d0
 		lea	(Normal_palette).w,a0
 		adda.w	d0,a0
-		addi.w	#-$4000,d0
+		addi.w	#$C000,d0
 		swap	d0
 		move.l	d0,VDP_control_port-VDP_data_port(a1)
 		move.l	(a0)+,(a1)
@@ -1289,12 +830,12 @@ loc_1146:
 		nop
 		moveq	#$24,d0
 
-loc_1162:
-		dbf	d0,loc_1162
-		dbf	d1,loc_1146
+$$wasteSomeCycles:
+		dbf	d0,$$wasteSomeCycles
+		dbf	d1,$$transferColors
 
-loc_116A:
-		move.w	#0,(Z80_bus_request).l
+$$skipTransfer:
+		startZ80
 		movem.l	(sp)+,d0-d1/a0-a2
 		tst.b	(Do_Updates_in_H_int).w
 		bne.s	HInt5_Do_Updates
@@ -1309,6 +850,9 @@ HInt5_Do_Updates:
 		jsr	(Do_Updates).l
 		movem.l	(sp)+,d0-a6
 		rte
+
+; ---------------------------------------------------------------------------
+; Identical to HInt3, except for faster systems
 ; ---------------------------------------------------------------------------
 
 HInt4:
@@ -1316,30 +860,27 @@ HInt4:
 		beq.s	Hint4_Done
 		move.w	#0,(H_int_flag).w
 		movem.l	d0-d1/a0-a2,-(sp)
+
 		lea	(VDP_data_port).l,a1
 		move.w	#$8AFF,VDP_control_port-VDP_data_port(a1)
-		move.w	#$100,(Z80_bus_request).l
-
-loc_11B6:
-		btst	#0,(Z80_bus_request).l
-		bne.s	loc_11B6
+		stopZ80
 		movea.l	(Water_palette_data_addr).w,a2
 		moveq	#$1B,d0
+-
+		dbf	d0,-
 
-loc_11C6:
-		dbf	d0,loc_11C6
 		move.w	(a2)+,d1
 		move.b	(H_int_counter).w,d0
-		subi.b	#-$38,d0
-		bcs.s	loc_11DA
+		subi.b	#200,d0
+		bcs.s	$$transferColors
 		sub.b	d0,d1
-		bcs.s	loc_11FC
+		bcs.s	$$skipTransfer
 
-loc_11DA:
+$$transferColors:
 		move.w	(a2)+,d0
 		lea	(Water_palette).w,a0
 		adda.w	d0,a0
-		addi.w	#-$4000,d0
+		addi.w	#$C000,d0
 		swap	d0
 		move.l	d0,VDP_control_port-VDP_data_port(a1)
 		move.l	(a0)+,(a1)
@@ -1347,12 +888,12 @@ loc_11DA:
 		nop
 		moveq	#$33,d0
 
-loc_11F4:
-		dbf	d0,loc_11F4
-		dbf	d1,loc_11DA
+$$wasteSomeCycles:
+		dbf	d0,$$wasteSomeCycles
+		dbf	d1,$$transferColors
 
-loc_11FC:
-		move.w	#0,(Z80_bus_request).l
+$$skipTransfer:
+		startZ80
 		movem.l	(sp)+,d0-d1/a0-a2
 		tst.b	(Do_Updates_in_H_int).w
 		bne.s	HInt4_Do_Updates
@@ -1367,6 +908,9 @@ HInt4_Do_Updates:
 		jsr	(Do_Updates).l
 		movem.l	(sp)+,d0-a6
 		rte
+
+; ---------------------------------------------------------------------------
+; Identical to HInt5, except for faster systems
 ; ---------------------------------------------------------------------------
 
 HInt_6:
@@ -1374,30 +918,27 @@ HInt_6:
 		beq.s	HInt6_Done
 		move.w	#0,(H_int_flag).w
 		movem.l	d0-d1/a0-a2,-(sp)
+
 		lea	(VDP_data_port).l,a1
 		move.w	#$8AFF,VDP_control_port-VDP_data_port(a1)
-		move.w	#$100,(Z80_bus_request).l
-
-loc_1248:
-		btst	#0,(Z80_bus_request).l
-		bne.s	loc_1248
+		stopZ80
 		movea.l	(Water_palette_data_addr).w,a2
 		moveq	#$1B,d0
+-
+		dbf	d0,-
 
-loc_1258:
-		dbf	d0,loc_1258
 		move.w	(a2)+,d1
 		move.b	(H_int_counter).w,d0
-		subi.b	#-$38,d0
-		bcs.s	loc_126C
+		subi.b	#200,d0
+		bcs.s	$$transferColors
 		sub.b	d0,d1
-		bcs.s	loc_128E
+		bcs.s	$$skipTransfer
 
-loc_126C:
+$$transferColors:
 		move.w	(a2)+,d0
 		lea	(Normal_palette).w,a0
 		adda.w	d0,a0
-		addi.w	#-$4000,d0
+		addi.w	#$C000,d0
 		swap	d0
 		move.l	d0,VDP_control_port-VDP_data_port(a1)
 		move.l	(a0)+,(a1)
@@ -1405,12 +946,12 @@ loc_126C:
 		nop
 		moveq	#$33,d0
 
-loc_1286:
-		dbf	d0,loc_1286
-		dbf	d1,loc_126C
+$$wasteSomeCycles:
+		dbf	d0,$$wasteSomeCycles
+		dbf	d1,$$transferColors
 
-loc_128E:
-		move.w	#0,(Z80_bus_request).l
+$$skipTransfer:
+		startZ80
 		movem.l	(sp)+,d0-d1/a0-a2
 		tst.b	(Do_Updates_in_H_int).w
 		bne.s	HInt6_Do_Updates
@@ -1425,6 +966,9 @@ HInt6_Do_Updates:
 		jsr	(Do_Updates).l
 		movem.l	(sp)+,d0-a6
 		rte
+
+; ---------------------------------------------------------------------------
+; Copies the entire water palette to CRAM, used only in Hydrocity
 ; ---------------------------------------------------------------------------
 
 HInt2:
@@ -1433,42 +977,14 @@ HInt2:
 		beq.s	HInt2_Done
 		move.w	#0,(H_int_flag).w
 		movem.l	a0-a1,-(sp)
+
 		lea	(VDP_data_port).l,a1
 		move.w	#$8ADF,VDP_control_port-VDP_data_port(a1)
 		lea	(Water_palette).w,a0
-		move.l	#$C0000000,VDP_control_port-VDP_data_port(a1)
+		move.l	#vdpComm($0000,CRAM,WRITE),VDP_control_port-VDP_data_port(a1)
+	rept 32
 		move.l	(a0)+,(a1)
-		move.l	(a0)+,(a1)
-		move.l	(a0)+,(a1)
-		move.l	(a0)+,(a1)
-		move.l	(a0)+,(a1)
-		move.l	(a0)+,(a1)
-		move.l	(a0)+,(a1)
-		move.l	(a0)+,(a1)
-		move.l	(a0)+,(a1)
-		move.l	(a0)+,(a1)
-		move.l	(a0)+,(a1)
-		move.l	(a0)+,(a1)
-		move.l	(a0)+,(a1)
-		move.l	(a0)+,(a1)
-		move.l	(a0)+,(a1)
-		move.l	(a0)+,(a1)
-		move.l	(a0)+,(a1)
-		move.l	(a0)+,(a1)
-		move.l	(a0)+,(a1)
-		move.l	(a0)+,(a1)
-		move.l	(a0)+,(a1)
-		move.l	(a0)+,(a1)
-		move.l	(a0)+,(a1)
-		move.l	(a0)+,(a1)
-		move.l	(a0)+,(a1)
-		move.l	(a0)+,(a1)
-		move.l	(a0)+,(a1)
-		move.l	(a0)+,(a1)
-		move.l	(a0)+,(a1)
-		move.l	(a0)+,(a1)
-		move.l	(a0)+,(a1)
-		move.l	(a0)+,(a1)
+	endm
 		movem.l	(sp)+,a0-a1
 		tst.b	(Do_Updates_in_H_int).w
 		bne.s	HInt2_Do_Updates
@@ -1483,14 +999,6 @@ HInt2_Do_Updates:
 		bsr.w	Do_Updates
 		movem.l	(sp)+,d0-a6
 		rte
-
-; =============== S U B R O U T I N E =======================================
-
-
-sndDriverInput:
-		rts
-; End of function sndDriverInput
-
 
 ; =============== S U B R O U T I N E =======================================
 
@@ -1516,8 +1024,8 @@ loc_134A:
 Poll_Controllers:
 		lea	(Ctrl_1).w,a0
 		lea	(HW_Port_1_Data).l,a1
-		bsr.s	Poll_Controller
-		addq.w	#2,a1
+		bsr.s	Poll_Controller	; poll first controller
+		addq.w	#2,a1	; poll second controller
 ; End of function Poll_Controllers
 
 
@@ -1525,24 +1033,24 @@ Poll_Controllers:
 
 
 Poll_Controller:
-		move.b	#0,(a1)
+		move.b	#0,(a1)			; Poll controller data port
 		nop
 		nop
-		move.b	(a1),d0
+		move.b	(a1),d0			; Get controller port data (start/A)
 		lsl.b	#2,d0
-		andi.b	#-$40,d0
-		move.b	#$40,(a1)
+		andi.b	#$C0,d0
+		move.b	#$40,(a1)		; Poll controller data port again
 		nop
 		nop
-		move.b	(a1),d1
+		move.b	(a1),d1			; Get controller port data (B/C/Dpad)
 		andi.b	#$3F,d1
-		or.b	d1,d0
+		or.b	d1,d0			; Fuse together into one controller bit array
 		not.b	d0
-		move.b	(a0),d1
-		eor.b	d0,d1
-		move.b	d0,(a0)+
+		move.b	(a0),d1			; Get press button data
+		eor.b	d0,d1			; Toggle off buttons that are being held
+		move.b	d0,(a0)+		; Put raw controller input (for held buttons) in F604/F606
 		and.b	d0,d1
-		move.b	d1,(a0)+
+		move.b	d1,(a0)+		; Put pressed controller input in F605/F607
 		rts
 ; End of function Poll_Controller
 
@@ -1554,39 +1062,28 @@ Init_VDP:
 		lea	(VDP_control_port).l,a0
 		lea	(VDP_data_port).l,a1
 		lea	(VDP_register_values).l,a2
-		moveq	#$12,d7
+		moveq	#18,d7
 
-loc_13C2:
+$$setRegisters:
 		move.w	(a2)+,(a0)
-		dbf	d7,loc_13C2
-		move.w	(VDP_register_values+2).l,d0
-		move.w	d0,(VDP_reg_1_command).w
-		move.w	#-$7521,(H_int_counter_command).w
+		dbf	d7,$$setRegisters
+		move.w	(VDP_register_values+2).l,d0	; get command for register #1
+		move.w	d0,(VDP_reg_1_command).w	; and store it in RAM (for easy display blanking/enabling)
+		move.w	#$8ADF,(H_int_counter_command).w
 		moveq	#0,d0
-		move.l	#$40000010,(VDP_control_port).l
+		move.l	#vdpComm($0000,VSRAM,WRITE),(VDP_control_port).l
 		move.w	d0,(a1)
 		move.w	d0,(a1)
-		move.l	#$C0000000,(VDP_control_port).l
+		move.l	#vdpComm($0000,CRAM,WRITE),(VDP_control_port).l
 		move.w	#$3F,d7
 
-loc_13F6:
+$$clearCRAM:
 		move.w	d0,(a1)
-		dbf	d7,loc_13F6
+		dbf	d7,$$clearCRAM
 		clr.l	(V_scroll_value).w
 		clr.l	(_unkF61A).w
 		move.l	d1,-(sp)
-		lea	(VDP_control_port).l,a5
-		move.w	#-$70FF,(a5)
-		move.l	#-$6B006C01,(a5)
-		move.w	#-$6880,(a5)
-		move.l	#$40000080,(a5)
-		move.w	#0,(VDP_data_port).l
-
-loc_1428:
-		move.w	(a5),d1
-		btst	#1,d1
-		bne.s	loc_1428
-		move.w	#-$70FE,(a5)
+		dmaFillVRAM 0,$0000,$10000	; clear entire VRAM
 		move.l	(sp)+,d1
 		rts
 ; End of function Init_VDP
@@ -1608,7 +1105,7 @@ VDP_register_values:
 		dc.w $8C81	; 40 cell wide display, no interlace
 		dc.w $8D3C	; Horizontal scroll table base $F000
 		dc.w $8E00
-		dc.w $8F02	; Auto-increment is 2
+		dc.w $8F02	; Auto-ncrement is 2
 		dc.w $9001	; Scroll planes are 64x32 cells
 		dc.w $9100
 		dc.w $9200	; Window disabled
@@ -1617,84 +1114,26 @@ VDP_register_values:
 
 
 Clear_DisplayData:
-		move.w	#$100,(Z80_bus_request).l
+		stopZ80
+		dmaFillVRAM 0,$0000,$40
 
-loc_1466:
-		btst	#0,(Z80_bus_request).l
-		bne.s	loc_1466
-		lea	(VDP_control_port).l,a5
-		move.w	#-$70FF,(a5)
-		move.l	#-$6BFF6CC1,(a5)
-		move.w	#-$6880,(a5)
-		move.l	#$40000080,(a5)
-		move.w	#0,(VDP_data_port).l
-
-loc_1492:
-		move.w	(a5),d1
-		btst	#1,d1
-		bne.s	loc_1492
-		move.w	#-$70FE,(a5)
 		tst.w	(Competition_mode).w
 		beq.s	Clear_DisplayData_No2P
-		lea	(VDP_control_port).l,a5
-		move.w	#-$70FF,(a5)
-		move.l	#-$6BC06C01,(a5)
-		move.w	#-$6880,(a5)
-		move.l	#$40000082,(a5)
-		move.w	#0,(VDP_data_port).l
-
-loc_14C6:
-		move.w	(a5),d1
-		btst	#1,d1
-		bne.s	loc_14C6
-		move.w	#-$70FE,(a5)
+		dmaFillVRAM 0,$8000,$4000
 		bra.s	Clear_DisplayData_Cont
 ; ---------------------------------------------------------------------------
 
 Clear_DisplayData_No2P:
-		lea	(VDP_control_port).l,a5
-		move.w	#-$70FF,(a5)
-		move.l	#-$6BF06C01,(a5)
-		move.w	#-$6880,(a5)
-		move.l	#$40000083,(a5)
-		move.w	#0,(VDP_data_port).l
-
-loc_14F6:
-		move.w	(a5),d1
-		btst	#1,d1
-		bne.s	loc_14F6
-		move.w	#-$70FE,(a5)
-		lea	(VDP_control_port).l,a5
-		move.w	#-$70FF,(a5)
-		move.l	#-$6BF06C01,(a5)
-		move.w	#-$6880,(a5)
-		move.l	#$60000083,(a5)
-		move.w	#0,(VDP_data_port).l
-
-loc_1524:
-		move.w	(a5),d1
-		btst	#1,d1
-		bne.s	loc_1524
-		move.w	#-$70FE,(a5)
+		dmaFillVRAM 0,$C000,$1000	; clear plane A PNT
+		dmaFillVRAM 0,$E000,$1000	; clear plane B PNT
 
 Clear_DisplayData_Cont:
 		clr.l	(V_scroll_value).w
 		clr.l	(_unkF61A).w
-		lea	(Sprite_table_buffer).w,a1
-		moveq	#0,d0
-		move.w	#$A0,d1
+		clearRAM Sprite_table_buffer,$284
+		clearRAM H_scroll_buffer,$404
 
-loc_1542:
-		move.l	d0,(a1)+
-		dbf	d1,loc_1542
-		lea	(H_scroll_buffer).w,a1
-		moveq	#0,d0
-		move.w	#$100,d1
-
-loc_1552:
-		move.l	d0,(a1)+
-		dbf	d1,loc_1552
-		move.w	#0,(Z80_bus_request).l
+		startZ80
 		rts
 ; End of function Clear_DisplayData
 
@@ -1710,18 +1149,16 @@ SndDrvInit:
 		lea	(Z80_SoundDriver).l,a0
 		lea	(Z80_RAM).l,a1
 		move.w	#$1C00-2,d0
-
-loc_1584:
+-
 		move.b	(a0)+,(a1)+
-		dbf	d0,loc_1584
+		dbf	d0,-
 
 		lea	(Z80_DefaultVariables).l,a0
 		lea	(Z80_RAM+$1C00).l,a1
 		move.w	#Z80_DefaultVariables_End-Z80_DefaultVariables-1,d0
-
-loc_159A:
+-
 		move.b	(a0)+,(a1)+
-		dbf	d0,loc_159A
+		dbf	d0,-
 
 		btst	#6,(Graphics_flags).w
 		beq.s	loc_15B0
@@ -1912,85 +1349,132 @@ loc_1754:
 ; End of function Pause_Game
 
 
+; ---------------------------------------------------------------------------
+; Copies a plane map to a plane PNT
+; Inputs:
+; a1 = map address
+; d0 = VDP command to write to the PNT
+; d1 = number of cells in a row - 1
+; d2 = number of cell rows - 1
+; ---------------------------------------------------------------------------
+
 ; =============== S U B R O U T I N E =======================================
 
 
 Plane_Map_To_VRAM:
 		lea	(VDP_data_port).l,a6
-		move.l	#$800000,d4
-
-loc_177C:
+		move.l	#$800000,d4	; row increment value
+-
 		move.l	d0,VDP_control_port-VDP_data_port(a6)
 		move.w	d1,d3
-
-loc_1782:
+-
 		move.w	(a1)+,(a6)
-		dbf	d3,loc_1782
-		add.l	d4,d0
-		dbf	d2,loc_177C
+		dbf	d3,-	; copy one row
+		add.l	d4,d0	; move onto next row
+		dbf	d2,--	; and copy it
 		rts
 ; End of function Plane_Map_To_VRAM
 
+; ---------------------------------------------------------------------------
+; Copies a plane map to a plane PNT, used for a 128-cell wide plane
+; Inputs:
+; a1 = map address
+; d0 = VDP command to write to the PNT
+; d1 = number of cells in a row - 1
+; d2 = number of cell rows - 1
+; ---------------------------------------------------------------------------
 
 ; =============== S U B R O U T I N E =======================================
 
 
 Plane_Map_To_VRAM_2:
 		lea	(VDP_data_port).l,a6
-		move.l	#$1000000,d4
-
-loc_179C:
+		move.l	#$1000000,d4	; row increment value
+-
 		move.l	d0,VDP_control_port-VDP_data_port(a6)
 		move.w	d1,d3
-
-loc_17A2:
+-
 		move.w	(a1)+,(a6)
-		dbf	d3,loc_17A2
-		add.l	d4,d0
-		dbf	d2,loc_179C
+		dbf	d3,-	; copy one row
+		add.l	d4,d0	; move onto next row
+		dbf	d2,--	; and copy it
 		rts
 ; End of function Plane_Map_To_VRAM_2
 
+; ---------------------------------------------------------------------------
+; Adds art to the DMA queue
+; Inputs:
+; d1 = source address
+; d2 = destination VRAM address
+; d3 = number of words to transfer
+; ---------------------------------------------------------------------------
 
 ; =============== S U B R O U T I N E =======================================
 
 
 Add_To_DMA_Queue:
+		; Detect if transfer crosses 128KB boundary
+		lsr.l	#1,d1
+		move.w	d3,d0
+		neg.w	d0
+		sub.w	d1,d0
+		bcc.s	.transfer
+		; Do first transfer
+		movem.l	d1-d3,-(sp)
+		add.w	d0,d3		; d3 = words remaining in 128KB "bank"
+		bsr.s	.transfer
+		movem.l	(sp)+,d1-d3
+		; Get second transfer's source, destination, and length
+		moveq	#0,d0
+		sub.w	d1,d0
+		sub.w	d0,d3
+		add.l	d0,d1
+		add.w	d0,d2
+		add.w	d0,d2
+		; Do second transfer
+	.transfer:
+
 		movea.l	(DMA_queue_slot).w,a1
-		cmpa.w	#DMA_queue_slot,a1
-		beq.s	locret_1810
-		move.w	#-$6D00,d0
+		cmpa.w	#DMA_queue_slot,a1	; is the queue full?
+		beq.s	Add_To_DMA_Queue_Done	; if it is, return
+
+		move.w	#$9300,d0
 		move.b	d3,d0
-		move.w	d0,(a1)+
-		move.w	#-$6C00,d0
+		move.w	d0,(a1)+	; command to specify transfer length in words & $00FF
+
+		move.w	#$9400,d0
 		lsr.w	#8,d3
 		move.b	d3,d0
-		move.w	d0,(a1)+
-		move.w	#-$6B00,d0
-		lsr.l	#1,d1
+		move.w	d0,(a1)+	; command to specify transfer length in words & $FF00
+
+		move.w	#$9500,d0
 		move.b	d1,d0
-		move.w	d0,(a1)+
-		move.w	#-$6A00,d0
+		move.w	d0,(a1)+	; command to specify transfer source & $0001FE
+
+		move.w	#$9600,d0
 		lsr.l	#8,d1
 		move.b	d1,d0
-		move.w	d0,(a1)+
-		move.w	#-$6900,d0
+		move.w	d0,(a1)+	; command to specify transfer source & $01FE00
+
+		move.w	#$9700,d0
 		lsr.l	#8,d1
-		andi.b	#$7F,d1
+		andi.b	#$7F,d1		; this instruction safely allows source to be in RAM; S2's lacks this
 		move.b	d1,d0
-		move.w	d0,(a1)+
+		move.w	d0,(a1)+	; command to specify transfer source & $FE0000
+
 		andi.l	#$FFFF,d2
 		lsl.l	#2,d2
 		lsr.w	#2,d2
 		swap	d2
-		ori.l	#$40000080,d2
-		move.l	d2,(a1)+
-		move.l	a1,(DMA_queue_slot).w
-		cmpa.w	#DMA_queue_slot,a1
-		beq.s	locret_1810
-		move.w	#0,(a1)
+		ori.l	#vdpComm($0000,VRAM,DMA),d2
+		move.l	d2,(a1)+	; command to specify transfer destination and begin DMA
 
-locret_1810:
+		move.l	a1,(DMA_queue_slot).w	; set new free slot address
+		cmpa.w	#DMA_queue_slot,a1	; has the end of the queue been reached?
+		beq.s	Add_To_DMA_Queue_Done	; if it has, branch
+		move.w	#0,(a1)	; place stop token at the end of the queue
+
+Add_To_DMA_Queue_Done:
 		rts
 ; End of function Add_To_DMA_Queue
 
@@ -2002,9 +1486,9 @@ Process_DMA_Queue:
 		lea	(VDP_control_port).l,a5
 		lea	(DMA_queue).w,a1
 
-loc_181C:
-		move.w	(a1)+,d0
-		beq.s	loc_1834
+$$loop:
+		move.w	(a1)+,d0	; has a stop token been encountered?
+		beq.s	$$stop	; if it has, branch
 		move.w	d0,(a5)
 		move.w	(a1)+,(a5)
 		move.w	(a1)+,(a5)
@@ -2012,15 +1496,14 @@ loc_181C:
 		move.w	(a1)+,(a5)
 		move.w	(a1)+,(a5)
 		move.w	(a1)+,(a5)
-		cmpa.w	#DMA_queue_slot,a1
-		bne.s	loc_181C
+		cmpa.w	#DMA_queue_slot,a1	; has the end of the queue been reached?
+		bne.s	$$loop	; if not, loop
 
-loc_1834:
+$$stop:
 		move.w	#0,(DMA_queue).w
 		move.l	#DMA_queue,(DMA_queue_slot).w
 		rts
 ; End of function Process_DMA_Queue
-
 
 ; =============== S U B R O U T I N E =======================================
 
@@ -2435,11 +1918,6 @@ loc_1B02:
 ; End of function Process_Nem_Queue_Main
 
 ; ---------------------------------------------------------------------------
-		lea	(Offs_PLC).l,a1
-		add.w	d0,d0
-		move.w	(a1,d0.w),d0
-		lea	(a1,d0.w),a1
-		move.w	(a1)+,d1
 
 ; =============== S U B R O U T I N E =======================================
 
@@ -3098,23 +2576,25 @@ Backup_Kos_Registers:
 
 Wait_VSync:
 		move	#$2300,sr
-
-loc_1FA6:
+-
 		tst.b	(V_int_routine).w
-		bne.s	loc_1FA6
+		bne.s	-	; wait until V-int's run
 		rts
 ; End of function Wait_VSync
 
+; ---------------------------------------------------------------------------
+; Generates a pseudo-random number in d0
+; ---------------------------------------------------------------------------
 
 ; =============== S U B R O U T I N E =======================================
 
 
 Random_Number:
 		move.l	(RNG_seed).w,d1
-		bne.s	loc_1FBA
-		move.l	#$2A6D365A,d1
-
-loc_1FBA:
+		tst.w	d1
+		bne.s	+
+		move.l	#$2A6D365B,d1	; reset seed if needed
++
 		move.l	d1,d0
 		asl.l	#2,d1
 		add.l	d0,d1
@@ -3223,10 +2703,6 @@ AnPal_Load:
 		lsr.w	#6,d0
 		move.w	OffsAnPal(pc,d0.w),d0
 		jmp	OffsAnPal(pc,d0.w)
-; End of function AnPal_Load
-
-; ---------------------------------------------------------------------------
-		rts
 ; ---------------------------------------------------------------------------
 OffsAnPal:	dc.w AnPal_AIZ1-OffsAnPal
 		dc.w AnPal_AIZ2-OffsAnPal
@@ -5552,20 +5028,19 @@ loc_4A0C:
 		bsr.w	SpawnLevelMainSprites
 		jsr	(Load_Sprites).l
 		jsr	(Load_Rings).l
-		jsr	(S2_SpecialCNZBumpers).l
 		jsr	(Draw_LRZ_Special_Rock_Sprites).l
 		jsr	(Process_Sprites).l
 		jsr	(Render_Sprites).l
 		jsr	(Animate_Tiles).l
 		move.w	#$708,(Demo_timer).w
-		tst.w	(Demo_mode_flag).w
-		bpl.s	loc_4AA2
-		move.w	#$21C,(Demo_timer).w
-		cmpi.w	#4,(Ending_demo_number).w
-		bne.s	loc_4AA2
-		move.w	#$1FE,(Demo_timer).w
+;		tst.w	(Demo_mode_flag).w
+;		bpl.s	loc_4AA2
+;		move.w	#$21C,(Demo_timer).w
+;		cmpi.w	#4,(Ending_demo_number).w
+;		bne.s	loc_4AA2
+;		move.w	#$1FE,(Demo_timer).w
 
-loc_4AA2:
+;loc_4AA2:
 		bsr.w	LoadWaterPalette
 		lea	(Water_palette_line_2).w,a1
 		moveq	#0,d0
@@ -5612,7 +5087,6 @@ LevelLoop:
 		jsr	(DeformBgLayer).l
 		jsr	(ScreenEvents).l
 		bsr.w	Handle_Onscreen_Water_Height
-		bsr.w	UpdateWaterSurface
 		jsr	(Load_Rings).l
 		jsr	(Animate_Tiles).l
 		bsr.w	Process_Nem_Queue_Init
@@ -6070,29 +5544,6 @@ Obj_ResetCollisionResponseList:
 ; =============== S U B R O U T I N E =======================================
 
 
-UpdateWaterSurface:
-		rts
-; ---------------------------------------------------------------------------
-		tst.b	(Water_flag).w
-		beq.s	locret_50DC
-		move.w	(Camera_X_pos).w,d1
-		btst	#0,(Level_frame_counter+1).w
-		beq.s	loc_50D2
-		addi.w	#$20,d1
-
-loc_50D2:
-		move.w	d1,d0
-		addi.w	#$60,d0
-		addi.w	#$120,d1
-
-locret_50DC:
-		rts
-; End of function UpdateWaterSurface
-
-
-; =============== S U B R O U T I N E =======================================
-
-
 Handle_Onscreen_Water_Height:
 		tst.b	(Water_flag).w
 		beq.w	loc_5146
@@ -6138,63 +5589,10 @@ loc_5142:
 		move.b	d0,(H_int_counter).w
 
 loc_5146:
-		bsr.w	sub_5598
+		bra.w	sub_5598
 		rts
 ; End of function Handle_Onscreen_Water_Height
 
-; ---------------------------------------------------------------------------
-		clr.b	(Water_full_screen_flag).w
-		move.w	(Mean_water_level).w,(Water_level).w
-		move.l	#HInt3,(H_int_addr).w
-		cmpi.w	#$1000,(V_blank_cycles).w
-		bcs.s	loc_516E
-		move.l	#HInt4,(H_int_addr).w
-
-loc_516E:
-		move.w	(Water_level).w,d0
-		sub.w	(Camera_Y_pos).w,d0
-		beq.s	loc_5186
-		bcc.s	loc_51C2
-		tst.w	d0
-		bpl.s	loc_51C2
-		addi.w	#$1E0,d0
-		beq.s	loc_5186
-		bcs.s	loc_5194
-
-loc_5186:
-		move.b	#1,(Water_full_screen_flag).w
-		move.b	#-1,(H_int_counter).w
-		rts
-; ---------------------------------------------------------------------------
-
-loc_5194:
-		cmpi.w	#$DF,d0
-		bcs.s	loc_519E
-		move.w	#$FF,d0
-
-loc_519E:
-		move.b	d0,(H_int_counter).w
-		move.b	#1,(Water_full_screen_flag).w
-		move.l	#HInt5,(H_int_addr).w
-		cmpi.w	#$1000,(V_blank_cycles).w
-		bcs.s	loc_51C0
-		move.l	#HInt_6,(H_int_addr).w
-
-loc_51C0:
-		bra.s	loc_51D0
-; ---------------------------------------------------------------------------
-
-loc_51C2:
-		cmpi.w	#$DF,d0
-		bcs.s	loc_51CC
-		move.w	#$FF,d0
-
-loc_51CC:
-		move.b	d0,(H_int_counter).w
-
-loc_51D0:
-		bsr.w	sub_5598
-		rts
 ; ---------------------------------------------------------------------------
 StartingWaterHeights:
 		binclude "Levels/Misc/StartingWaterHeights.bin"
@@ -7353,23 +6751,11 @@ loc_626C:
 		move.w	#$207B,(a2)+
 		dbf	d1,loc_626C
 		bsr.w	Update2PLevSelSelection
-		addq.b	#1,(Current_zone_2P).w
-		andi.b	#3,(Current_zone_2P).w
 		bsr.w	ClearOld2PLevSelSelection
-		addq.b	#1,(Current_zone_2P).w
-		andi.b	#3,(Current_zone_2P).w
-		bsr.w	ClearOld2PLevSelSelection
-		addq.b	#1,(Current_zone_2P).w
-		andi.b	#3,(Current_zone_2P).w
-		bsr.w	ClearOld2PLevSelSelection
-		addq.b	#1,(Current_zone_2P).w
-		andi.b	#3,(Current_zone_2P).w
 		clr.w	(Player_mode).w
-		clr.b	(Current_act_2P).w
 		clr.w	(Results_screen_2P).w
 		clr.b	(Level_started_flag).w
 		clr.w	(Anim_Counters).w
-		clr.w	(_unkFF98).w
 		lea	(AniPLC_SONICMILES).l,a2
 		jsr	(AnimateTiles_DoAniPLC).l
 		moveq	#4,d0
@@ -7400,7 +6786,6 @@ LevelSelect2P_Main:
 		bsr.w	Wait_VSync
 		move	#$2700,sr
 		bsr.w	ClearOld2PLevSelSelection
-		bsr.w	LevelSelect2P_Controls
 		bsr.w	Update2PLevSelSelection
 		move	#$2300,sr
 		lea	(AniPLC_SONICMILES).l,a2
@@ -7424,25 +6809,6 @@ loc_6368:
 		move.b	#0,(Game_mode).w
 		rts
 ; ---------------------------------------------------------------------------
-		moveq	#0,d0
-		move.b	(Current_zone_2P).w,d0
-		add.w	d0,d0
-		move.w	LevelSelect2P_LevelOrder(pc,d0.w),d0
-		bmi.s	loc_63BE
-		move.w	d0,(Current_zone_and_act).w
-		move.w	d0,(Apparent_zone_and_act).w
-		move.w	d0,(Saved_zone_and_act).w
-		move.w	#1,(Competition_mode).w
-		move.b	#$C,(Game_mode).w
-		move.b	#0,(Last_star_post_hit).w
-		move.b	#0,(Special_bonus_entry_flag).w
-		moveq	#0,d0
-		move.l	d0,(Score).w
-		move.l	d0,(Score_P2).w
-		move.l	#5000,(Next_extra_life_score).w
-		move.l	#5000,(Next_extra_life_score_P2).w
-		rts
-; ---------------------------------------------------------------------------
 
 loc_63BE:
 		move.b	#4,(Current_special_stage).w
@@ -7461,30 +6827,8 @@ LevelSelect2P_LevelOrder:
 ; =============== S U B R O U T I N E =======================================
 
 
-LevelSelect2P_Controls:
-		move.b	(Ctrl_1_pressed).w,d0
-		or.b	(Ctrl_2_pressed).w,d0
-		move.b	d0,d1
-		andi.b	#3,d0
-		beq.s	loc_63F4
-		bchg	#1,(Current_zone_2P).w
-
-loc_63F4:
-		andi.b	#$C,d1
-		beq.s	locret_6400
-		bchg	#0,(Current_zone_2P).w
-
-locret_6400:
-		rts
-; End of function LevelSelect2P_Controls
-
-
-; =============== S U B R O U T I N E =======================================
-
-
 Update2PLevSelSelection:
 		moveq	#0,d0
-		move.b	(Current_zone_2P).w,d0
 		lsl.w	#4,d0
 		lea	(S2LevSel2PIconData).l,a3
 		lea	(a3,d0.w),a3
@@ -7534,7 +6878,6 @@ loc_647A:
 
 Chk2PZoneCompletion:
 		moveq	#0,d0
-		move.b	(Current_zone_2P).w,d0
 		move.w	d0,d1
 		add.w	d0,d0
 		add.w	d1,d0
@@ -7551,7 +6894,6 @@ Chk2PZoneCompletion:
 
 ClearOld2PLevSelSelection:
 		moveq	#0,d0
-		move.b	(Current_zone_2P).w,d0
 		lsl.w	#4,d0
 		lea	(S2LevSel2PIconData).l,a3
 		lea	(a3,d0.w),a3
@@ -7691,7 +7033,6 @@ OptionScreen_Select_Not1P:
 		move.w	d0,(Competition_mode).w
 		move.w	d0,(Competition_settings).w
 		move.b	#$1C,(Game_mode).w
-		move.b	#0,(Current_zone_2P).w
 		move.w	#0,(Player_mode).w
 		rts
 ; ---------------------------------------------------------------------------
@@ -15858,600 +15199,6 @@ CMap_Ring:	dc.w $FFF8, $0005, $0000+make_art_tile(ArtTile_Ring,1,0), $FFF8
 ; =============== S U B R O U T I N E =======================================
 
 
-S2_SpecialCNZBumpers:
-		moveq	#0,d0
-		move.b	(CNZ_bumper_routine).w,d0
-		move.w	SpecialCNZBumpers_Index(pc,d0.w),d0
-		jmp	SpecialCNZBumpers_Index(pc,d0.w)
-; End of function S2_SpecialCNZBumpers
-
-; ---------------------------------------------------------------------------
-SpecialCNZBumpers_Index:
-		dc.w SpecialCNZBumpers_Init-SpecialCNZBumpers_Index
-		dc.w SpecialCNZBumpers_Main-SpecialCNZBumpers_Index
-; ---------------------------------------------------------------------------
-
-SpecialCNZBumpers_Init:
-		addq.b	#2,(CNZ_bumper_routine).w
-		lea	(SpecialCNZBumpers_Act1).l,a1
-		tst.b	(Current_act).w
-		beq.s	loc_F8E6
-		lea	(SpecialCNZBumpers_Act2).l,a1
-
-loc_F8E6:
-		move.w	(Camera_X_pos).w,d4
-		subq.w	#8,d4
-		bhi.s	loc_F8F6
-		moveq	#1,d4
-		bra.s	loc_F8F6
-; ---------------------------------------------------------------------------
-
-loc_F8F2:
-		lea	6(a1),a1
-
-loc_F8F6:
-		cmp.w	2(a1),d4
-		bhi.s	loc_F8F2
-		move.l	a1,(CNZ_visible_bumpers_start).w
-		move.l	a1,(CNZ_Visible_bumpers_start_P2).w
-		addi.w	#$150,d4
-		bra.s	loc_F90E
-; ---------------------------------------------------------------------------
-
-loc_F90A:
-		lea	6(a1),a1
-
-loc_F90E:
-		cmp.w	2(a1),d4
-		bhi.s	loc_F90A
-		move.l	a1,(CNZ_Visible_bumpers_end).w
-		move.l	a1,(CNZ_Visible_bumpers_end_P2).w
-		move.b	#1,(CNZ_bumper_unk).w
-		rts
-; ---------------------------------------------------------------------------
-
-SpecialCNZBumpers_Main:
-		movea.l	(CNZ_visible_bumpers_start).w,a1
-		move.w	(Camera_X_pos).w,d4
-		subq.w	#8,d4
-		bhi.s	loc_F938
-		moveq	#1,d4
-		bra.s	loc_F938
-; ---------------------------------------------------------------------------
-
-loc_F934:
-		lea	6(a1),a1
-
-loc_F938:
-		cmp.w	2(a1),d4
-		bhi.s	loc_F934
-		bra.s	loc_F942
-; ---------------------------------------------------------------------------
-
-loc_F940:
-		subq.w	#6,a1
-
-loc_F942:
-		cmp.w	-4(a1),d4
-		bls.s	loc_F940
-		move.l	a1,(CNZ_visible_bumpers_start).w
-		movea.l	(CNZ_Visible_bumpers_end).w,a2
-		addi.w	#$150,d4
-		bra.s	loc_F95A
-; ---------------------------------------------------------------------------
-
-loc_F956:
-		lea	6(a2),a2
-
-loc_F95A:
-		cmp.w	2(a2),d4
-		bhi.s	loc_F956
-		bra.s	loc_F964
-; ---------------------------------------------------------------------------
-
-loc_F962:
-		subq.w	#6,a2
-
-loc_F964:
-		cmp.w	-4(a2),d4
-		bls.s	loc_F962
-		move.l	a2,(CNZ_Visible_bumpers_end).w
-		tst.w	(Competition_mode).w
-		bne.s	loc_F97E
-		move.l	a1,(CNZ_Visible_bumpers_start_P2).w
-		move.l	a2,(CNZ_Visible_bumpers_end_P2).w
-		rts
-; ---------------------------------------------------------------------------
-
-loc_F97E:
-		movea.l	(CNZ_Visible_bumpers_start_P2).w,a1
-		move.w	(Camera_X_pos_P2).w,d4
-		subq.w	#8,d4
-		bhi.s	loc_F992
-		moveq	#1,d4
-		bra.s	loc_F992
-; ---------------------------------------------------------------------------
-
-loc_F98E:
-		lea	6(a1),a1
-
-loc_F992:
-		cmp.w	2(a1),d4
-		bhi.s	loc_F98E
-		bra.s	loc_F99C
-; ---------------------------------------------------------------------------
-
-loc_F99A:
-		subq.w	#6,a1
-
-loc_F99C:
-		cmp.w	-4(a1),d4
-		bls.s	loc_F99A
-		move.l	a1,(CNZ_Visible_bumpers_start_P2).w
-		movea.l	(CNZ_Visible_bumpers_end_P2).w,a2
-		addi.w	#$150,d4
-		bra.s	loc_F9B4
-; ---------------------------------------------------------------------------
-
-loc_F9B0:
-		lea	6(a2),a2
-
-loc_F9B4:
-		cmp.w	2(a2),d4
-		bhi.s	loc_F9B0
-		bra.s	loc_F9BE
-; ---------------------------------------------------------------------------
-
-loc_F9BC:
-		subq.w	#6,a2
-
-loc_F9BE:
-		cmp.w	-4(a2),d4
-		bls.s	loc_F9BC
-		move.l	a2,(CNZ_Visible_bumpers_end_P2).w
-		rts
-
-; =============== S U B R O U T I N E =======================================
-
-
-Check_CNZ_Bumpers:
-		movea.l	(CNZ_visible_bumpers_start).w,a1
-		movea.l	(CNZ_Visible_bumpers_end).w,a2
-		cmpa.w	#Player_1,a0
-		beq.s	loc_F9E0
-		movea.l	(CNZ_Visible_bumpers_start_P2).w,a1
-		movea.l	(CNZ_Visible_bumpers_end_P2).w,a2
-
-loc_F9E0:
-		cmpa.l	a1,a2
-		beq.w	locret_FA7A
-		move.w	$10(a0),d2
-		move.w	$14(a0),d3
-		subi.w	#9,d2
-		moveq	#0,d5
-		move.b	$1E(a0),d5
-		subq.b	#3,d5
-		sub.w	d5,d3
-		cmpi.b	#$4D,$22(a0)
-		bne.s	loc_FA0A
-		addi.w	#$C,d3
-		moveq	#$A,d5
-
-loc_FA0A:
-		move.w	#$12,d4
-		add.w	d5,d5
-
-CNZ_Bumper_Loop:
-		move.w	(a1),d0
-		andi.w	#$E,d0
-		lea	byte_FA5A(pc,d0.w),a3
-		moveq	#0,d1
-		move.b	(a3)+,d1
-		move.w	2(a1),d0
-		sub.w	d1,d0
-		sub.w	d2,d0
-		bcc.s	loc_FA32
-		add.w	d1,d1
-		add.w	d1,d0
-		bcs.s	loc_FA38
-		bra.w	CNZ_Bumper_Next
-; ---------------------------------------------------------------------------
-
-loc_FA32:
-		cmp.w	d4,d0
-		bhi.w	CNZ_Bumper_Next
-
-loc_FA38:
-		moveq	#0,d1
-		move.b	(a3)+,d1
-		move.w	4(a1),d0
-		sub.w	d1,d0
-		sub.w	d3,d0
-		bcc.s	loc_FA52
-		add.w	d1,d1
-		add.w	d1,d0
-		bcs.w	loc_FA66
-		bra.w	CNZ_Bumper_Next
-; ---------------------------------------------------------------------------
-
-loc_FA52:
-		cmp.w	d5,d0
-		bhi.w	CNZ_Bumper_Next
-		bra.s	loc_FA66
-; ---------------------------------------------------------------------------
-byte_FA5A:	dc.b $20
-		dc.b $20
-		dc.b $20
-		dc.b $20
-		dc.b $40
-		dc.b 8
-		dc.b $40
-		dc.b 8
-		dc.b 8
-		dc.b $40
-		dc.b 8
-		dc.b $40
-; ---------------------------------------------------------------------------
-
-loc_FA66:
-		move.w	(a1),d0
-		move.w	off_FA7C(pc,d0.w),d0
-		jmp	off_FA7C(pc,d0.w)
-; ---------------------------------------------------------------------------
-
-CNZ_Bumper_Next:
-		lea	6(a1),a1
-		cmpa.l	a1,a2
-		bne.w	CNZ_Bumper_Loop
-
-locret_FA7A:
-		rts
-; ---------------------------------------------------------------------------
-off_FA7C:	dc.w loc_FA88-off_FA7C
-		dc.w loc_FB3A-off_FA7C
-		dc.w loc_FBA0-off_FA7C
-		dc.w loc_FBF8-off_FA7C
-		dc.w loc_FC4E-off_FA7C
-		dc.w loc_FCA6-off_FA7C
-; ---------------------------------------------------------------------------
-
-loc_FA88:
-		move.w	4(a1),d0
-		sub.w	$14(a0),d0
-		neg.w	d0
-		cmpi.w	#$20,d0
-		blt.s	loc_FAA2
-		move.w	#$A00,$1A(a0)
-		bra.w	loc_FCFC
-; ---------------------------------------------------------------------------
-
-loc_FAA2:
-		move.w	2(a1),d0
-		sub.w	$10(a0),d0
-		neg.w	d0
-		cmpi.w	#$20,d0
-		blt.s	loc_FABC
-		move.w	#$A00,$18(a0)
-		bra.w	loc_FCFC
-; ---------------------------------------------------------------------------
-
-loc_FABC:
-		move.w	2(a1),d0
-		sub.w	$10(a0),d0
-		cmpi.w	#$20,d0
-		blt.s	loc_FACE
-		move.w	#$20,d0
-
-loc_FACE:
-		add.w	4(a1),d0
-		subq.w	#8,d0
-		move.w	$14(a0),d1
-		addi.w	#$E,d1
-		sub.w	d1,d0
-		bcc.s	locret_FAEA
-		move.w	#$20,d3
-		bsr.s	loc_FAEC
-		bra.w	loc_FCFC
-; ---------------------------------------------------------------------------
-
-locret_FAEA:
-		rts
-; ---------------------------------------------------------------------------
-
-loc_FAEC:
-		move.w	$18(a0),d1
-		move.w	$1A(a0),d2
-		jsr	(GetArcTan).l
-		move.b	d0,(_dbgFFDC).w
-		sub.w	d3,d0
-		move.w	d0,d1
-		bpl.s	loc_FB06
-		neg.w	d1
-
-loc_FB06:
-		neg.w	d0
-		add.w	d3,d0
-		move.b	d0,(_dbgFFDD).w
-		move.b	d1,(_dbgFFDF).w
-		cmpi.b	#$38,d1
-		bcs.s	loc_FB1A
-		move.w	d3,d0
-
-loc_FB1A:
-		move.b	d0,(_dbgFFDE).w
-		jsr	(GetSineCosine).l
-		muls.w	#-$A00,d1
-		asr.l	#8,d1
-		move.w	d1,$18(a0)
-		muls.w	#-$A00,d0
-		asr.l	#8,d0
-		move.w	d0,$1A(a0)
-		rts
-; ---------------------------------------------------------------------------
-
-loc_FB3A:
-		move.w	4(a1),d0
-		sub.w	$14(a0),d0
-		neg.w	d0
-		cmpi.w	#$20,d0
-		blt.s	loc_FB54
-		move.w	#$A00,$1A(a0)
-		bra.w	loc_FCFC
-; ---------------------------------------------------------------------------
-
-loc_FB54:
-		move.w	2(a1),d0
-		sub.w	$10(a0),d0
-		cmpi.w	#$20,d0
-		blt.s	loc_FB6C
-		move.w	#-$A00,$18(a0)
-		bra.w	loc_FCFC
-; ---------------------------------------------------------------------------
-
-loc_FB6C:
-		move.w	2(a1),d0
-		sub.w	$10(a0),d0
-		neg.w	d0
-		cmpi.w	#$20,d0
-		blt.s	loc_FB80
-		move.w	#$20,d0
-
-loc_FB80:
-		add.w	4(a1),d0
-		subq.w	#8,d0
-		move.w	$14(a0),d1
-		addi.w	#$E,d1
-		sub.w	d1,d0
-		bcc.s	locret_FB9E
-		move.w	#$60,d3
-		bsr.w	loc_FAEC
-		bra.w	loc_FCFC
-; ---------------------------------------------------------------------------
-
-locret_FB9E:
-		rts
-; ---------------------------------------------------------------------------
-
-loc_FBA0:
-		move.w	4(a1),d0
-		sub.w	$14(a0),d0
-		neg.w	d0
-		cmpi.w	#8,d0
-		blt.s	loc_FBBA
-		move.w	#$A00,$1A(a0)
-		bra.w	loc_FCFC
-; ---------------------------------------------------------------------------
-
-loc_FBBA:
-		move.w	2(a1),d0
-		sub.w	$10(a0),d0
-		cmpi.w	#$40,d0
-		blt.s	loc_FBD2
-		move.w	#-$A00,$18(a0)
-		bra.w	loc_FCFC
-; ---------------------------------------------------------------------------
-
-loc_FBD2:
-		neg.w	d0
-		cmpi.w	#$40,d0
-		blt.s	loc_FBE4
-		move.w	#$A00,$18(a0)
-		bra.w	loc_FCFC
-; ---------------------------------------------------------------------------
-
-loc_FBE4:
-		move.w	#$38,d3
-		tst.w	d0
-		bmi.s	loc_FBF0
-		move.w	#$48,d3
-
-loc_FBF0:
-		bsr.w	loc_FAEC
-		bra.w	loc_FCFC
-; ---------------------------------------------------------------------------
-
-loc_FBF8:
-		move.w	4(a1),d0
-		sub.w	$14(a0),d0
-		cmpi.w	#8,d0
-		blt.s	loc_FC10
-		move.w	#-$A00,$1A(a0)
-		bra.w	loc_FCFC
-; ---------------------------------------------------------------------------
-
-loc_FC10:
-		move.w	2(a1),d0
-		sub.w	$10(a0),d0
-		cmpi.w	#$40,d0
-		blt.s	loc_FC28
-		move.w	#-$A00,$18(a0)
-		bra.w	loc_FCFC
-; ---------------------------------------------------------------------------
-
-loc_FC28:
-		neg.w	d0
-		cmpi.w	#$40,d0
-		blt.s	loc_FC3A
-		move.w	#$A00,$18(a0)
-		bra.w	loc_FCFC
-; ---------------------------------------------------------------------------
-
-loc_FC3A:
-		move.w	#$C8,d3
-		tst.w	d0
-		bmi.s	loc_FC46
-		move.w	#$B8,d3
-
-loc_FC46:
-		bsr.w	loc_FAEC
-		bra.w	loc_FCFC
-; ---------------------------------------------------------------------------
-
-loc_FC4E:
-		move.w	2(a1),d0
-		sub.w	$10(a0),d0
-		neg.w	d0
-		cmpi.w	#8,d0
-		blt.s	loc_FC68
-		move.w	#$A00,$18(a0)
-		bra.w	loc_FCFC
-; ---------------------------------------------------------------------------
-
-loc_FC68:
-		move.w	4(a1),d0
-		sub.w	$14(a0),d0
-		cmpi.w	#$40,d0
-		blt.s	loc_FC80
-		move.w	#-$A00,$1A(a0)
-		bra.w	loc_FCFC
-; ---------------------------------------------------------------------------
-
-loc_FC80:
-		neg.w	d0
-		cmpi.w	#$40,d0
-		blt.s	loc_FC92
-		move.w	#$A00,$18(a0)
-		bra.w	loc_FCFC
-; ---------------------------------------------------------------------------
-
-loc_FC92:
-		move.w	#8,d3
-		tst.w	d0
-		bmi.s	loc_FC9E
-		move.w	#$F8,d3
-
-loc_FC9E:
-		bsr.w	loc_FAEC
-		bra.w	loc_FCFC
-; ---------------------------------------------------------------------------
-
-loc_FCA6:
-		move.w	2(a1),d0
-		sub.w	$10(a0),d0
-		cmpi.w	#8,d0
-		blt.s	loc_FCBE
-		move.w	#$A00,$18(a0)
-		bra.w	loc_FCFC
-; ---------------------------------------------------------------------------
-
-loc_FCBE:
-		move.w	4(a1),d0
-		sub.w	$14(a0),d0
-		cmpi.w	#$40,d0
-		blt.s	loc_FCD6
-		move.w	#-$A00,$1A(a0)
-		bra.w	loc_FCFC
-; ---------------------------------------------------------------------------
-
-loc_FCD6:
-		neg.w	d0
-		cmpi.w	#$40,d0
-		blt.s	loc_FCE8
-		move.w	#$A00,$18(a0)
-		bra.w	loc_FCFC
-; ---------------------------------------------------------------------------
-
-loc_FCE8:
-		move.w	#$78,d3
-		tst.w	d0
-		bmi.s	loc_FCF4
-		move.w	#$88,d3
-
-loc_FCF4:
-		bsr.w	loc_FAEC
-		bra.w	loc_FCFC
-; ---------------------------------------------------------------------------
-
-loc_FCFC:
-		bset	#1,$2A(a0)
-		bclr	#4,$2A(a0)
-		bclr	#5,$2A(a0)
-		clr.b	$40(a0)
-		move.w	#sfx_MagneticSpike,d0
-		jmp	(Play_SFX).l
-; End of function Check_CNZ_Bumpers
-
-; ---------------------------------------------------------------------------
-SpecialCNZBumpers_Act1:
-		dc.w     $A,  $410,  $540,     0,  $560,  $520
-		dc.w     $A,  $810,  $400,     8,  $8F0,  $400
-		dc.w      4,  $C40,  $1E0,     4,  $CC0,  $1E0
-		dc.w      4,  $D40,  $1E0,     4,  $DC0,  $1E0
-		dc.w      4,  $E40,  $1E0,     4,  $E40,  $460
-		dc.w      4,  $EC0,  $460,     4,  $F40,  $460
-		dc.w      4,  $FC0,  $460,     6, $11C0,  $120
-		dc.w      4, $11C0,  $1E0,     6, $1240,  $120
-		dc.w      4, $1240,  $1E0,     6, $12C0,  $120
-		dc.w      6, $1440,  $320,     4, $1440,  $3E0
-		dc.w      6, $1440,  $420,     6, $14C0,  $320
-		dc.w     $A, $1590,  $640,     6, $15C0,  $420
-		dc.w      8, $15F0,  $6C0,    $A, $1610,  $6C0
-		dc.w      6, $1640,  $420,     8, $1670,  $640
-		dc.w      6, $19C0,  $220,     0, $19E0,  $360
-		dc.w      6, $1A40,  $220,     2, $1A60,  $320
-		dc.w      2, $1AA0,  $6E0,     4, $1AC0,  $360
-		dc.w      6, $1AC0,  $620,     4, $1AC0,  $760
-		dc.w      4, $1B40,  $360,     6, $1B40,  $620
-		dc.w      4, $1B40,  $760,     4, $1BC0,  $360
-		dc.w      6, $1BC0,  $620,     4, $1BC0,  $760
-		dc.w      4, $1C40,  $760,     4, $1CC0,  $760
-		dc.w      0, $1CE0,  $360,     0, $1D20,  $320
-		dc.w      2, $1F60,  $620,     0, $2060,  $620
-		dc.w      0, $20A0,  $4A0,     2, $21E0,  $1A0
-		dc.w      2, $2260,  $4E0,     8, $22F0,  $1C0
-		dc.w      8, $23F0,  $3C0,     0, $FFFF,     0
-SpecialCNZBumpers_Act2:
-		dc.w      0,     0,     0,     2,  $DA0,  $5A0
-		dc.w      0,  $EE0,  $5A0,     2, $1320,  $320
-		dc.w      0, $1360,  $2A0,     4, $1540,  $1E0
-		dc.w      6, $1540,  $220,     4, $15C0,  $1E0
-		dc.w      6, $15C0,  $220,     4, $1640,  $1E0
-		dc.w      6, $1640,  $220,     6, $1740,  $720
-		dc.w      4, $1740,  $7E0,     6, $17C0,  $720
-		dc.w      4, $17C0,  $7E0,    $A, $1810,  $240
-		dc.w      6, $1840,  $720,     4, $1840,  $7E0
-		dc.w      6, $18C0,  $720,     4, $18C0,  $7E0
-		dc.w     $A, $1890,  $3C0,     8, $1930,  $240
-		dc.w      6, $1940,  $720,     4, $1940,  $7E0
-		dc.w      6, $19C0,  $720,     4, $19C0,  $7E0
-		dc.w      6, $1A40,  $720,     4, $1A40,  $7E0
-		dc.w      6, $1AC0,  $720,     4, $1AC0,  $7E0
-		dc.w     $A, $1C90,  $240,     2, $1CA0,  $360
-		dc.w      2, $1D20,  $3E0,     4, $1DC0,  $1E0
-		dc.w      6, $1DC0,  $220,     4, $1E40,  $1E0
-		dc.w      6, $1E40,  $220,     8, $1E70,  $380
-		dc.w      4, $1EC0,  $5E0,     6, $1F80,  $590
-		dc.w      2, $2220,  $1A0,     2, $2260,  $1E0
-		dc.w      2, $22A0,  $220,     2, $22E0,  $260
-		dc.w      2, $23A0,  $4E0,     0, $2520,  $520
-		dc.w      8, $2530,  $1C0,     8, $2530,  $2C0
-		dc.w      8, $2530,  $340,     8, $2530,  $3C0
-		dc.w      8, $2530,  $4C0,     0, $25A0,  $360
-		dc.w      0, $25E0,  $320,     0, $FFFF,     0
-
-; =============== S U B R O U T I N E =======================================
-
-
 Player_AnglePos:
 		move.l	(Primary_collision_addr).w,(Collision_addr).w
 		cmpi.b	#$C,$46(a0)
@@ -18422,14 +17169,14 @@ locret_112E4:
 ; ---------------------------------------------------------------------------
 
 Touch_Monitor:
-		tst.w	$1A(a0)
+		tst.w	y_vel(a0)
 		bpl.s	loc_11312
-		move.w	$14(a0),d0
+		move.w	y_pos(a0),d0
 		subi.w	#$10,d0
-		cmp.w	$14(a1),d0
+		cmp.w	y_pos(a1),d0
 		bcs.s	locret_11334
-		neg.w	$1A(a0)
-		move.w	#-$180,$1A(a1)
+		neg.w	y_vel(a0)
+		move.w	#-$180,y_vel(a1)
 		tst.b	$3C(a1)
 		bne.s	locret_11334
 		move.b	#4,$3C(a1)
@@ -40730,8 +39477,6 @@ loc_22CA0:
 		add.w	d1,(_unkF740).w
 		rts
 ; ---------------------------------------------------------------------------
-		rts
-; ---------------------------------------------------------------------------
 
 loc_22CD8:
 		bclr	#7,4(a0)
@@ -41390,426 +40135,6 @@ loc_231DC:
 ; ---------------------------------------------------------------------------
 Map_ScaledArt:	include "General/Sprites/Level Misc/Map - Scaled Art.asm"
 ; ---------------------------------------------------------------------------
-
-Obj_SphereTest:
-		lea	(word_2382C).l,a6
-		movea.l	a0,a1
-		move.l	#Obj_SphereTest_Main,(a1)
-		cmpi.b	#1,$2C(a0)
-		beq.w	loc_23398
-		cmpi.b	#2,$2C(a0)
-		beq.w	loc_23556
-		tst.b	(Ctrl_2).w
-		bne.w	loc_23556
-
-loc_23398:
-		moveq	#0,d2
-		moveq	#$D,d3
-		tst.w	(Sphere_test_address).w
-		bne.s	loc_233D6
-		move.w	a0,(Sphere_test_address).w
-		move.w	#0,(_unkE412).w
-		move.w	#0,(_unkE414).w
-		move.w	#$200,(_unkE416).w
-		move.w	#0,(SStage_scalar_index_0).w
-		move.w	#0,(SStage_scalar_index_1).w
-		move.w	#0,(SStage_scalar_index_2).w
-		bra.s	loc_233DC
-; ---------------------------------------------------------------------------
-
-loc_233CC:
-		jsr	(Create_New_Sprite3).l
-		bne.w	loc_234E0
-
-loc_233D6:
-		move.l	#Obj_EosianSphere,(a1)
-
-loc_233DC:
-		bsr.w	sub_23500
-		bsr.w	sub_23540
-		move.w	d2,d0
-		addi.w	#$10,d2
-		jsr	(GetSineCosine).l
-		asr.w	#1,d0
-		asr.w	#1,d1
-		move.w	d1,$34(a1)
-		move.w	d0,$36(a1)
-		move.w	#-$20,$38(a1)
-		move.l	a6,$3A(a1)
-		adda.w	#$10,a6
-		dbf	d3,loc_233CC
-		moveq	#0,d2
-		moveq	#$D,d3
-
-loc_23412:
-		jsr	(Create_New_Sprite3).l
-		bne.w	loc_234E0
-		move.l	#Obj_EosianSphere,(a1)
-		bsr.w	sub_23500
-		bsr.w	sub_23540
-		move.w	d2,d0
-		addi.w	#$10,d2
-		jsr	(GetSineCosine).l
-		asr.w	#1,d0
-		asr.w	#1,d1
-		move.w	d1,$34(a1)
-		move.w	d0,$36(a1)
-		move.w	#$20,$38(a1)
-		move.l	a6,$3A(a1)
-		adda.w	#$10,a6
-		dbf	d3,loc_23412
-		moveq	#0,d2
-		moveq	#$D,d3
-
-loc_23458:
-		jsr	(Create_New_Sprite3).l
-		bne.w	loc_234E0
-		move.l	#Obj_EosianSphere,(a1)
-		bsr.w	sub_23500
-		bsr.w	sub_23540
-		move.w	d2,d0
-		addi.w	#$10,d2
-		jsr	(GetSineCosine).l
-		asr.w	#1,d0
-		asr.w	#1,d1
-		move.w	#$20,$34(a1)
-		move.w	d0,$36(a1)
-		move.w	d1,$38(a1)
-		move.l	a6,$3A(a1)
-		adda.w	#$10,a6
-		dbf	d3,loc_23458
-		moveq	#0,d2
-		moveq	#$D,d3
-
-loc_2349E:
-		jsr	(Create_New_Sprite3).l
-		bne.w	loc_234E0
-		move.l	#Obj_EosianSphere,(a1)
-		bsr.w	sub_23500
-		bsr.w	sub_23540
-		move.w	d2,d0
-		addi.w	#$10,d2
-		jsr	(GetSineCosine).l
-		asr.w	#1,d0
-		asr.w	#1,d1
-		move.w	#-$20,$34(a1)
-		move.w	d0,$36(a1)
-		move.w	d1,$38(a1)
-		move.l	a6,$3A(a1)
-		adda.w	#$10,a6
-		dbf	d3,loc_2349E
-
-loc_234E0:
-		lea	(Pal_SphereTest).l,a1
-		lea	(Normal_palette_line_2).w,a2
-		move.w	#$F,d0
-
-loc_234EE:
-		move.w	(a1)+,(a2)+
-		dbf	d0,loc_234EE
-		moveq	#9,d0
-		jsr	(Load_PLC).l
-		bra.w	Obj_SphereTest_Main
-
-; =============== S U B R O U T I N E =======================================
-
-
-sub_23500:
-		move.b	#4,4(a1)
-		move.b	#$10,7(a1)
-		move.b	#$10,6(a1)
-		move.w	#$200,8(a1)
-		move.l	#Map_SphereTest,$C(a1)
-		move.w	#$24E0,$A(a1)
-		move.w	$10(a0),$10(a1)
-		move.w	$10(a0),$30(a1)
-		move.w	$14(a0),$14(a1)
-		move.w	$14(a0),$32(a1)
-		rts
-; End of function sub_23500
-
-
-; =============== S U B R O U T I N E =======================================
-
-
-sub_23540:
-		cmpi.w	#$40,d2
-		bne.s	loc_2354A
-		addi.w	#$10,d2
-
-loc_2354A:
-		cmpi.w	#$C0,d2
-		bne.s	locret_23554
-		addi.w	#$10,d2
-
-locret_23554:
-		rts
-; End of function sub_23540
-
-; ---------------------------------------------------------------------------
-
-loc_23556:
-		moveq	#0,d2
-		moveq	#$F,d3
-		tst.w	(Sphere_test_address).w
-		bne.s	loc_23594
-		move.w	a0,(Sphere_test_address).w
-		move.w	#0,(_unkE412).w
-		move.w	#0,(_unkE414).w
-		move.w	#$200,(_unkE416).w
-		move.w	#0,(SStage_scalar_index_0).w
-		move.w	#0,(SStage_scalar_index_1).w
-		move.w	#0,(SStage_scalar_index_2).w
-		bra.s	loc_2359A
-; ---------------------------------------------------------------------------
-
-loc_2358A:
-		jsr	(Create_New_Sprite3).l
-		bne.w	loc_2364C
-
-loc_23594:
-		move.l	#Obj_EosianSphere,(a1)
-
-loc_2359A:
-		bsr.w	sub_2366C
-		move.w	d2,d0
-		addi.w	#$10,d2
-		jsr	(GetSineCosine).l
-		asr.w	#1,d0
-		asr.w	#1,d1
-		move.w	d1,$34(a1)
-		move.w	d0,$36(a1)
-		move.w	#0,$38(a1)
-		move.l	a6,$3A(a1)
-		adda.w	#$10,a6
-		dbf	d3,loc_2358A
-		moveq	#0,d2
-		moveq	#$F,d3
-
-loc_235CC:
-		jsr	(Create_New_Sprite3).l
-		bne.w	loc_2364C
-		move.l	#Obj_EosianSphere,(a1)
-		bsr.w	sub_2366C
-		move.w	d2,d0
-		addi.w	#$10,d2
-		jsr	(GetSineCosine).l
-		asr.w	#1,d0
-		asr.w	#1,d1
-		move.w	#0,$34(a1)
-		move.w	d0,$36(a1)
-		move.w	d1,$38(a1)
-		move.l	a6,$3A(a1)
-		adda.w	#$10,a6
-		dbf	d3,loc_235CC
-		moveq	#0,d2
-		moveq	#$F,d3
-
-loc_2360E:
-		jsr	(Create_New_Sprite3).l
-		bne.w	loc_2364C
-		move.l	#Obj_EosianSphere,(a1)
-		bsr.w	sub_2366C
-		move.w	d2,d0
-		addi.w	#$10,d2
-		jsr	(GetSineCosine).l
-		asr.w	#1,d0
-		asr.w	#1,d1
-		move.w	d0,$34(a1)
-		move.w	#0,$36(a1)
-		move.w	d1,$38(a1)
-		move.l	a6,$3A(a1)
-		adda.w	#$10,a6
-		dbf	d3,loc_2360E
-
-loc_2364C:
-		lea	(Pal_SphereTest).l,a1
-		lea	(Normal_palette_line_2).w,a2
-		move.w	#$F,d0
-
-loc_2365A:
-		move.w	(a1)+,(a2)+
-		dbf	d0,loc_2365A
-		moveq	#9,d0
-		jsr	(Load_PLC).l
-		bra.w	Obj_SphereTest_Main
-
-; =============== S U B R O U T I N E =======================================
-
-
-sub_2366C:
-		move.b	#4,4(a1)
-		move.b	#$10,7(a1)
-		move.b	#$10,6(a1)
-		move.w	#$200,8(a1)
-		move.l	#Map_SphereTest,$C(a1)
-		move.w	#$24E0,$A(a1)
-		move.w	$10(a0),$10(a1)
-		move.w	$10(a0),$30(a1)
-		move.w	$14(a0),$14(a1)
-		move.w	$14(a0),$32(a1)
-		rts
-; End of function sub_2366C
-
-; ---------------------------------------------------------------------------
-Pal_SphereTest:	binclude "General/Special Stage/Palettes/Eosian Spheres.bin"
-		even
-; ---------------------------------------------------------------------------
-
-Obj_SphereTest_Main:
-		move.b	(Ctrl_2).w,d1
-		btst	#6,d1
-		beq.s	loc_236E2
-		cmpi.w	#$800,(_unkE416).w
-		bcc.s	loc_236E2
-		addq.w	#8,(_unkE416).w
-
-loc_236E2:
-		btst	#5,d1
-		beq.s	loc_236F4
-		cmpi.w	#$81,(_unkE416).w
-		bcs.s	loc_236F4
-		subq.w	#8,(_unkE416).w
-
-loc_236F4:
-		tst.w	$3E(a0)
-		bne.s	loc_2371A
-		btst	#0,d1
-		bne.s	loc_23704
-		addq.w	#3,(SStage_scalar_index_0).w
-
-loc_23704:
-		btst	#3,d1
-		bne.s	loc_2370E
-		addq.w	#2,(SStage_scalar_index_1).w
-
-loc_2370E:
-		btst	#4,d1
-		bne.s	loc_23718
-		addq.w	#1,(SStage_scalar_index_2).w
-
-loc_23718:
-		bra.s	loc_23738
-; ---------------------------------------------------------------------------
-
-loc_2371A:
-		btst	#0,d1
-		beq.s	loc_23724
-		subq.w	#1,(SStage_scalar_index_0).w
-
-loc_23724:
-		btst	#3,d1
-		beq.s	loc_2372E
-		addq.w	#1,(SStage_scalar_index_1).w
-
-loc_2372E:
-		btst	#4,d1
-		beq.s	loc_23738
-		addq.w	#1,(SStage_scalar_index_2).w
-
-loc_23738:
-		btst	#7,(Ctrl_2_pressed).w
-		beq.s	loc_23758
-		eori.w	#-1,$3E(a0)
-		move.w	#0,(SStage_scalar_index_0).w
-		move.w	#0,(SStage_scalar_index_1).w
-		move.w	#0,(SStage_scalar_index_2).w
-
-loc_23758:
-		btst	#1,d1
-		bne.s	loc_23762
-		addq.w	#8,(_unkE414).w
-
-loc_23762:
-		btst	#2,d1
-		bne.s	loc_2376C
-		subq.w	#8,(_unkE414).w
-
-loc_2376C:
-		move.w	(SStage_scalar_index_2).w,d0
-		lea	(SStage_scalar_result_2).w,a1
-		bsr.w	GetScalars
-		move.w	(SStage_scalar_index_1).w,d0
-		lea	(SStage_scalar_result_1).w,a1
-		bsr.w	GetScalars
-		move.w	(SStage_scalar_index_0).w,d0
-		lea	(SStage_scalar_result_0).w,a1
-		bsr.w	GetScalars
-
-Obj_EosianSphere:
-		move.w	$10(a0),d0
-		andi.w	#$FF80,d0
-		sub.w	(Camera_X_pos_coarse_back).w,d0
-		cmpi.w	#$280,d0
-		bhi.w	loc_237A6
-		bra.s	loc_237C4
-; ---------------------------------------------------------------------------
-
-loc_237A6:
-		move.w	$48(a0),d0
-		beq.s	loc_237B2
-		movea.w	d0,a2
-		bclr	#7,(a2)
-
-loc_237B2:
-		cmpa.w	(Sphere_test_address).w,a0
-		bne.s	loc_237BE
-		move.w	#0,(Sphere_test_address).w
-
-loc_237BE:
-		jmp	(Delete_Current_Sprite).l
-; ---------------------------------------------------------------------------
-
-loc_237C4:
-		movea.l	$3A(a0),a6
-		move.w	$34(a0),d1
-		move.w	$36(a0),d2
-		move.w	$38(a0),d0
-		bsr.w	sub_2398E
-		bsr.w	sub_23964
-		add.w	(_unkE416).w,d0
-		cmpi.w	#$80,d0
-		blt.s	locret_2382A
-		bsr.w	sub_2393A
-		add.w	(_unkE414).w,d2
-		bsr.w	sub_2392C
-		add.w	$30(a0),d1
-		move.w	d1,$10(a0)
-		add.w	$32(a0),d2
-		move.w	d2,$14(a0)
-		subi.w	#$80,d0
-		lsr.w	#5,d0
-		addi.w	#0,d0
-		cmpi.w	#$10,d0
-		bcs.s	loc_23816
-		move.w	#$F,d0
-
-loc_23816:
-		move.b	d0,$22(a0)
-		lsl.w	#6,d0
-		andi.w	#$380,d0
-		move.w	d0,8(a0)
-		jsr	(Draw_Sprite).l
-
-locret_2382A:
-		rts
-; ---------------------------------------------------------------------------
-word_2382C:	dc.w   -$70,-$8000,  -$70,-$8000,     0,-$8000,     0,  $234
-		dc.w   -$50,-$8000,  -$70,-$8000,     0,-$8000,     0,  $234
-		dc.w   -$30,-$8000,  -$70,-$8000,     0,-$8000,     0,  $234
-		dc.w   -$10,-$8000,  -$70,-$8000,     0,-$8000,     0,  $234
-		dc.w    $10,-$8000,  -$70,-$8000,     0,-$8000,     0,  $234
-		dc.w    $30,-$8000,  -$70,-$8000,     0,-$8000,     0,  $234
-		dc.w    $50,-$8000,  -$70,-$8000,     0,-$8000,     0,  $234
-		dc.w    $70,-$8000,  -$70,-$8000,     0,-$8000,     0,  $234
-		dc.w   -$70,-$8000,   $70,-$8000,     0,-$8000,     0,  $234
-		dc.w   -$50,-$8000,   $70,-$8000,     0,-$8000,     0,  $234
-		dc.w   -$30,-$8000,   $70,-$8000,     0,-$8000,     0,  $234
-		dc.w   -$10,-$8000,   $70,-$8000,     0,-$8000,     0,  $234
-		dc.w    $10,-$8000,   $70,-$8000,     0,-$8000,     0,  $234
-		dc.w    $30,-$8000,   $70,-$8000,     0,-$8000,     0,  $234
-		dc.w    $50,-$8000,   $70,-$8000,     0,-$8000,     0,  $234
-		dc.w    $70,-$8000,   $70,-$8000,     0,-$8000,     0,  $234
 
 ; =============== S U B R O U T I N E =======================================
 
@@ -70306,7 +68631,7 @@ AIZ2SE_Normal:
 		andi.w	#$FFF0,d0
 		subi.w	#$10,d0
 		move.w	d0,(HScroll_table+$1FE).w
-		move.b	#1,(Scroll_lock).w
+		st	(Scroll_lock).w
 		move.w	#4,(Special_events_routine).w
 		addq.w	#4,(Events_routine_fg).w
 
@@ -76627,11 +74952,9 @@ loc_403FE:
 		clr.w	(DMA_queue).w
 		move.l	#DMA_queue,(DMA_queue_slot).w
 		clr.w	(Player_mode).w
-		clr.b	(Current_act_2P).w
 		clr.w	(Results_screen_2P).w
 		clr.b	(Level_started_flag).w
 		clr.w	(Anim_Counters).w
-		clr.w	(_unkFF98).w
 		clr.w	(Competition_mode).w
 		clr.l	(Camera_X_pos).w
 		clr.l	(Camera_Y_pos).w
@@ -115917,7 +114240,7 @@ ObjDat3_5AAEE:	dc.l Map_RobotnikShip
 		dc.b 0
 ;		1st PLC		palette                          2nd 8x8 data                                       2nd 16x16 data                                     2nd 128x128 data
 ;			2nd PLC           1st 8x8 data                                    1st 16x16 data                                      1st 128x128 data
-LevelLoadBlock:	levartptrs $B,  $B,  $A,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Secondary_KosM, AIZ1_16x16_Primary_Kos,   AIZ1_16x16_Secondary_Kos, AIZ1_128x128_Kos,        AIZ1_128x128_Kos
+LevelLoadBlock:	levartptrs $B,  $B,  $A,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Intro_KosM, AIZ1_16x16_Primary_Kos,   AIZ1_16x16_Intro_Kos, AIZ1_128x128_Kos,        AIZ1_128x128_Kos
 		levartptrs $C,  $C,  $B,  AIZ2_8x8_Primary_KosM, AIZ2_8x8_Secondary_KosM, AIZ2_16x16_Primary_Kos,   AIZ2_16x16_Secondary_Kos, AIZ2_128x128_Kos,        AIZ2_128x128_Kos
 		levartptrs $E,  $F,  $C,  HCZ_8x8_Primary_KosM,  HCZ1_8x8_Secondary_KosM, HCZ_16x16_Primary_Kos,    HCZ1_16x16_Secondary_Kos, HCZ_128x128_Primary_Kos, HCZ1_128x128_Secondary_Kos
 		levartptrs $10, $11, $D,  HCZ_8x8_Primary_KosM,  HCZ2_8x8_Secondary_KosM, HCZ_16x16_Primary_Kos,    HCZ2_16x16_Secondary_Kos, HCZ_128x128_Primary_Kos, HCZ2_128x128_Secondary_Kos
@@ -115933,18 +114256,18 @@ LevelLoadBlock:	levartptrs $B,  $B,  $A,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Second
 		levartptrs $24, $25, $17, LBZ_8x8_Primary_KosM,  LBZ2_8x8_Secondary_KosM, LBZ_16x16_Primary_Kos,    LBZ2_16x16_Secondary_Kos, LBZ2_128x128_Kos,        LBZ2_128x128_Kos
 		levartptrs $26, $26, $18, ArtKosM_MHZ,           ArtKosM_MHZ,             MHZ_16x16_Kos,            MHZ_16x16_Kos,            MHZ_128x128_Kos,         MHZ_128x128_Kos
 		levartptrs $28, $28, $19, ArtKosM_MHZ,           ArtKosM_MHZ,             MHZ_16x16_Kos,            MHZ_16x16_Kos,            MHZ_128x128_Kos,         MHZ_128x128_Kos
-		levartptrs $B,  $B,  $A,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Secondary_KosM, AIZ1_16x16_Secondary_Kos, AIZ1_16x16_Secondary_Kos, AIZ1_128x128_Kos,        AIZ1_128x128_Kos
-		levartptrs $C,  $C,  $B,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Secondary_KosM, AIZ1_16x16_Secondary_Kos, AIZ1_16x16_Secondary_Kos, AIZ1_128x128_Kos,        AIZ1_128x128_Kos
+		levartptrs $B,  $B,  $A,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Intro_KosM, AIZ1_16x16_Intro_Kos, AIZ1_16x16_Intro_Kos, AIZ1_128x128_Kos,        AIZ1_128x128_Kos
+		levartptrs $C,  $C,  $B,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Intro_KosM, AIZ1_16x16_Intro_Kos, AIZ1_16x16_Intro_Kos, AIZ1_128x128_Kos,        AIZ1_128x128_Kos
 		levartptrs $2E, $2E, $1C, ArtKosM_LRZ,           ArtKosM_LRZ,             LRZ_16x16_Kos,            LRZ_16x16_Kos,            LRZ_128x128_Kos,         LRZ_128x128_Kos
 		levartptrs $30, $30, $1D, ArtKosM_LRZ,           ArtKosM_LRZ,             LRZ_16x16_Kos,            LRZ_16x16_Kos,            LRZ_128x128_Kos,         LRZ_128x128_Kos
-		levartptrs $B,  $B,  $A,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Secondary_KosM, AIZ1_16x16_Secondary_Kos, AIZ1_16x16_Secondary_Kos, AIZ1_128x128_Kos,        AIZ1_128x128_Kos
-		levartptrs $C,  $C,  $B,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Secondary_KosM, AIZ1_16x16_Secondary_Kos, AIZ1_16x16_Secondary_Kos, AIZ1_128x128_Kos,        AIZ1_128x128_Kos
-		levartptrs $B,  $B,  $A,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Secondary_KosM, AIZ1_16x16_Secondary_Kos, AIZ1_16x16_Secondary_Kos, AIZ1_128x128_Kos,        AIZ1_128x128_Kos
-		levartptrs $C,  $C,  $B,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Secondary_KosM, AIZ1_16x16_Secondary_Kos, AIZ1_16x16_Secondary_Kos, AIZ1_128x128_Kos,        AIZ1_128x128_Kos
-		levartptrs $B,  $B,  $A,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Secondary_KosM, AIZ1_16x16_Secondary_Kos, AIZ1_16x16_Secondary_Kos, AIZ1_128x128_Kos,        AIZ1_128x128_Kos
-		levartptrs $C,  $C,  $B,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Secondary_KosM, AIZ1_16x16_Secondary_Kos, AIZ1_16x16_Secondary_Kos, AIZ1_128x128_Kos,        AIZ1_128x128_Kos
+		levartptrs $B,  $B,  $A,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Intro_KosM, AIZ1_16x16_Intro_Kos, AIZ1_16x16_Intro_Kos, AIZ1_128x128_Kos,        AIZ1_128x128_Kos
+		levartptrs $C,  $C,  $B,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Intro_KosM, AIZ1_16x16_Intro_Kos, AIZ1_16x16_Intro_Kos, AIZ1_128x128_Kos,        AIZ1_128x128_Kos
+		levartptrs $B,  $B,  $A,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Intro_KosM, AIZ1_16x16_Intro_Kos, AIZ1_16x16_Intro_Kos, AIZ1_128x128_Kos,        AIZ1_128x128_Kos
+		levartptrs $C,  $C,  $B,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Intro_KosM, AIZ1_16x16_Intro_Kos, AIZ1_16x16_Intro_Kos, AIZ1_128x128_Kos,        AIZ1_128x128_Kos
+		levartptrs $B,  $B,  $A,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Intro_KosM, AIZ1_16x16_Intro_Kos, AIZ1_16x16_Intro_Kos, AIZ1_128x128_Kos,        AIZ1_128x128_Kos
+		levartptrs $C,  $C,  $B,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Intro_KosM, AIZ1_16x16_Intro_Kos, AIZ1_16x16_Intro_Kos, AIZ1_128x128_Kos,        AIZ1_128x128_Kos
 		levartptrs $B,  $B,  $2A, AIZ1_8x8_Primary_KosM, AIZ1_8x8_MainLevel_KosM, AIZ1_16x16_Primary_Kos,   AIZ1_16x16_MainLevel_Kos, AIZ1_128x128_Kos,        AIZ1_128x128_Kos
-		levartptrs $C,  $C,  $B,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Secondary_KosM, AIZ1_16x16_Secondary_Kos, AIZ1_16x16_Secondary_Kos, AIZ1_128x128_Kos,        AIZ1_128x128_Kos
+		levartptrs $C,  $C,  $B,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Intro_KosM, AIZ1_16x16_Intro_Kos, AIZ1_16x16_Intro_Kos, AIZ1_128x128_Kos,        AIZ1_128x128_Kos
 		levartptrs $42, $42, $26, ALZ_8x8_KosM,          ALZ_8x8_KosM,            ALZ_16x16_Kos,            ALZ_16x16_Kos,            ALZ_128x128_Kos,         ALZ_128x128_Kos
 		levartptrs $42, $42, $27, ALZ_8x8_KosM,          ALZ_8x8_KosM,            ALZ_16x16_Kos,            ALZ_16x16_Kos,            ALZ_128x128_Kos,         ALZ_128x128_Kos
 		levartptrs $43, $43, $28, BPZ_8x8_KosM,          BPZ_8x8_KosM,            BPZ_16x16_Kos,            BPZ_16x16_Kos,            BPZ_128x128_Kos,         BPZ_128x128_Kos
@@ -115961,10 +114284,10 @@ LevelLoadBlock:	levartptrs $B,  $B,  $A,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Second
 		levartptrs $47, $47, $37, ArtKosM_Pachinko,      ArtKosM_Pachinko,        Pachinko_16x16_Kos,       Pachinko_16x16_Kos,       Pachinko_128x128_Kos,    Pachinko_128x128_Kos
 		levartptrs $47, $47, $38, ArtKosM_Slots,         ArtKosM_Slots,           Slots_16x16_Kos,          Slots_16x16_Kos,          Slots_128x128_Kos,       Slots_128x128_Kos
 		levartptrs $47, $47, $38, ArtKosM_Slots,         ArtKosM_Slots,           Slots_16x16_Kos,          Slots_16x16_Kos,          Slots_128x128_Kos,       Slots_128x128_Kos
-		levartptrs $B,  $B,  $A,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Secondary_KosM, AIZ1_16x16_Secondary_Kos, AIZ1_16x16_Secondary_Kos, AIZ1_128x128_Kos,        AIZ1_128x128_Kos
-		levartptrs $C,  $C,  $B,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Secondary_KosM, AIZ1_16x16_Secondary_Kos, AIZ1_16x16_Secondary_Kos, AIZ1_128x128_Kos,        AIZ1_128x128_Kos
-		levartptrs $B,  $B,  $A,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Secondary_KosM, AIZ1_16x16_Secondary_Kos, AIZ1_16x16_Secondary_Kos, AIZ1_128x128_Kos,        AIZ1_128x128_Kos
-		levartptrs $C,  $C,  $B,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Secondary_KosM, AIZ1_16x16_Secondary_Kos, AIZ1_16x16_Secondary_Kos, AIZ1_128x128_Kos,        AIZ1_128x128_Kos
+		levartptrs $B,  $B,  $A,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Intro_KosM, AIZ1_16x16_Intro_Kos, AIZ1_16x16_Intro_Kos, AIZ1_128x128_Kos,        AIZ1_128x128_Kos
+		levartptrs $C,  $C,  $B,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Intro_KosM, AIZ1_16x16_Intro_Kos, AIZ1_16x16_Intro_Kos, AIZ1_128x128_Kos,        AIZ1_128x128_Kos
+		levartptrs $B,  $B,  $A,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Intro_KosM, AIZ1_16x16_Intro_Kos, AIZ1_16x16_Intro_Kos, AIZ1_128x128_Kos,        AIZ1_128x128_Kos
+		levartptrs $C,  $C,  $B,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Intro_KosM, AIZ1_16x16_Intro_Kos, AIZ1_16x16_Intro_Kos, AIZ1_128x128_Kos,        AIZ1_128x128_Kos
 Offs_PLC:	dc.w PLC_00-Offs_PLC
 		dc.w PLC_01-Offs_PLC
 		dc.w PLC_02-Offs_PLC
@@ -119346,7 +117669,7 @@ ArtNem_AIZMiniboss:
 		binclude "Levels/AIZ/Nemesis Art/Miniboss.bin"
 		even
 ArtKosM_AIZEndBoss:
-		binclude "Levels/AIZ/KosinskiM Art/End Boss.bin"
+		binclude "Levels/AIZ/KosinskiM Art/End Boss.kosm"
 		even
 ArtNem_AIZMinibossSmall:
 		binclude "Levels/AIZ/Nemesis Art/Miniboss Small.bin"
@@ -119531,13 +117854,13 @@ ArtNem_EggCapsule:
 		binclude "General/Sprites/Robotnik/Egg Capsule.bin"
 		even
 ArtKosM_AIZIntroPlane:
-		binclude "Levels/AIZ/KosinskiM Art/Intro Plane.bin"
+		binclude "Levels/AIZ/KosinskiM Art/Intro Plane.kosm"
 		even
 ArtUnc_CutsceneKnux:
 		binclude "General/Sprites/Knuckles/Cutscene/Cutscene Main.bin"
 		even
 ArtKosM_AIZIntroEmeralds:
-		binclude "Levels/AIZ/KosinskiM Art/Intro Emeralds.bin"
+		binclude "Levels/AIZ/KosinskiM Art/Intro Emeralds.kosm"
 		even
 ArtUnc_SSEntryRing:
 		binclude "General/Sprites/SS Entry/Entry Ring.bin"
@@ -119669,7 +117992,7 @@ ArtNem_CGZMisc:	binclude "Levels/CGZ/Nemesis Art/Platform.bin"
 ArtNem_EMZMisc:	binclude "Levels/EMZ/Nemesis Art/Misc Art.bin"
 		even
 ArtKosM_AIZ2Bombership2_8x8:
-		binclude "Levels/AIZ/Tiles/Act 2 Bombership 2.bin"
+		binclude "Levels/AIZ/Tiles/Act 2 Bombership 2.kosm"
 		even
 ArtKosM_ResultsSONIC:
 		binclude "General/Sprites/Results/Results SONIC S3.bin"
@@ -119703,7 +118026,7 @@ ArtKosM_TitleCardRedAct:
 		binclude "General/Sprites/Title Card/Title Card Red ACT.bin"
 		even
 ArtKosM_AIZTitleCard:
-		binclude "Levels/AIZ/KosinskiM Art/Title Card.bin"
+		binclude "Levels/AIZ/KosinskiM Art/Title Card.kosm"
 		even
 ArtKosM_HCZTitleCard:
 		binclude "Levels/HCZ/KosinskiM Art/Title Card.bin"
@@ -119805,50 +118128,50 @@ MapUnc_SaveScreenStatic4:
 ArtKos_SaveScreenMisc:
 		binclude "General/Save Menu/Kosinski Art/Misc.bin"
 		even
-AIZ1_16x16_Primary_Kos:
-		binclude "Levels/AIZ/Blocks/Act 1 Primary.bin"
-		even
-AIZ1_16x16_Secondary_Kos:
-		binclude "Levels/AIZ/Blocks/Act 1 Secondary.bin"
-		even
-AIZ1_16x16_MainLevel_Kos:
-		binclude "Levels/AIZ/Blocks/Act 1 Main Level.bin"
+AIZ1_8x8_Intro_KosM:
+		binclude "Levels/AIZ/Tiles/Act 1 Intro.kosm"
 		even
 AIZ1_8x8_Primary_KosM:
-		binclude "Levels/AIZ/Tiles/Act 1 Primary.bin"
-		even
-AIZ1_8x8_Secondary_KosM:
-		binclude "Levels/AIZ/Tiles/Act 1 Secondary.bin"
+		binclude "Levels/AIZ/Tiles/Act 1 Primary.kosm"
 		even
 AIZ1_8x8_MainLevel_KosM:
-		binclude "Levels/AIZ/Tiles/Act 1 Main Level.bin"
-		even
-AIZ1_128x128_Kos:
-		binclude "Levels/AIZ/Chunks/Act 1.bin"
+		binclude "Levels/AIZ/Tiles/Act 1 Main Level.kosm"
 		even
 AIZ1_8x8_Flames_KosM:
-		binclude "Levels/AIZ/Tiles/Act 1 Fire Overlay.bin"
+		binclude "Levels/AIZ/Tiles/Act 1 Fire Overlay.kosm"
+		even
+AIZ1_16x16_Intro_Kos:
+		binclude "Levels/AIZ/Blocks/Act 1 Intro.kos"
+		even
+AIZ1_16x16_Primary_Kos:
+		binclude "Levels/AIZ/Blocks/Act 1 Primary.kos"
+		even
+AIZ1_16x16_MainLevel_Kos:
+		binclude "Levels/AIZ/Blocks/Act 1 Main Level.kos"
+		even
+AIZ1_128x128_Kos:
+		binclude "Levels/AIZ/Chunks/Act 1.kos"
 		even
 AIZ2_16x16_Primary_Kos:
-		binclude "Levels/AIZ/Blocks/Act 2 Primary.bin"
+		binclude "Levels/AIZ/Blocks/Act 2 Primary.kos"
 		even
 AIZ2_16x16_Secondary_Kos:
-		binclude "Levels/AIZ/Blocks/Act 2 Secondary.bin"
+		binclude "Levels/AIZ/Blocks/Act 2 Secondary.kos"
 		even
 AIZ2_16x16_BomberShip_Kos:
-		binclude "Levels/AIZ/Blocks/Act 2 BomberShip.bin"
+		binclude "Levels/AIZ/Blocks/Act 2 BomberShip.kos"
 		even
 AIZ2_8x8_Primary_KosM:
-		binclude "Levels/AIZ/Tiles/Act 2 Primary.bin"
+		binclude "Levels/AIZ/Tiles/Act 2 Primary.kosm"
 		even
 AIZ2_8x8_Secondary_KosM:
-		binclude "Levels/AIZ/Tiles/Act 2 Secondary.bin"
+		binclude "Levels/AIZ/Tiles/Act 2 Secondary.kosm"
 		even
 AIZ2_8x8_BomberShip_KosM:
-		binclude "Levels/AIZ/Tiles/Act 2 Bombership.bin"
+		binclude "Levels/AIZ/Tiles/Act 2 Bombership.kosm"
 		even
 AIZ2_128x128_Kos:
-		binclude "Levels/AIZ/Chunks/Act 2.bin"
+		binclude "Levels/AIZ/Chunks/Act 2.kos"
 		even
 HCZ_16x16_Primary_Kos:
 		binclude "Levels/HCZ/Blocks/Primary.bin"
@@ -120032,6 +118355,6 @@ Pachinko_128x128_Kos:
 Slots_16x16_Kos:
 ArtKosM_Slots:
 Slots_128x128_Kos:
-		org $200000
+;		org $200000
 EndOfROM:
 		END

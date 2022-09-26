@@ -18,7 +18,6 @@
 	dbglistobj Obj_Bloominator,		Map_Bloominator,		   0,   0, make_art_tile($52A,1,0)
 	dbglistobj Obj_MonkeyDude,		Map_MonkeyDude,			 $10,   0, make_art_tile($548,1,0)
 	dbglistobj Obj_AIZSurfboardIntro,	Map_SurfboardIntro,		   1,   1, make_art_tile($680,0,0)
-	dbglistobj Obj_SphereTest,		Map_SphereTest,			   0,   0, make_art_tile($4E0,1,0)
 	dbglistobj Obj_StarPost,		Map_StarPost,			   1,   0, make_art_tile($5EC,0,0)
 	dbglistobj Obj_Bubbler,			Map_Bubbler,			 $81, $13, make_art_tile($45C,0,1)
 	dbglistobj Obj_CorkFloor,		Map_AIZCorkFloor,		   0,   0, make_art_tile($001,2,0)

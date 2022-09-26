@@ -253,7 +253,9 @@ SStage_unkA600 :=		Block_table+$1600	; unknown special stage array
 HScroll_table			ds.b $200		; array of background scroll positions for the level. WARNING: some references are before this label
 _unkA880 :=			HScroll_table+$80	; used in SSZ screen/background events
 _unkA8E0 :=			HScroll_table+$E0	; used in SSZ screen/background events
-Nem_code_table			ds.b $200		; code table is built up here and then used during decompression
+
+Object_respawn_table		ds.b $300		; 1 byte per object, every object in the level gets an entry
+Ring_status_table		ds.b $400		; 1 word per ring
 Sprite_table_input		ds.b $400		; 8 priority levels, $80 bytes per level
 
 Object_RAM =			*			; $1FCC bytes ; $4A bytes per object, 110 objects
@@ -277,35 +279,51 @@ Invincibility_stars		ds.b object_size*4
 Invincibility_stars_P2		ds.b object_size*3
 Wave_Splash			ds.b object_size	; Obj_HCZWaveSplash is loaded here
 Object_RAM_end =		*
-			ds.b $14			; unused
 Conveyor_belt_load_array	ds.b $E			; each subtype of hcz conveyor belt uses a different byte to check if it's already loaded. Since they're so wide, the object loader may try loading them multiple times
-			ds.b $12			; unused
-
 Kos_decomp_buffer		ds.b $1000		; each module in a KosM archive is decompressed here and then DMAed to VRAM
+Kos_decomp_queue_count		ds.w 1			; the number of pieces of data on the queue. Sign bit set indicates a decompression is in progress
+Kos_decomp_stored_registers	ds.w 20			; allows decompression to be spread over multiple frames
+Kos_decomp_stored_SR		ds.w 1
+Kos_decomp_bookmark		ds.l 1			; the address within the Kosinski queue processor at which processing is to be resumed
+Kos_description_field		ds.w 1			; used by the Kosinski queue processor the same way the stack is used by the normal Kosinski decompression routine
+Kos_decomp_queue		ds.l 2*4		; 2 longwords per entry, first is source location and second is decompression location
+Kos_decomp_source =		Kos_decomp_queue	; long ; the compressed data location for the first entry in the queue
+Kos_decomp_destination =	Kos_decomp_queue+4	; long ; the decompression location for the first entry in the queue
+Kos_modules_left		ds.b 1			; the number of modules left to decompresses. Sign bit set indicates a module is being decompressed/has been decompressed
+			ds.b 1				; unused
+Kos_last_module_size		ds.w 1			; the uncompressed size of the last module in words. All other modules are $800 words
+Kos_module_queue		ds.w 3*4		; 6 bytes per entry, first longword is source location and next word is VRAM destination
+Kos_module_source =		Kos_module_queue	; long ; the compressed data location for the first module in the queue
+Kos_module_destination =	Kos_module_queue+4	; word ; the VRAM destination for the first module in the queue
+Nem_code_table			ds.b $200		; code table is built up here and then used during decompression
+Nem_decomp_queue		ds.b 6*$10		; 6 bytes per entry, first longword is source location and next word is VRAM destination
+Nem_decomp_source =		Nem_decomp_queue	; long ; the compressed data location for the first entry in the queue
+Nem_decomp_destination =	Nem_decomp_queue+4	; word ; destination in VRAM for the first entry in the queue
+Nem_decomp_vars =		*			; $20 bytes ; various variables used by the Nemesis decompression queue processor
+Nem_write_routine		ds.l 1			; points to either Nem_PCD_WriteRowToVDP or Nem_PCD_WriteRowToVDP_XOR
+Nem_repeat_count		ds.l 1			; stored repeat count for the current palette index
+Nem_palette_index		ds.l 1			; the current palette index
+Nem_previous_row		ds.l 1			; used in XOR mode
+Nem_data_word			ds.l 1			; contains the current compressed word being processed
+Nem_shift_value			ds.l 1			; the number of bits the data word needs to be shifted by
+Nem_patterns_left		ds.w 1			; the number of patterns remaining to be decompressed
+Nem_frame_patterns_left		ds.w 1			; the number of patterns remaining to be decompressed in the current frame
+
 H_scroll_buffer			ds.b $380		; horizontal scroll table is built up here and then DMAed to VRAM
 Collision_response_list		ds.b $80		; only objects in this list are processed by the collision response routines
-Stat_table =			*			; used by Tails' AI in a Sonic and Tails game
+Stat_table 			; used by Tails' AI in a Sonic and Tails game
 Pos_table_P2			ds.b $100		; used by Player 2 in competition mode
 Pos_table 			ds.b $100		;
 Competition_saved_data		ds.b $54		; saved data from Competition Mode
-			ds.b $C				; unused
-Save_pointer :=			*		; S3 uses a different address
-				ds.l 1			; pointer to the active save slot in 1 player mode
-			ds.w 1				; unused
+Save_pointer			ds.l 1			; pointer to the active save slot in 1 player mode
 Emerald_flicker_flag		ds.w 1			; controls the emerald flicker in save screen and special stage results.
-			ds.b $44			; unused
-Saved_data :=			*		; S3 uses a different address
-				ds.b $54		; saved data from 1 player mode
-Ring_status_table		ds.b $400		; 1 word per ring
-Object_respawn_table		ds.b $300		; 1 byte per object, every object in the level gets an entry
+Saved_data			ds.b $54		; saved data from 1 player mode
 
 Camera_RAM =			*			; various camera and scroll-related variables are stored here
 H_scroll_amount			ds.w 1			; number of pixels camera scrolled horizontally in the last frame * $100
 V_scroll_amount			ds.w 1			; number of pixels camera scrolled vertically in the last frame * $100
 H_scroll_amount_P2		ds.w 1
 V_scroll_amount_P2		ds.w 1
-_unkEE08			ds.b 1			; this is actually unused
-			ds.b 1				; unused
 Scroll_lock			ds.b 1			; if this is set scrolling routines aren't called
 Scroll_lock_P2			ds.b 1
 Camera_target_min_X_pos		ds.w 1
@@ -327,10 +345,8 @@ Pos_table_index_P2		ds.w 1
 Distance_from_top		ds.w 1			; the vertical scroll manager scrolls the screen until the player's distance from the top of the screen is equal to this (or between this and this + $40 when in the air). $60 by default
 Distance_from_top_P2		ds.w 1
 Deform_lock			ds.b 1
-			ds.b 1				; unused
 Camera_max_Y_pos_changing	ds.b 1			; set when the maximum camera Y pos is undergoing a change
 Dynamic_resize_routine		ds.b 1
-			ds.b 5				; unused
 Fast_V_scroll_flag		ds.b 1			; if this is set vertical scroll when the player is on the ground and has a speed of less than $800 is capped at 24 pixels per frame instead of 6
 V_scroll_value_P2_copy		ds.l 1			; upper word for foreground, lower word for background
 Camera_X_diff			ds.w 1			; difference between Camera_X_pos_copy and Camera_X_pos_BG_copy, used for background collision in SSZ and other levels
@@ -338,35 +354,26 @@ Camera_Y_diff			ds.w 1			; difference between Camera_Y_pos_copy and Camera_Y_pos
 Ring_start_addr_ROM		ds.l 1			; address in the ring layout of the first ring whose X position is >= camera X position - 8
 Ring_end_addr_ROM		ds.l 1			; address in the ring layout of the first ring whose X position is >= camera X position + 328
 Ring_start_addr_RAM		ds.w 1			; address in the ring status table of the first ring whose X position is >= camera X position - 8
-			ds.w 1				; unused
 Apparent_zone_and_act =		*
 Apparent_zone			ds.b 1			; always equal to actual zone
 Apparent_act			ds.b 1			; for example, after AIZ gets burnt, this indicates act 1 even though it's actually act 2
 Palette_fade_timer		ds.w 1			; the palette gets faded in until this timer expires
-Competition_time_record		ds.l 1		; player 1's recorded time for the current run, to be displayed in menus and the result screen 
+Competition_time_record		ds.l 1		; player 1's recorded time for the current run, to be displayed in menus and the result screen
 Competition_time_record_minute =			Competition_time_record+1
 Competition_time_record_second =			Competition_time_record+2
 Competition_time_record_frame =			Competition_time_record+3
-Competition_time_record_P2	ds.l 1		; player 2's recorded time for the current run, to be displayed in menus and the result screen 
+Competition_time_record_P2	ds.l 1		; player 2's recorded time for the current run, to be displayed in menus and the result screen
 Competition_time_record_minute_P2 =		Competition_time_record_P2+1
 Competition_time_record_second_P2 =		Competition_time_record_P2+2
 Competition_time_record_frame_P2 =		Competition_time_record_P2+3
 Competition_time_attack_new_top_record			ds.b 1		; signifies new time records in time attack mode. set: no new records, clear: 1st place, $1: 2nd place, $2: 3rd place record.
-			ds.b 1				; unused
-Competition_lap_count			ds.b 1			; number of laps that player 1 has completed
-Competition_lap_count_2P			ds.b 1		; number of laps that player 2 has completed
+				ds.b 1
+Competition_lap_count		ds.b 1			; number of laps that player 1 has completed
 Act3_flag			ds.b 1			; set when entering LRZ 3 or DEZ 3 directly from previous act. Prevents title card from loading
-			ds.b 1				; unused
 Camera_X_pos_P2			ds.l 1
 Camera_Y_pos_P2			ds.l 1
 Camera_X_pos_P2_copy		ds.w 1
-			ds.w 1				; unused
 Camera_Y_pos_P2_copy		ds.w 1
-			ds.w 1				; unused
-_unkEE70			ds.w 1			; it is unclear how this is used
-			ds.w 1				; unused
-_unkEE74			ds.w 1			; it is unclear how this is used
-			ds.w 1				; unused
 Camera_X_pos			ds.l 1
 Camera_Y_pos			ds.l 1
 Camera_X_pos_copy		ds.l 1
@@ -390,12 +397,10 @@ Screen_Y_wrap_value		ds.w 1			; either $7FF or $FFF
 Camera_Y_pos_mask		ds.w 1			; either $7F0 or $FF0
 Layout_row_index_mask		ds.w 1			; either $3C or $7C
 
-_unkEEB0			ds.w 1			;
 Special_events_routine		ds.w 1			; routine counter for various special events. Used for example with LBZ2 Death Egg sequence
 Events_fg_0			ds.w 1			; various flags used by screen events
 Events_fg_1			ds.w 1			; various flags used by screen events
 Events_fg_2			ds.w 1			; various flags used by screen events
-_unkEEBA			ds.w 1			; only used in Sonic 3
 Level_repeat_offset		ds.w 1			; the number of pixels the screen was moved this frame, used to offset level objects horizontally. Used only for level repeat sections, such as AIZ airship.
 Events_fg_3			ds.w 1			; various flags used by screen events
 Events_routine_fg		ds.w 1			; screen events routine counter
@@ -420,7 +425,7 @@ _unkEEF2			ds.w 1			; used exclusively in SSZ background events code
 _unkEEF4			ds.w 1			; used exclusively in SSZ background events code
 _unkEEF6			ds.l 1			; used exclusively in SSZ background events code
 _unkEEFA			ds.w 1			; used exclusively in SSZ background events code
-			ds.b $3E			; used in some instances (see above)
+				ds.b $3E		; used in some instances (see above)
 
 Spritemask_flag			ds.w 1			; when set, indicates that special sprites are used for sprite masking
 Use_normal_sprite_table		ds.w 1			; if this is set Sprite_table_buffer and Sprite_table_buffer_P2 will be DMAed instead of Sprite_table_buffer_2 and Sprite_table_buffer_P2_2
@@ -435,12 +440,9 @@ Competition_menu_zone		ds.b 1			; competition mode zone id. This is different fr
 Dataselect_entry		ds.b 1			; the selected save entry in data select menu. This includes no save and delete options, too
 Dataselect_nosave_player	ds.w 1			; Player mode for NO SAVE option in data select menu
 Competition_menu_items		ds.b 1			; 0 = Enabled, FF = Disabled
-			ds.b 1				; unused
 Demo_start_button		ds.b 1			; keeps track of whether controller 1 has pressed the start button. May be used by the demo data itself
-			ds.b 1				; unused
 Demo_data_addr			ds.l 1			; keeps getting incremented as the demo progresses
 SRAM_mask_interrupts_flag	ds.w 1			; if this is set SRAM routines will mask all interrupts (by setting the SR to $2700)
-			ds.w 1				; unused
 Object_index_addr		ds.l 1			; points to either the object index for S3 levels or that for S&K levels
 Act3_ring_count			ds.w 1			; stores ring count during act 3 transition
 Act3_timer			ds.l 1			; stores timer during act 3 transition
@@ -450,15 +452,12 @@ _unkEF68			ds.w 1			; stores a tile used in special stage results screen, unknow
 Special_stage_zone_and_act	ds.w 1			; stored zone and act during special stage results screen?
 HPZ_special_stage_completed	ds.w 1			; set if special stage was completed. This determines which cutscene to play when entering HPZS
 Current_special_stage_2		ds.b 1			; seems to be just a copy of Current_special_stage
-			ds.b 1				; unused
 HPZ_current_special_stage	ds.b 1			; seems to be just a copy of Current_special_stage used specifically for HPZS
-			ds.b 1				; unused
 Ending_running_flag		ds.w 1			; the only thing this does is prevent the game from pausing
 Plane_buffer_2_addr		ds.l 1			; the address of the second plane buffer to process, if applicable
 Demo_hold_counter		ds.b 1			; the number of frames to hold the current buttons. This only applies to S&K demos
 Demo_hold_buttons		ds.b 1			; the buttons to hold. This only applies to S&K demos
 Demo_number			ds.w 1			; the currently running demo
-			ds.l 1				; unused
 
 Ring_consumption_table =	*			; $80 bytes ; stores the addresses of all rings currently being consumed
 Ring_consumption_count		ds.w 1			; the number of rings being consumed currently
@@ -472,9 +471,17 @@ Water_palette_line_3 =		Water_palette+$40	; $20 bytes
 Water_palette_line_4 =		Water_palette+$60	; $20 bytes
 Plane_buffer			ds.b $480		; used by level drawing routines
 VRAM_buffer			ds.b $80		; used to temporarily hold data while it is being transferred from one VRAM location to another
+Normal_palette			ds.b $80
+Normal_palette_line_2 =		Normal_palette+$20	; $20 bytes
+Normal_palette_line_3 =		Normal_palette+$40	; $20 bytes
+Normal_palette_line_4 =		Normal_palette+$60	; $20 bytes
+Target_palette			ds.b $80		; used by palette fading routines
+Target_palette_line_2 =		Target_palette+$20	; $20 bytes
+Target_palette_line_3 =		Target_palette+$40	; $20 bytes
+Target_palette_line_4 =		Target_palette+$60	; $20 bytes
 
 Game_mode			ds.b 1
-			ds.b 1				; unused
+				ds.b 1			; unused
 Ctrl_1_logical =		*			; both held and pressed
 Ctrl_1_held_logical		ds.b 1
 Ctrl_1_pressed_logical		ds.b 1
@@ -484,20 +491,15 @@ Ctrl_1_pressed			ds.b 1			; buttons being pressed newly this frame
 Ctrl_2 =			*			; both held and pressed
 Ctrl_2_held			ds.b 1
 Ctrl_2_pressed			ds.b 1
-_tempF608		ds.b 6				; this is used in Sonic 3 Alone, but unused in Sonic & Knuckles and Sonic 3 Complete
 
 VDP_reg_1_command		ds.w 1			; AND the lower byte by $BF and write to VDP control port to disable display, OR by $40 to enable
-			ds.l 1				; unused
 Demo_timer			ds.w 1			; the time left for a demo to start/run
 V_scroll_value =		*			; both foreground and background
 V_scroll_value_FG		ds.w 1
 V_scroll_value_BG		ds.w 1
-_unkF61A			ds.l 1			; unused
 V_scroll_value_P2 =		*
 V_scroll_value_FG_P2		ds.w 1
 V_scroll_value_BG_P2		ds.w 1
-Teleport_active_timer		ds.b 1			; left over from Sonic 2
-Teleport_active_flag		ds.b 1			; left over from Sonic 2
 H_int_counter_command		ds.w 1			; contains a command to write to VDP register $0A (line interrupt counter)
 H_int_counter =			H_int_counter_command+1	; just the counter part of the command
 Palette_fade_info =		*			; both index and count
@@ -505,17 +507,13 @@ Palette_fade_index		ds.b 1			; colour to start fading from
 Palette_fade_count		ds.b 1			; the number of colours to fade
 Lag_frame_count			ds.w 1			; more specifically, the number of times V-int routine 0 has run. Reset at the end of a normal frame
 V_int_routine			ds.b 1
-			ds.b 1				; unused
 Sprites_drawn			ds.b 1			; used to ensure the sprite limit isn't exceeded
-			ds.b 1				; unused
 Water_palette_data_addr		ds.l 1			; points to the water palette data for the current level
 Palette_cycle_counter0		ds.w 1			; various counters and variables for palette cycles
 Palette_cycle_counter1		ds.w 1			; various counters and variables for palette cycles
 RNG_seed			ds.l 1			; used by the random number generator
 Game_paused			ds.w 1
-			ds.l 1				; unused
 DMA_trigger_word		ds.w 1			; transferred from RAM to avoid crashing the Mega Drive
-			ds.w 1				; unused
 H_int_flag			ds.w 1			; unless this is set H-int will return immediately
 
 Water_level			ds.w 1			; keeps fluctuating
@@ -530,7 +528,6 @@ Palette_frame			ds.w 1
 Palette_timer			ds.b 1
 Super_palette_status		ds.b 1			 ; appears to be a flag for the palette's current status: '0' for 'off', '1' for 'fading', -1 for 'fading done'
 _unkF660			ds.w 1
-_unkF662			ds.w 1			 ; unused
 Background_collision_flag	ds.b 1			 ; if set, background collision is enabled
 Disable_death_plane		ds.b 1			 ; if set, going below the screen wont kill the player
 Hyper_Sonic_flash_timer		ds.b 1			 ; used for Hyper Sonic's double jump move
@@ -540,35 +537,12 @@ Palette_timer_Tails		ds.b 1
 Ctrl_2_logical =		*			 ; both held and pressed
 Ctrl_2_held_logical		ds.b 1
 Ctrl_2_pressed_logical		ds.b 1
-_unkF66C			ds.b 1
-			ds.b 3				; unused
 Super_frame_count		ds.w 1
-			ds.l 1				; unused
 Scroll_force_positions		ds.b 1			; if this is set scrolling will be based on the two variables below rather than the player's actual position
-			ds.b 1				; unused
-Scroll_forced_X_pos		ds.w 1
-			ds.w 1				; unused
-Scroll_forced_Y_pos		ds.w 1			; note: must be exactly 4 bytes after Scroll_forced_X_pos
-			ds.w 1				; unused
-
-Nem_decomp_queue		ds.b 6*$10		; 6 bytes per entry, first longword is source location and next word is VRAM destination
-Nem_decomp_source =		Nem_decomp_queue	; long ; the compressed data location for the first entry in the queue
-Nem_decomp_destination =	Nem_decomp_queue+4	; word ; destination in VRAM for the first entry in the queue
-Nem_decomp_vars =		*			; $20 bytes ; various variables used by the Nemesis decompression queue processor
-Nem_write_routine		ds.l 1			; points to either Nem_PCD_WriteRowToVDP or Nem_PCD_WriteRowToVDP_XOR
-Nem_repeat_count		ds.l 1			; stored repeat count for the current palette index
-Nem_palette_index		ds.l 1			; the current palette index
-Nem_previous_row		ds.l 1			; used in XOR mode
-Nem_data_word			ds.l 1			; contains the current compressed word being processed
-Nem_shift_value			ds.l 1			; the number of bits the data word needs to be shifted by
-Nem_patterns_left		ds.w 1			; the number of patterns remaining to be decompressed
-Nem_frame_patterns_left		ds.w 1			; the number of patterns remaining to be decompressed in the current frame
-			ds.l 1				; unused?
-
+_unkF66C			ds.b 1
 Tails_CPU_interact		ds.w 1			; RAM address of the last object Tails stood on while controlled by AI
 Tails_CPU_idle_timer		ds.w 1			; counts down while controller 2 is idle, when it reaches 0 the AI takes over
 Tails_CPU_flight_timer		ds.w 1			; counts up while Tails is respawning, when it reaches 300 he drops into the level
-			ds.w 1				; unused
 Tails_CPU_routine		ds.w 1			; Tails' current AI routine in a Sonic and Tails game
 Tails_CPU_target_X		ds.w 1			; Tails' target x-position
 Tails_CPU_target_Y		ds.w 1			; Tails' target y-position
@@ -578,13 +552,10 @@ Rings_manager_routine		ds.b 1
 Level_started_flag		ds.b 1
 _unkF712			ds.b $1C		; ??? ; unknown object respawn table
 AIZ1_palette_cycle_flag		ds.b 1			; selects which palette cycles are used in AIZ1
-			ds.b 1				; unused
 Water_flag			ds.b 1
-			ds.b $D				; unused
 Flying_carrying_Sonic_flag	ds.b 1			; set when Tails carries Sonic in a Sonic and Tails game
 Flying_picking_Sonic_timer	ds.b 1			; until this is 0 Tails can't pick Sonic up
 _unkF740			ds.w 1
-			ds.w 1				; unused
 _unkF744			ds.w 1
 Tails_CPU_star_post_flag	ds.b 1			; copy of Last_star_post_hit, sets Tails' starting behavior in a Sonic and Tails game
 			ds.b 1				; unused
@@ -596,7 +567,6 @@ _unkF74B			ds.b 1
 _unkF74C			ds.w 1
 Gliding_collision_flags		ds.b 1
 Disable_wall_grab		ds.b 1			; if set, disables Knuckles wall grab
-			ds.b $10			; unused
 Max_speed			ds.w 1
 Acceleration			ds.w 1
 Deceleration			ds.w 1
@@ -615,17 +585,14 @@ Object_load_addr_front		ds.l 1			; the address inside the object placement data 
 Object_load_addr_back		ds.l 1			; the address inside the object placement data of the first object whose X pos is >= Camera_X_pos_coarse - $80
 Object_respawn_index_front	ds.w 1			; the object respawn table index for the object at Obj_load_addr_front
 Object_respawn_index_back	ds.w 1			; the object respawn table index for the object at Obj_load_addr_back
-			ds.b $16			; unused
 Pal_fade_delay			ds.w 1			; timer for palette fade routines
 Collision_addr			ds.l 1			; points to the primary or secondary collision data as appropriate
-			ds.b $10			; unused
 Boss_flag			ds.b 1			; set if a boss fight is going on
-			ds.b 5				; unused
+			ds.b 3				; unused
 _unkF7B0			ds.b 4
 
 Primary_collision_addr		ds.l 1
 Secondary_collision_addr	ds.l 1
-			ds.l 1				; unused
 MHZ_pollen_counter		ds.b 1			; number of currently active pollen or leaves in MHZ
 _unkF7C1			ds.b 1
 _unkF7C2			ds.b 1
@@ -637,11 +604,9 @@ WindTunnel_flag			ds.b 1
 WindTunnel_flag_P2		ds.b 1
 Ctrl_1_locked			ds.b 1
 Ctrl_2_locked			ds.b 1
-			ds.l 1				; unused
 Chain_bonus_counter		ds.w 1
 Time_bonus_countdown		ds.w 1			; used on the results screen
 Ring_bonus_countdown		ds.w 1			; used on the results screen
-			ds.l 1				; unused
 Camera_X_pos_coarse_back	ds.w 1			; Camera_X_pos_coarse - $80
 _unkF7DC			ds.w 1
 Player_prev_frame_P2		ds.b 1			; used by DPLC routines to detect whether a DMA transfer is required
@@ -666,7 +631,6 @@ Camera_stored_min_X_pos		ds.w 1			; the target camera minimum x-position
 Camera_stored_min_Y_pos		ds.w 1			; the target camera minimum y-position
 Camera_stored_max_Y_pos		ds.w 1			; the target camera maximum y-position
 Slotted_object_bits		ds.w 1			; bits to determine which slots are used for slotted objects
-			ds.b 6				; unused
 _unkFAA2			ds.b 1
 _unkFAA3			ds.b 1
 _unkFAA4			ds.w 1
@@ -698,30 +662,22 @@ _unkFAC8			ds.w 1
 			ds.w 1				; unused
 _unkFACC			ds.b 1
 _unkFACD			ds.b 1
-Pal_fade_delay2			ds.w 1			; timer for palette fade from white routine
-			ds.b $A				; unused
-Palette_rotation_custom		ds.l 1			; custom routine for palette rotation scripts
-Palette_rotation_data		ds.w 9			; data used by palette rotation scripts. Last word must always be 0
-SSZ_MTZ_boss_X_pos			ds.w 1			; horizontal position of the Metropolis Zone boss in Sky Sanctuary
-			ds.w 1				; unused
-SSZ_MTZ_boss_Y_pos			ds.w 1			; vertical position of the Metropolis Zone boss in Sky Sanctuary
-			ds.w 1				; unused
-SSZ_MTZ_boss_X_vel			ds.w 1				; horizontal velocity of the Metropolis Zone boss in Sky Sanctuary
-SSZ_MTZ_boss_Y_vel			ds.w 1				; vertical velocity of the Metropolis Zone boss in Sky Sanctuary
-SSZ_MTZ_boss_laser_timer			ds.w 1	; counts down until a laser is fired in Sky Sanctuary's Metropolis boss fight
-			ds.w 1				; unused
+Pal_fade_delay2			ds.w 1		; timer for palette fade from white routine
+				ds.b $A		; unused
+Palette_rotation_custom		ds.l 1		; custom routine for palette rotation scripts
+Palette_rotation_data		ds.w 9		; data used by palette rotation scripts. Last word must always be 0
+SSZ_MTZ_boss_X_pos		ds.w 1		; horizontal position of the Metropolis Zone boss in Sky Sanctuary
+				ds.w 1		; unused
+SSZ_MTZ_boss_Y_pos		ds.w 1		; vertical position of the Metropolis Zone boss in Sky Sanctuary
+				ds.w 1		; unused
+SSZ_MTZ_boss_X_vel		ds.w 1		; horizontal velocity of the Metropolis Zone boss in Sky Sanctuary
+SSZ_MTZ_boss_Y_vel		ds.w 1		; vertical velocity of the Metropolis Zone boss in Sky Sanctuary
+SSZ_MTZ_boss_laser_timer	ds.w 1		; counts down until a laser is fired in Sky Sanctuary's Metropolis boss fight
+				ds.w 1		; unused
 
 DMA_queue			ds.w $12*7		; stores all the VDP commands necessary to initiate a DMA transfer
 DMA_queue_slot			ds.l 1			; points to the next free slot on the queue
 
-Normal_palette			ds.b $80
-Normal_palette_line_2 =		Normal_palette+$20	; $20 bytes
-Normal_palette_line_3 =		Normal_palette+$40	; $20 bytes
-Normal_palette_line_4 =		Normal_palette+$60	; $20 bytes
-Target_palette			ds.b $80		; used by palette fading routines
-Target_palette_line_2 =		Target_palette+$20	; $20 bytes
-Target_palette_line_3 =		Target_palette+$40	; $20 bytes
-Target_palette_line_4 =		Target_palette+$60	; $20 bytes
 Stack_contents			ds.b $100		; stack contents
 System_stack =			*			; this is the top of the stack, it grows downwards
 
@@ -740,9 +696,7 @@ Current_zone_and_act =		*
 Current_zone			ds.b 1
 Current_act			ds.b 1
 Life_count			ds.b 1
-			ds.b 3				; unused
 Current_special_stage		ds.b 1
-			ds.b 1				; unused
 Continue_count			ds.b 1
 Super_Sonic_Knux_flag		ds.b 1
 Time_over_flag			ds.b 1
@@ -800,18 +754,17 @@ LRZ_rocks_addr_front		ds.l 1			; the address inside the lrz rocks data of the fi
 LRZ_rocks_addr_back		ds.l 1			; the address inside the lrz rocks data of the first rock whose X pos is >= Camera_X_pos_coarse - $80
 Oscillating_table		ds.b $42		; various oscillating variables
 Oscillating_table_end =		*			; end of oscillating data array
-Slot_machine_goal_frame_timer			ds.b 1
-Slot_machine_goal_frame			ds.b 1
+Slot_machine_goal_frame_timer	ds.b 1
+Slot_machine_goal_frame		ds.b 1
 Rings_frame_timer		ds.b 1
 Rings_frame			ds.b 1
-Slot_machine_peppermint_frame_timer			ds.b 1
+Slot_machine_peppermint_frame_timer		ds.b 1
 Slot_machine_peppermint_frame			ds.b 1
 Ring_spill_anim_counter		ds.b 1
 Ring_spill_anim_frame		ds.b 1
 Ring_spill_anim_accum		ds.w 1
 AIZ_vine_angle			ds.w 1			; controls the angle of AIZ giant vines
-			ds.w 1				; unused
-_unkFEBE			ds.b 1			; unused
+				ds.b 1			; unused
 Extra_life_flags_P2		ds.b 1
 Max_speed_P2			ds.w 1
 Acceleration_P2			ds.w 1
@@ -829,32 +782,13 @@ Timer_second_P2 =		Timer_P2+2
 Timer_frame_P2 =		Timer_P2+3		; the second gets incremented when this reaches 60
 Score_P2			ds.l 1			; left over from Sonic 2
 Competition_total_laps			ds.b 1		; total number of laps in competition mode (typically 5)
-			ds.b 1				; unused
 Competition_current_lap			ds.b 1		; current lap number for player 1 in competition mode
 Competition_current_lap_2P		ds.b 1		; current lap number for player 2 in competition mode
-Loser_time_left			ds.b 1			; left over from Sonic 2
-			ds.b $23			; unused
+				ds.b 1			; unused
 Results_screen_2P		ds.w 1			; left over from Sonic 2
 Perfect_rings_left		ds.w 1			; left over from Sonic 2
-_unkFF06			ds.w 1			; unknown
 Player_mode			ds.w 1			; 0 = Sonic and Tails, 1 = Sonic alone, 2 = Tails alone, 3 = Knuckles alone
 Player_option			ds.w 1			; option selected on level select, data select screen or Sonic & Knuckles title screen
-			ds.w 1				; unused
-
-Kos_decomp_queue_count		ds.w 1			; the number of pieces of data on the queue. Sign bit set indicates a decompression is in progress
-Kos_decomp_stored_registers	ds.w 20			; allows decompression to be spread over multiple frames
-Kos_decomp_stored_SR		ds.w 1
-Kos_decomp_bookmark		ds.l 1			; the address within the Kosinski queue processor at which processing is to be resumed
-Kos_description_field		ds.w 1			; used by the Kosinski queue processor the same way the stack is used by the normal Kosinski decompression routine
-Kos_decomp_queue		ds.l 2*4		; 2 longwords per entry, first is source location and second is decompression location
-Kos_decomp_source =		Kos_decomp_queue	; long ; the compressed data location for the first entry in the queue
-Kos_decomp_destination =	Kos_decomp_queue+4	; long ; the decompression location for the first entry in the queue
-Kos_modules_left		ds.b 1			; the number of modules left to decompresses. Sign bit set indicates a module is being decompressed/has been decompressed
-			ds.b 1				; unused
-Kos_last_module_size		ds.w 1			; the uncompressed size of the last module in words. All other modules are $800 words
-Kos_module_queue		ds.w 3*4		; 6 bytes per entry, first longword is source location and next word is VRAM destination
-Kos_module_source =		Kos_module_queue	; long ; the compressed data location for the first module in the queue
-Kos_module_destination =	Kos_module_queue+4	; word ; the VRAM destination for the first module in the queue
 
 _unkFF7C			ds.w 1
 _unkFF7E			ds.w 1
@@ -863,18 +797,16 @@ Level_select_option		ds.w 1			; the current selected option in the level select
 Sound_test_sound		ds.w 1
 Title_screen_option		ds.b 1
 			ds.b 1				; unused
-_tempFF88		ds.w 1				; this is used in Sonic 3 Alone, but unused in Sonic & Knuckles and Sonic 3 Complete
 Competition_settings =		*			; both items and game type
 Competition_items		ds.b 1			; 0 = Enabled, FF = Disabled.
 Competition_type		ds.b 1			; 0 = grand prix, 3 = match race, -1 = time attack
-_tempFF8C		ds.b 1				; this is used in Sonic 3 Alone, but unused in Sonic & Knuckles and Sonic 3 Complete
+Options_menu_box		ds.b 1			; byte ; left over from Sonic 2
 			ds.b 1				; unused
 Total_bonus_countup		ds.w 1			; the total points to be added due to various bonuses this frame in the end of level results screen
 Current_music			ds.w 1
 Collected_special_ring_array	ds.l 1			; each bit indicates a special stage entry ring in the current zone
 Saved2_status_secondary		ds.b 1
 Respawn_table_keep		ds.b 1			; if set, respawn table is not reset during level load
-_tempFF98		ds.w 1				; this is used in Sonic 3 Alone, but unused in Sonic & Knuckles and Sonic 3 Complete
 Saved_apparent_zone_and_act	ds.w 1
 Saved2_apparent_zone_and_act	ds.w 1
 			ds.b 1				; unused
@@ -893,61 +825,35 @@ Emerald_counts =		*			; both chaos and super emeralds
 Chaos_emerald_count		ds.b 1
 Super_emerald_count		ds.b 1
 Collected_emeralds_array	ds.b 7			; 1 byte per emerald, 0 = not collected, 1 = chaos emerald collected, 2 = grey super emerald, 3 = super emerald collected
-			ds.b 1				; unused
-
 Emeralds_converted_flag		ds.b 1			; set if at least one emerald has been converted to a super emerald
 SK_special_stage_flag		ds.b 1			; set if a Sonic & Knuckles special stage is being run
 Title_anim_buffer		ds.b 1			; status of the title animation buffer. Changes 2 different nametables in VDP while the other is being processed
 Title_anim_delay		ds.b 1			; title animation delay counter
 Title_anim_frame		ds.b 1			; title animation frame number
-			ds.b 1				; unused
 Next_extra_life_score		ds.l 1
 Next_extra_life_score_P2	ds.l 1			; left over from Sonic 2
-			ds.w 1				; unused
 Debug_saved_mappings		ds.l 1			; player 1 mappings before entering debug mode
 Debug_saved_art_tile		ds.w 1			; player 1 art_tile before entering debug mode
-Demo_mode_flag :=		*		; S3 uses a different address
-				ds.w 1
-Next_demo_number :=		*		; S3 uses a different address
-				ds.w 1
-Blue_spheres_stage_flag :=	*		; S3 uses a different address
-				ds.b 1			; set if a Blue Sphere special stage is being run
-			ds.b 1				; unused
-V_blank_cycles :=		*		; S3 uses a different address
-				ds.w 1			; the number of cycles between V-blanks
-Graphics_flags :=		*		; S3 uses a different address
-				ds.b 1			; bit 7 set = English system, bit 6 set = PAL system
-			ds.b 1				; unused
-Debug_mode_flag :=		*		; S3 uses a different address
-				ds.w 1
-			ds.l 1				; unused
-Level_select_flag :=		*		; S3 uses a different address
-				ds.b 1
-Slow_motion_flag :=		*		; S3 uses a different address
-				ds.b 1
-Debug_cheat_flag :=		*		; S3 uses a different address
-				ds.w 1			; set if the debug cheat's been entered
-Level_select_cheat_counter :=	*		; S3 uses a different address
-				ds.w 1			; progress entering level select cheat, unused
-Debug_mode_cheat_counter :=	*		; S3 uses a different address
-				ds.w 1			; progress entering debug mode cheat, unused
-Competition_mode :=		*		; S3 uses a different address
-				ds.w 1
-P1_character :=			*		; S3 uses a different address
-				ds.b 1			; 0 = Sonic, 1 = Tails, 2 = Knuckles
-P2_character :=			*		; S3 uses a different address
-				ds.b 1
-			ds.l 1				; unused
+Demo_mode_flag			ds.w 1
+Next_demo_number		ds.w 1
+Blue_spheres_stage_flag		ds.b 1			; set if a Blue Sphere special stage is being run
+Graphics_flags			ds.b 1			; bit 7 set = English system, bit 6 set = PAL system
+V_blank_cycles			ds.w 1			; the number of cycles between V-blanks
+Debug_mode_flag			ds.w 1
+Level_select_flag		ds.b 1
+Slow_motion_flag		ds.b 1
+Debug_cheat_flag		ds.w 1			; set if the debug cheat's been entered
+Level_select_cheat_counter	ds.w 1			; progress entering level select cheat, unused
+Debug_mode_cheat_counter	ds.w 1			; progress entering debug mode cheat, unused
+Competition_mode		ds.w 1
+P1_character			ds.b 1			; 0 = Sonic, 1 = Tails, 2 = Knuckles
+P2_character			ds.b 1
 
-V_int_jump :=			*		; S3 uses a different address
-				ds.b 6			; contains an instruction to jump to the V-int handler
+V_int_jump			ds.b 6			; contains an instruction to jump to the V-int handler
 V_int_addr :=			V_int_jump+2		; long
-H_int_jump :=			*		; S3 uses a different address
-				ds.b 6			; contains an instruction to jump to the H-int handler
+H_int_jump			ds.b 6			; contains an instruction to jump to the H-int handler
 H_int_addr :=			H_int_jump+2		; long
-Checksum_string :=		*		; S3 uses a different address
-				ds.l 1			; set to Ref_Checksum_String once the checksum routine has run
-Ref_Checksum_String := 'SM&K'
+				ds.b $162		; FREE RAM
 
 .check =	(*)&$FFFFFF
 	if (.check>0)&(.check<$FF0000)

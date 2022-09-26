@@ -16,7 +16,7 @@
 		dc.l Obj_CollapsingBridge		; 15
 		dc.l Obj_LBZTubeElevator		; 16
 		dc.l Obj_LBZMovingPlatform		; 17
-		dc.l Obj_LBZUnusedElevator		; 18
+		dc.l Obj_Ring				; 18
 		dc.l Obj_LBZExplodingTrigger		; 19
 		dc.l Obj_LBZTriggerBridge		; 20
 		dc.l Obj_LBZPlayerLauncher		; 21
@@ -24,7 +24,7 @@
 		dc.l Obj_LBZRideGrapple			; 23
 		dc.l Obj_LBZCupElevator			; 24
 		dc.l Obj_LBZCupElevatorPole		; 25
-		dc.l Obj_LBZUnusedTiltingBridge		; 26
+		dc.l Obj_Ring				; 26
 		dc.l Obj_LBZPipePlug			; 27
 		dc.l Obj_Ring				; 28
 		dc.l Obj_LBZUnusedBarPlatform		; 29
@@ -33,7 +33,7 @@
 		dc.l Obj_MGZLBZSmashingPillar		; 32
 		dc.l Obj_LBZGateLaser			; 33
 		dc.l Obj_LBZAlarm			; 34
-		dc.l Obj_LBZUnusedForceFall		; 35
+		dc.l Obj_Ring				; 35
 		dc.l Obj_AutomaticTunnel		; 36
 		dc.l Obj_Ring				; 37
 		dc.l Obj_AutoSpin			; 38
