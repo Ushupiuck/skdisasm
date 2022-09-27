@@ -253,9 +253,7 @@ SStage_unkA600 :=		Block_table+$1600	; unknown special stage array
 HScroll_table			ds.b $200		; array of background scroll positions for the level. WARNING: some references are before this label
 _unkA880 :=			HScroll_table+$80	; used in SSZ screen/background events
 _unkA8E0 :=			HScroll_table+$E0	; used in SSZ screen/background events
-
-Object_respawn_table		ds.b $300		; 1 byte per object, every object in the level gets an entry
-Ring_status_table		ds.b $400		; 1 word per ring
+Nem_code_table			ds.b $200		; code table is built up here and then used during decompression
 Sprite_table_input		ds.b $400		; 8 priority levels, $80 bytes per level
 
 Object_RAM =			*			; $1FCC bytes ; $4A bytes per object, 110 objects
@@ -274,12 +272,25 @@ Tails_tails			ds.b object_size	; Tails' tails
 Dust				ds.b object_size
 Dust_P2				ds.b object_size
 Shield				ds.b object_size
-Shield_P2			ds.b object_size	; left over from Sonic 2 I'm guessing
+				ds.b object_size	; left over from Sonic 2 I'm guessing
 Invincibility_stars		ds.b object_size*4
 Invincibility_stars_P2		ds.b object_size*3
 Wave_Splash			ds.b object_size	; Obj_HCZWaveSplash is loaded here
 Object_RAM_end =		*
 Conveyor_belt_load_array	ds.b $E			; each subtype of hcz conveyor belt uses a different byte to check if it's already loaded. Since they're so wide, the object loader may try loading them multiple times
+
+Sprite_table_buffer		ds.b $280
+H_scroll_buffer			ds.b $380		; horizontal scroll table is built up here and then DMAed to VRAM
+Collision_response_list		ds.b $80		; only objects in this list are processed by the collision response routines
+Stat_table 			; used by Tails' AI in a Sonic and Tails game
+Pos_table_P2			ds.b $100		; used by Player 2 in competition mode
+Pos_table 			ds.b $100		;
+Competition_saved_data		ds.b $54		; saved data from Competition Mode
+Save_pointer			ds.l 1			; pointer to the active save slot in 1 player mode
+Emerald_flicker_flag		ds.w 1			; controls the emerald flicker in save screen and special stage results.
+Saved_data			ds.b $54		; saved data from 1 player mode
+Ring_status_table		ds.b $400		; 1 word per ring
+Object_respawn_table		ds.b $300		; 1 byte per object, every object in the level gets an entry
 Kos_decomp_buffer		ds.b $1000		; each module in a KosM archive is decompressed here and then DMAed to VRAM
 Kos_decomp_queue_count		ds.w 1			; the number of pieces of data on the queue. Sign bit set indicates a decompression is in progress
 Kos_decomp_stored_registers	ds.w 20			; allows decompression to be spread over multiple frames
@@ -295,7 +306,6 @@ Kos_last_module_size		ds.w 1			; the uncompressed size of the last module in wor
 Kos_module_queue		ds.w 3*4		; 6 bytes per entry, first longword is source location and next word is VRAM destination
 Kos_module_source =		Kos_module_queue	; long ; the compressed data location for the first module in the queue
 Kos_module_destination =	Kos_module_queue+4	; word ; the VRAM destination for the first module in the queue
-Nem_code_table			ds.b $200		; code table is built up here and then used during decompression
 Nem_decomp_queue		ds.b 6*$10		; 6 bytes per entry, first longword is source location and next word is VRAM destination
 Nem_decomp_source =		Nem_decomp_queue	; long ; the compressed data location for the first entry in the queue
 Nem_decomp_destination =	Nem_decomp_queue+4	; word ; destination in VRAM for the first entry in the queue
@@ -308,16 +318,6 @@ Nem_data_word			ds.l 1			; contains the current compressed word being processed
 Nem_shift_value			ds.l 1			; the number of bits the data word needs to be shifted by
 Nem_patterns_left		ds.w 1			; the number of patterns remaining to be decompressed
 Nem_frame_patterns_left		ds.w 1			; the number of patterns remaining to be decompressed in the current frame
-
-H_scroll_buffer			ds.b $380		; horizontal scroll table is built up here and then DMAed to VRAM
-Collision_response_list		ds.b $80		; only objects in this list are processed by the collision response routines
-Stat_table 			; used by Tails' AI in a Sonic and Tails game
-Pos_table_P2			ds.b $100		; used by Player 2 in competition mode
-Pos_table 			ds.b $100		;
-Competition_saved_data		ds.b $54		; saved data from Competition Mode
-Save_pointer			ds.l 1			; pointer to the active save slot in 1 player mode
-Emerald_flicker_flag		ds.w 1			; controls the emerald flicker in save screen and special stage results.
-Saved_data			ds.b $54		; saved data from 1 player mode
 
 Camera_RAM =			*			; various camera and scroll-related variables are stored here
 H_scroll_amount			ds.w 1			; number of pixels camera scrolled horizontally in the last frame * $100
@@ -575,7 +575,7 @@ Player_prev_frame		ds.b 1			; used by DPLC routines to detect whether a DMA tran
 Primary_Angle			ds.b 1
 Primary_Angle_save		ds.b 1	; Used in FindFloor/FindWall
 Secondary_Angle			ds.b 1
-Secondary_Angle_save	ds.b 1	; Used in FindFloor/FindWall
+Secondary_Angle_save		ds.b 1	; Used in FindFloor/FindWall
 
 Object_load_routine		ds.b 1			; routine counter for the object loading manager
 			ds.b 1				; unused
@@ -614,7 +614,6 @@ Player_prev_frame_P2_tail	ds.b 1			; used by DPLC routines to detect whether a D
 Level_trigger_array		ds.b $10		; used by buttons, etc.
 Anim_Counters			ds.b $10		; each word stores data on animated level art, including duration and current frame
 
-Sprite_table_buffer		ds.b $280
 _unkFA80			ds.w 1			; unused
 _unkFA82			ds.b 1
 _unkFA83			ds.b 1
