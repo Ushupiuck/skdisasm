@@ -5,6 +5,7 @@ Comp_ScreenInit:
 		move.w	d0,(Events_fg_1).w
 		move.w	(Camera_X_pos_P2_copy).w,d0
 		move.w	d0,(Events_fg_2).w
+		move.w	d0,(_unkEEBA).w
 		moveq	#0,d0
 		move.b	(Current_zone_and_act).w,d0
 		lsl.w	#4,d0
@@ -14,6 +15,7 @@ Comp_ScreenInit:
 		move.w	(a1)+,(Screen_Y_wrap_value).w
 		move.w	(a1)+,(Camera_Y_pos_mask).w
 		move.w	(a1)+,(Layout_row_index_mask).w
+		move.w	(a1)+,(_unkEEB0).w
 		move.w	(a1)+,d0
 		move.w	(a1)+,d2
 		move.w	(a1)+,d6
@@ -132,6 +134,7 @@ loc_23A764:
 		jsr	(ApplyDeformation2).l
 		movea.l a6,a4
 		lea	(HScroll_table+$100).w,a5
+		move.w	(_unkEE74).w,d0
 		subq.w	#4,d0
 		move.w	(Camera_X_pos_P2_copy).w,d3
 		moveq	#$73,d1
@@ -147,6 +150,7 @@ DPZ_BackgroundEvent:
 		moveq	#$1A,d2
 		bsr.s	sub_23A7BA
 		move.w	(Camera_X_pos_P2_copy).w,d0
+		move.w	(_unkEE70).w,d1
 		moveq	#$1C,d2
 		bsr.s	sub_23A7BA
 		jmp	(Update_VScrollValueP2).l
@@ -173,6 +177,7 @@ ALZ_Deformation:
 		move.w	d0,(Camera_Y_pos_BG_copy).w
 		move.w	(Camera_Y_pos_P2_copy).w,d0
 		bsr.s	sub_23A808
+		move.w	d0,(_unkEE74).w
 		addq.w	#3,(Events_bg+$00).w
 		addi.l	#$1000,(Events_bg+$02).w
 		lea	(AIZ2_ALZ_BGDeformDelta).l,a4
@@ -180,6 +185,7 @@ ALZ_Deformation:
 		move.w	(Events_fg_1).w,d0
 		bsr.s	sub_23A81E
 		lea	(HScroll_table+$100).w,a1
+		move.w	(_unkEEBA).w,d0
 		bra.s	sub_23A81E
 ; ---------------------------------------------------------------------------
 
@@ -255,10 +261,12 @@ BPZ_Deformation:
 		move.w	d0,(Camera_Y_pos_BG_copy).w
 		move.w	(Camera_Y_pos_P2_copy).w,d0
 		bsr.s	sub_23A8B6
+		move.w	d0,(_unkEE74).w
 		lea	(HScroll_table+$00E).w,a1
 		move.w	(Events_fg_1).w,d0
 		bsr.s	sub_23A8C2
 		lea	(HScroll_table+$10E).w,a1
+		move.w	(_unkEEBA).w,d0
 		bsr.s	sub_23A8C2
 
 sub_23A8B6:
@@ -292,11 +300,14 @@ DPZ_Deformation:
 		move.w	(Camera_Y_pos_P2_copy).w,d0
 		bsr.s	sub_23A912
 		addi.w	#$80,d0
+		move.w	d0,(_unkEE74).w
 		move.w	(Events_fg_1).w,d0
 		bsr.s	sub_23A91C
 		move.w	d0,(Camera_X_pos_BG_copy).w
 		move.w	d1,(Events_bg+$10).w
+		move.w	(_unkEEBA).w,d0
 		bsr.s	sub_23A91C
+		move.w	d0,(_unkEE70).w
 		move.w	d1,(Events_bg+$12).w
 		rts
 ; ---------------------------------------------------------------------------
@@ -321,10 +332,12 @@ CGZ_Deformation:
 		move.w	d0,(Camera_Y_pos_BG_copy).w
 		move.w	(Events_bg+$06).w,d0
 		bsr.s	sub_23A94C
+		move.w	d0,(_unkEE74).w
 		lea	(HScroll_table+$00A).w,a1
 		move.w	(Events_fg_1).w,d0
 		bsr.s	sub_23A95C
 		lea	(HScroll_table+$10A).w,a1
+		move.w	(_unkEEBA).w,d0
 		bsr.s	sub_23A95C
 
 sub_23A94C:
@@ -367,10 +380,12 @@ EMZ_Deformation:
 		move.w	d0,(Camera_Y_pos_BG_copy).w
 		move.w	(Camera_Y_pos_P2_copy).w,d0
 		bsr.s	sub_23A9A8
+		move.w	d0,(_unkEE74).w
 		lea	(HScroll_table).w,a1
 		move.w	(Events_fg_1).w,d0
 		bsr.s	sub_23A9BE
 		lea	(HScroll_table+$100).w,a1
+		move.w	(_unkEEBA).w,d0
 		bsr.s	sub_23A9BE
 
 sub_23A9A8:
