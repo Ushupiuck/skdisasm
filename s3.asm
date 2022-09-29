@@ -1081,7 +1081,6 @@ $$clearCRAM:
 		move.w	d0,(a1)
 		dbf	d7,$$clearCRAM
 		clr.l	(V_scroll_value).w
-		clr.l	(_unkF61A).w
 		move.l	d1,-(sp)
 		dmaFillVRAM 0,$0000,$10000	; clear entire VRAM
 		move.l	(sp)+,d1
@@ -1129,7 +1128,6 @@ Clear_DisplayData_No2P:
 
 Clear_DisplayData_Cont:
 		clr.l	(V_scroll_value).w
-		clr.l	(_unkF61A).w
 		clearRAM Sprite_table_buffer,$284
 		clearRAM H_scroll_buffer,$404
 
@@ -1144,34 +1142,34 @@ Clear_DisplayData_Cont:
 SndDrvInit:
 		nop
 		move.w	#$100,(Z80_bus_request).l
-		move.w	#$100,(Z80_reset).l
-
+		move.w	#$100,(Z80_reset).l	; release Z80 reset
+		; Load SMPS sound driver
 		lea	(Z80_SoundDriver).l,a0
 		lea	(Z80_RAM).l,a1
-		move.w	#$1C00-2,d0
--
-		move.b	(a0)+,(a1)+
-		dbf	d0,-
-
+		bsr.w	Kos_Decomp
+		; Load sound driver data (PSG envelopes, music/sound pointers, FM voice bank)
+		lea	(Z80_SoundDriverData).l,a0
+		lea	(Z80_RAM+$1300).l,a1
+		bsr.w	Kos_Decomp
+		; Load default variables
 		lea	(Z80_DefaultVariables).l,a0
-		lea	(Z80_RAM+$1C00).l,a1
-		move.w	#Z80_DefaultVariables_End-Z80_DefaultVariables-1,d0
+		lea	(Z80_RAM+zDataStart).l,a1
+		move.w	#Z80_DefaultVariables_end-Z80_DefaultVariables-1,d0
 -
 		move.b	(a0)+,(a1)+
 		dbf	d0,-
-
+		; Detect PAL region consoles
 		btst	#6,(Graphics_flags).w
-		beq.s	loc_15B0
-		move.b	#1,(Z80_RAM+$1C02).l
-
-loc_15B0:
-		move.w	#0,(Z80_reset).l
+		beq.s	+
+		move.b	#1,(Z80_RAM+zPalFlag).l
++
+		move.w	#0,(Z80_reset).l	; reset Z80
 		nop
 		nop
 		nop
 		nop
-		move.w	#$100,(Z80_reset).l
-		move.w	#0,(Z80_bus_request).l
+		move.w	#$100,(Z80_reset).l	; release reset
+		startZ80
 		rts
 ; End of function SndDrvInit
 
@@ -1195,51 +1193,50 @@ Z80_DefaultVariables:
 		dc.b 0	; zFadeDelayTimeout
 Z80_DefaultVariables_End:
 
+; ---------------------------------------------------------------------------
+; Always replaces an index previous passed to this function
+; ---------------------------------------------------------------------------
+
 ; =============== S U B R O U T I N E =======================================
 
 
 Play_Music:
-		move.w	#$100,(Z80_bus_request).l
-
-loc_15EA:
-		btst	#0,(Z80_bus_request).l
-		bne.s	loc_15EA
-		move.b	d0,(Z80_RAM+$1C0A).l
-		move.w	#0,(Z80_bus_request).l
+		stopZ80
+		move.b	d0,(Z80_RAM+zMusicNumber).l
+		startZ80
 		rts
 ; End of function Play_Music
 
 ; ---------------------------------------------------------------------------
+; plays a sound if the source object is on-screen
+; unused/dead code, left over from Sonic 2
 
 Play_SFX_Local:
-		tst.b	4(a0)
-		bpl.s	locret_164A
+		tst.b	render_flags(a0)
+		bpl.s	Play_SFX_Done
+
+; ---------------------------------------------------------------------------
+; Can handle up to two different indexes in one frame
+; ---------------------------------------------------------------------------
 
 ; =============== S U B R O U T I N E =======================================
 
 
 Play_SFX:
-		move.w	#$100,(Z80_bus_request).l
-
-loc_1612:
-		btst	#0,(Z80_bus_request).l
-		bne.s	loc_1612
-		cmp.b	(Z80_RAM+$1C0B).l,d0
-		beq.s	loc_1642
-		tst.b	(Z80_RAM+$1C0B).l
-		bne.s	loc_163C
-		move.b	d0,(Z80_RAM+$1C0B).l
-		move.w	#0,(Z80_bus_request).l
+		stopZ80
+		cmp.b	(Z80_RAM+zSFXNumber0).l,d0
+		beq.s	++
+		tst.b	(Z80_RAM+zSFXNumber0).l
+		bne.s	+
+		move.b	d0,(Z80_RAM+zSFXNumber0).l
+		startZ80
 		rts
-; ---------------------------------------------------------------------------
++
+		move.b	d0,(Z80_RAM+zSFXNumber1).l
++
+		startZ80
 
-loc_163C:
-		move.b	d0,(Z80_RAM+$1C0C).l
-
-loc_1642:
-		move.w	#0,(Z80_bus_request).l
-
-locret_164A:
+Play_SFX_Done:
 		rts
 ; End of function Play_SFX
 
@@ -1248,13 +1245,9 @@ locret_164A:
 
 
 Change_Music_Tempo:
-		move.w	#$100,(Z80_bus_request).l
-
-loc_1654:
-		btst	#0,(Z80_bus_request).l
-		bne.s	loc_1654
-		move.b	d0,(Z80_RAM+$1C08).l
-		move.w	#0,(Z80_bus_request).l
+		stopZ80
+		move.b	d0,(Z80_RAM+zTempoSpeedup).l
+		startZ80
 		rts
 ; End of function Change_Music_Tempo
 
@@ -1264,24 +1257,24 @@ loc_1654:
 
 Pause_Game:
 		nop
+		tst.w	(Ending_running_flag).w
+		beq.s	Pause_Main
+		rts
+; ---------------------------------------------------------------------------
+
+Pause_Main:
 		tst.b	(Life_count).w
 		beq.w	Pause_Unpause
 		tst.w	(Game_paused).w
-		bne.s	loc_168E
+		bne.s	+
 		move.b	(Ctrl_1_pressed).w,d0
-		or.b	(Ctrl_2_pressed).w,d0
-		andi.b	#-$80,d0
-		beq.w	Pause_NoPause
-
-loc_168E:
+		andi.b	#$80,d0	; is Start pressed?
+		beq.w	Pause_NoPause	; if not, branch
++
 		move.w	#1,(Game_paused).w
-		move.w	#$100,(Z80_bus_request).l
-
-loc_169C:
-		btst	#0,(Z80_bus_request).l
-		bne.s	loc_169C
-		move.b	#1,(Z80_RAM+$1C10).l
-		move.w	#0,(Z80_bus_request).l
+		stopZ80
+		move.b	#1,(Z80_RAM+zPauseFlag).l	; Pause the music
+		startZ80
 
 Pause_Loop:
 		move.b	#$10,(V_int_routine).w
@@ -1289,45 +1282,40 @@ Pause_Loop:
 		tst.b	(Slow_motion_flag).w
 		beq.s	Pause_NoSlowMo
 		btst	#6,(Ctrl_1_pressed).w
-		beq.s	Pause_ChkFrameAdvance
-		move.b	#$28,(Game_mode).w
+		beq.s	Pause_ChkFrameAdvance	; branch if A isn't pressed
+		move.b	#4,(Game_mode).w
 		nop
 		bra.s	Pause_ResumeMusic
 ; ---------------------------------------------------------------------------
 
 Pause_ChkFrameAdvance:
-		btst	#4,(Ctrl_1_held).w
-		bne.s	Pause_FrameAdvance
+		btst	#4,(Ctrl_1).w
+		bne.s	Pause_FrameAdvance	; branch if B is held
 		btst	#5,(Ctrl_1_pressed).w
-		bne.s	Pause_FrameAdvance
+		bne.s	Pause_FrameAdvance	; branch if C is pressed
 
 Pause_NoSlowMo:
 		cmpi.b	#$E,(Current_zone).w
-		bcs.s	Pause_ChkStart
+		blo.s	Pause_ChkStart	; if the zone is below ALZ
 		cmpi.b	#$12,(Current_zone).w
-		bhi.s	Pause_ChkStart
+		bhi.s	Pause_ChkStart	; if the zone is above EMZ
 		tst.b	(Competition_type).w
 		bpl.s	Pause_ChkStart
 		btst	#4,(Ctrl_1_pressed).w
 		beq.s	Pause_ChkStart
-		move.b	#-$40,(Game_mode).w
+		move.b	#$C0,(Game_mode).w	; If in time attack mode, go back to 2P menu if B is pressed
 		bra.s	Pause_ResumeMusic
 ; ---------------------------------------------------------------------------
 
 Pause_ChkStart:
 		move.b	(Ctrl_1_pressed).w,d0
-		or.b	(Ctrl_2_pressed).w,d0
-		andi.b	#-$80,d0
+		andi.b	#$80,d0
 		beq.s	Pause_Loop
 
 Pause_ResumeMusic:
-		move.w	#$100,(Z80_bus_request).l
-
-loc_1724:
-		btst	#0,(Z80_bus_request).l
-		bne.s	loc_1724
-		move.b	#$80,(Z80_RAM+$1C10).l
-		move.w	#0,(Z80_bus_request).l
+		stopZ80
+		move.b	#$80,(Z80_RAM+zPauseFlag).l	; Unpause music
+		startZ80
 
 Pause_Unpause:
 		move.w	#0,(Game_paused).w
@@ -1338,14 +1326,10 @@ Pause_NoPause:
 
 Pause_FrameAdvance:
 		move.w	#1,(Game_paused).w
-		move.w	#$100,(Z80_bus_request).l
-
-loc_1754:
-		btst	#0,(Z80_bus_request).l
-		bne.s	loc_1754
-		move.b	#$80,(Z80_RAM+$1C10).l
-		move.w	#0,(Z80_bus_request).l
-		rts
+		stopZ80
+		move.b	#$80,(Z80_RAM+zPauseFlag).l	; Unpause music
+		startZ80
+		rts	; advance by a single frame
 ; End of function Pause_Game
 
 
@@ -3964,10 +3948,9 @@ loc_3704:
 		tst.w	-$E(a1)
 		bne.s	loc_3704
 		clr.w	(_unkF660).w
-		clr.w	(_unkF662).w
 		move.b	#-1,(Title_anim_buffer).w
 		move.b	#0,(Title_anim_delay).w
-		move.w	#1,(Title_anim_frame).w
+		move.b	#1,(Title_anim_frame).w
 		moveq	#1,d0
 		bsr.w	TitleSonic_LoadFrame
 		move.w	#$384,(Demo_timer).w
@@ -3990,11 +3973,11 @@ Wait_Title:
 		or.b	(Ctrl_2_pressed).w,d0
 		andi.b	#-$80,d0
 		bne.w	loc_379E
-		cmpi.w	#$C,(Title_anim_frame).w
+		cmpi.b	#$C,(Title_anim_frame).w
 		bcs.s	Wait_Title
 
 loc_379E:
-		move.w	#$C,(Title_anim_frame).w
+		move.b	#$C,(Title_anim_frame).w
 		lea	(Normal_palette).w,a1
 		moveq	#$3F,d1
 
@@ -4154,7 +4137,7 @@ TitleAnim_FlipBuffer:
 		tst.b	(Title_anim_delay).w
 		bne.s	loc_3A4E
 		move.b	#3,(Title_anim_delay).w
-		cmpi.w	#$C,(Title_anim_frame).w
+		cmpi.b	#$C,(Title_anim_frame).w
 		bcc.s	loc_3A54
 		move.b	#3,(Title_anim_delay).w
 		lea	(Target_palette).w,a0
@@ -4203,19 +4186,19 @@ loc_3A5E:
 Iterate_TitleSonicFrame:
 		cmpi.b	#1,(Title_anim_delay).w
 		bne.s	locret_3A92
-		move.w	(Title_anim_frame).w,d0
+		move.b	(Title_anim_frame).w,d0
 		move.b	SonicFrameIndex(pc,d0.w),d0
 		ext.w	d0
 		bmi.s	loc_3A94
 		bsr.w	TitleSonic_LoadFrame
-		addq.w	#1,(Title_anim_frame).w
+		addq.b	#1,(Title_anim_frame).w
 
 locret_3A92:
 		rts
 ; ---------------------------------------------------------------------------
 
 loc_3A94:
-		move.w	#$C,(Title_anim_frame).w
+		move.b	#$C,(Title_anim_frame).w
 		move.b	#3,(Title_anim_delay).w
 		bra.w	locret_3AB0
 ; ---------------------------------------------------------------------------
@@ -5012,13 +4995,10 @@ loc_4A0C:
 		move.b	d0,(Time_over_flag).w
 		move.w	d0,(Debug_placement_mode).w
 		move.w	d0,(Restart_level_flag).w
-		move.b	d0,(Teleport_active_timer).w
-		move.b	d0,(Teleport_active_flag).w
 		move.w	d0,(Total_ring_count).w
 		move.w	d0,(Total_ring_count_P2).w
 		move.w	d0,(Monitors_broken).w
 		move.w	d0,(Monitors_broken_P2).w
-		move.w	d0,(Loser_time_left).w
 		move.b	d0,(LRZ_rocks_routine).w
 		bsr.w	sub_58F4
 		move.b	#1,(Update_HUD_score).w
@@ -13590,7 +13570,7 @@ Obj_SaveScreen_NoSave_Slot:
 		move.w	(Dataselect_nosave_player).w,(Player_option).w
 		clr.w	(Current_zone_and_act).w
 		clr.w	(Apparent_zone_and_act).w
-		clr.w	(Current_special_stage).w
+		clr.b	(Current_special_stage).w
 		clr.w	(Chaos_emerald_count).w
 		clr.l	(Collected_emeralds_array).w
 		clr.w	(Collected_emeralds_array+4).w
@@ -13805,7 +13785,7 @@ loc_C40A:
 		move.w	d0,(Player_option).w
 		clr.w	(Current_zone_and_act).w
 		clr.w	(Apparent_zone_and_act).w
-		clr.w	(Current_special_stage).w
+		clr.b	(Current_special_stage).w
 		clr.w	(Chaos_emerald_count).w
 		clr.l	(Collected_emeralds_array).w
 		clr.w	(Collected_emeralds_array+4).w
@@ -15128,7 +15108,6 @@ loc_F800:
 
 loc_F80A:
 		move.w	d5,(Perfect_rings_left).w
-		move.w	#0,(_unkFF06).w
 		rts
 ; End of function sub_F7C0
 
@@ -27197,8 +27176,6 @@ loc_18DB4:
 JmpTo_Play_SFX:
 		jmp	(Play_SFX).l
 ; ---------------------------------------------------------------------------
-		rts
-; ---------------------------------------------------------------------------
 
 GiveRing_Tails:
 		cmpi.w	#999,(Total_ring_count_P2).w
@@ -27213,7 +27190,6 @@ loc_18DD8:
 loc_18DE4:
 		tst.w	(Competition_mode).w
 		beq.s	GiveRing_1P
-		ori.b	#1,(_unkFEBE).w
 		move.w	#sfx_RingRight,d0
 		cmpi.w	#100,(Ring_count_P2).w
 		bcs.s	loc_18E20
@@ -27554,8 +27530,6 @@ Init_SpriteTable_2Player:
 
 
 Process_Sprites:
-		tst.b	(Teleport_active_flag).w
-		bne.s	locret_191D0
 		lea	(Object_RAM).w,a0
 		tst.w	(Competition_mode).w
 		bne.s	loc_191BE
@@ -29479,14 +29453,12 @@ locret_1A18C:
 
 Get_LevelSizeStart:
 		clr.b	(Deform_lock).w
-		clr.b	(_unkEE08).w
 		clr.b	(Scroll_lock).w
 		clr.b	(Scroll_lock_P2).w
 		clr.b	(Fast_V_scroll_flag).w
 		moveq	#0,d0
 		move.b	d0,(Dynamic_resize_routine).w
 		move.w	d0,(_unkF660).w
-		move.w	d0,(_unkF662).w
 		move.w	(Current_zone_and_act).w,d0
 		ror.b	#1,d0
 		lsr.w	#4,d0
@@ -29736,8 +29708,6 @@ loc_1A556:
 
 MoveCameraX:
 		move.w	(a1),d4
-		tst.b	(Teleport_active_flag).w
-		bne.s	locret_1A598
 		move.w	(a5),d1
 		beq.s	loc_1A584
 		subi.w	#$100,d1
@@ -29964,8 +29934,6 @@ locret_1A6E8:
 
 MoveCameraX_2P:
 		move.w	(a1),d4
-		tst.b	(Teleport_active_flag).w
-		bne.s	locret_1A72E
 		move.w	(a5),d1
 		beq.s	loc_1A714
 		subi.w	#$100,d1
@@ -30062,17 +30030,18 @@ loc_1A77A:
 		move.l	a2,-(sp)
 		addq.w	#8,a2
 		move.l	(a2)+,d0
-		andi.l	#$FFFFFF,d0
+		andi.l	#$FFFFFF,d0	; pointer to block mappings
 		move.l	d0,d7
 		movea.l	d0,a0
 		lea	(Block_table).w,a1
-		jsr	(Kos_Decomp).l
+		clr.w	d0
+		jsr	(Eni_Decomp).l	; load block maps
 		move.l	(a2)+,d0
-		andi.l	#$FFFFFF,d0
+		andi.l	#$FFFFFF,d0	; pointer to block mappings
 		cmp.l	d0,d7
 		beq.s	loc_1A7C0
 		movea.l	d0,a0
-		jsr	(Kos_Decomp).l
+		jsr	(Eni_Decomp).l	; load block maps
 
 loc_1A7C0:
 		move.l	(a2)+,d0
@@ -31575,21 +31544,15 @@ loc_1B6F8:
 		cmpi.w	#100,(a2)
 		bcs.s	loc_1B714
 		bset	#1,(a4)
-		beq.s	loc_1B71C
+		beq.s	Monitor_Give_1up
 		cmpi.w	#200,(a2)
 		bcs.s	loc_1B714
 		bset	#2,(a4)
-		beq.s	loc_1B71C
+		beq.s	Monitor_Give_1up
 
 loc_1B714:
 		moveq	#signextendB(sfx_RingRight),d0
 		jmp	(Play_Music).l
-; ---------------------------------------------------------------------------
-
-loc_1B71C:
-		cmpa.w	#Player_1,a1
-		beq.w	Monitor_Give_1up
-		bra.w	Monitor_Give_Eggman
 ; ---------------------------------------------------------------------------
 
 Monitor_Give_SpeedShoes:
@@ -31623,16 +31586,8 @@ Monitor_Give_FireShield:
 		bset	#4,$2B(a1)
 		moveq	#signextendB(sfx_FireShield),d0
 		jsr	(Play_Music).l
-		tst.b	$43(a0)
-		bne.s	loc_1B7A2
 		move.l	#Obj_FireShield,(Shield).w
 		move.w	a1,(Shield+parent).w
-		rts
-; ---------------------------------------------------------------------------
-
-loc_1B7A2:
-		move.l	#Obj_FireShield,(Shield_P2).w
-		move.w	a1,(Shield_P2+parent).w
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -31643,16 +31598,8 @@ Monitor_Give_LightningShield:
 		bset	#5,$2B(a1)
 		moveq	#signextendB(sfx_LightningShield),d0
 		jsr	(Play_Music).l
-		tst.b	$43(a0)
-		bne.s	loc_1B7E0
 		move.l	#Obj_LightningShield,(Shield).w
 		move.w	a1,(Shield+parent).w
-		rts
-; ---------------------------------------------------------------------------
-
-loc_1B7E0:
-		move.l	#Obj_LightningShield,(Shield_P2).w
-		move.w	a1,(Shield_P2+parent).w
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -31663,16 +31610,8 @@ Monitor_Give_BubbleShield:
 		bset	#6,$2B(a1)
 		moveq	#signextendB(sfx_BubbleShield),d0
 		jsr	(Play_Music).l
-		tst.b	$43(a0)
-		bne.s	loc_1B81E
 		move.l	#Obj_BubbleShield,(Shield).w
 		move.w	a1,(Shield+parent).w
-		rts
-; ---------------------------------------------------------------------------
-
-loc_1B81E:
-		move.l	#Obj_BubbleShield,(Shield_P2).w
-		move.w	a1,(Shield_P2+parent).w
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -62103,7 +62042,8 @@ Obj_2PGoalMarker:
 		subi.w	#$14,d0
 		move.w	d0,$38(a0)
 		move.b	#5,(Competition_total_laps).w
-		clr.w	(Competition_current_lap).w
+		clr.b	(Competition_current_lap).w
+		clr.b	(Competition_current_lap_2P).w
 		clr.w	(Events_bg+$14).w
 		clr.b	(Update_HUD_timer).w
 		clr.l	(Timer).w
@@ -62192,7 +62132,8 @@ loc_362D0:
 		move.w	#0,$32(a1)
 
 loc_36352:
-		clr.w	(Competition_current_lap).w
+		clr.b	(Competition_current_lap).w
+		clr.b	(Competition_current_lap_2P).w
 		clr.b	(Update_HUD_timer).w
 		clr.l	(Timer).w
 		clr.b	(Update_HUD_timer_P2).w
@@ -62619,7 +62560,7 @@ loc_3684E:
 		move.b	#$80,(Update_HUD_timer_P2).w
 		bsr.w	sub_36998
 		moveq	#signextendB(sfx_Goal),d0
-		jsr	(Play_SFX).l
+		jmp	(Play_SFX).l
 
 locret_36860:
 		rts
@@ -62740,7 +62681,7 @@ loc_36966:
 		move.b	#-$80,(Update_HUD_timer_P2).w
 		move.w	#$78,(Events_bg+$16).w
 		moveq	#signextendB(sfx_Goal),d0
-		jsr	(Play_SFX).l
+		jmp	(Play_SFX).l
 
 locret_36996:
 		rts
@@ -62808,7 +62749,7 @@ loc_36A2C:
 		move.b	#2,(Competition_time_attack_new_top_record).w
 
 loc_36A42:
-		jsr	(Write_SaveGeneral).l
+		jmp	(Write_SaveGeneral).l
 
 locret_36A48:
 		rts
@@ -62903,7 +62844,6 @@ loc_372EC:
 		lea	($FF708A).l,a2
 		lea	(Timer_minute_P2).w,a3
 		moveq	#0,d1
-		move.b	(Competition_lap_count_2P).w,d1
 		lea	(Update_HUD_timer_P2).w,a4
 		lea	(Competition_time_record_P2).w,a5
 		lea	($FF7840).l,a6
@@ -74961,7 +74901,6 @@ loc_403FE:
 		clr.l	(Camera_X_pos).w
 		clr.l	(Camera_Y_pos).w
 		clr.l	(V_scroll_value).w
-		clr.l	(_unkF61A).w
 		jsr	(Init_SpriteTable).l
 		move.l	#$40200000,(VDP_control_port).l
 		lea	(ArtNem_S38x16Font).l,a0
@@ -76176,7 +76115,6 @@ SonicOnSegaScr_Init:
 		move.w	#$1E8,$10(a0)
 		move.w	#$F0,$14(a0)
 		move.w	#$B,$2E(a0)
-		move.w	#2,(_unkF662).w
 		bset	#0,4(a0)
 		bset	#0,$2A(a0)
 		lea	(H_scroll_buffer+$138).w,a1
@@ -76275,7 +76213,6 @@ loc_4328A:
 		addq.b	#2,5(a0)
 		bchg	#0,4(a0)
 		move.w	#$B,$2E(a0)
-		move.w	#4,(_unkF662).w
 		subi.w	#$28,$10(a0)
 		bchg	#0,4(a0)
 		bchg	#0,$2A(a0)
@@ -76479,9 +76416,6 @@ Map_SonicOnSegaScr:
 
 
 SegaScr_VInt:
-		move.w	(_unkF662).w,d0
-		beq.w	locret_432D8
-		clr.w	(_unkF662).w
 		move.w	off_435C0-2(pc,d0.w),d0
 		jmp	off_435C0(pc,d0.w)
 ; End of function SegaScr_VInt
@@ -116389,779 +116323,6 @@ DemoDat_HCZ:	binclude "Levels/HCZ/Demodata/1.bin"
 		even
 DemoDat_MGZ:	binclude "Levels/MGZ/Demodata/1.bin"
 		even
-
-; ===========================================================================
-; Music Banks
-; ===========================================================================
-	cnop -Size_of_Snd_Bank1, $8000	; aligned to end of bank
-
-; ---------------------------------------------------------------------------
-; Music Bank 1
-; ---------------------------------------------------------------------------
-Snd_Bank1_Start:
-Snd_Minib:	include "Sound/Music/Miniboss (Sonic 3).asm"
-Snd_FinalBoss:	include "Sound/Music/Final Boss.asm"
-Snd_Bank1_End
-
-	if Snd_Bank1_End - Snd_Bank1_Start > $8000
-		fatal "Snd_Bank1_Start must fit within $8000 bytes, but was $\{Snd_Bank1_End-Snd_Bank1_Start }. Try moving something to the other bank."
-	endif
-	if Snd_Bank1_End - Snd_Bank1_Start > Size_of_Snd_Bank1
-		fatal "Size_of_Snd_Bank1 = $\{Size_of_Snd_Bank1}, but you have $\{Snd_Bank1_End-Snd_Bank1_Start} bytes of music."
-	endif
-
-; ---------------------------------------------------------------------------
-; Music Bank 2
-; ---------------------------------------------------------------------------
-Snd_Bank2_Start:	startBank
-Snd_AIZ1:	include "Sound/Music/AIZ1.asm"
-Snd_AIZ2:	include "Sound/Music/AIZ2.asm"
-Snd_HCZ1:	include "Sound/Music/HCZ1.asm"
-Snd_HCZ2:	include "Sound/Music/HCZ2.asm"
-Snd_MGZ1:	include "Sound/Music/MGZ1.asm"
-Snd_MGZ2:	include "Sound/Music/MGZ2.asm"
-Snd_CNZ2:	include "Sound/Music/CNZ2.asm"
-Snd_CNZ1:	include "Sound/Music/CNZ1.asm"
-Snd_FBZ1:	include "Sound/Music/FBZ1 (Sonic 3).asm"
-Snd_FBZ2:	include "Sound/Music/FBZ2.asm"
-Snd_DDZ:	include "Sound/Music/DDZ.asm"
-
-	finishBank
-
-; ---------------------------------------------------------------------------
-; Music Bank 3
-; ---------------------------------------------------------------------------
-Snd_Bank3_Start:	startBank
-Snd_ICZ2:	include "Sound/Music/ICZ2.asm"
-Snd_ICZ1:	include "Sound/Music/ICZ1.asm"
-Snd_LBZ2:	include "Sound/Music/LBZ2.asm"
-Snd_LBZ1:	include "Sound/Music/LBZ1.asm"
-Snd_MHZ1:	include "Sound/Music/MHZ1.asm"
-Snd_MHZ2:	include "Sound/Music/MHZ2.asm"
-Snd_SOZ1:	include "Sound/Music/SOZ1.asm"
-Snd_SOZ2:	include "Sound/Music/SOZ2.asm"
-Snd_LRZ1:	include "Sound/Music/LRZ1.asm"
-Snd_LRZ2:	include "Sound/Music/LRZ2.asm"
-Snd_SSZ:	include "Sound/Music/SSZ (Sonic 3).asm"
-Snd_DEZ1:	include "Sound/Music/DEZ1.asm"
-Snd_DEZ2:	include "Sound/Music/DEZ2.asm"
-Snd_Minib_SK:	include "Sound/Music/Miniboss (Sonic & Knuckles).asm"
-Snd_Boss:	include "Sound/Music/Zone Boss.asm"
-Snd_PachBonus:	include "Sound/Music/Pachinko.asm"
-Snd_SpecialS:	include "Sound/Music/Special Stage.asm"
-Snd_Results:	include "Sound/Music/Level Outro.asm"
-Snd_Menu:	include "Sound/Music/Menu (Sonic 3).asm"
-
-	finishBank
-
-; ---------------------------------------------------------------------------
-; Music Bank 4
-; ---------------------------------------------------------------------------
-Snd_Bank4_Start:	startBank
-Snd_SlotBonus:	include "Sound/Music/Slots.asm"
-Snd_GumBonus:	include "Sound/Music/Gum Ball Machine.asm"
-Snd_Knux:	include "Sound/Music/Knuckles (Sonic 3).asm"
-Snd_ALZ:	include "Sound/Music/Azure Lake.asm"
-Snd_BPZ:	include "Sound/Music/Balloon Park.asm"
-Snd_DPZ:	include "Sound/Music/Desert Palace.asm"
-Snd_CGZ:	include "Sound/Music/Chrome Gadget.asm"
-Snd_EMZ:	include "Sound/Music/Endless Mine.asm"
-Snd_Title:	include "Sound/Music/Title (Sonic 3).asm"
-Snd_S3Credits:	include "Sound/Music/Credits (Sonic 3).asm"
-Snd_GameOver:	include "Sound/Music/Game Over.asm"
-Snd_Continue:	include "Sound/Music/Continue (Sonic 3).asm"
-Snd_1UP:	include "Sound/Music/1UP (Sonic 3).asm"
-Snd_Emerald:	include "Sound/Music/Chaos Emerald.asm"
-Snd_Invic:	include "Sound/Music/Invincible (Sonic 3).asm"
-Snd_2PMenu:	include "Sound/Music/Competition Menu.asm"
-Snd_Drown:	include "Sound/Music/Countdown.asm"
-Snd_PresSega:	include "Sound/Music/Game Complete (Sonic 3).asm"
-
-	finishBank
-
-; ---------------------------------------------------------------------------
-; ===========================================================================
-; DAC Banks
-; ===========================================================================
-; DAC Bank 1
-; ---------------------------------------------------------------------------
-DacBank1:			startBank
-
-DAC_Offsets:
-		offsetBankTableEntry.w	DAC_81_Setup
-		offsetBankTableEntry.w	DAC_82_Setup
-		offsetBankTableEntry.w	DAC_83_Setup
-		offsetBankTableEntry.w	DAC_84_Setup
-		offsetBankTableEntry.w	DAC_85_Setup
-		offsetBankTableEntry.w	DAC_86_Setup
-		offsetBankTableEntry.w	DAC_87_Setup
-		offsetBankTableEntry.w	DAC_88_Setup
-		offsetBankTableEntry.w	DAC_89_Setup
-		offsetBankTableEntry.w	DAC_8A_Setup
-		offsetBankTableEntry.w	DAC_8B_Setup
-		offsetBankTableEntry.w	DAC_8C_Setup
-		offsetBankTableEntry.w	DAC_8D_Setup
-		offsetBankTableEntry.w	DAC_8E_Setup
-		offsetBankTableEntry.w	DAC_8F_Setup
-
-		offsetBankTableEntry.w	DAC_90_Setup
-		offsetBankTableEntry.w	DAC_91_Setup
-		offsetBankTableEntry.w	DAC_92_Setup
-		offsetBankTableEntry.w	DAC_93_Setup
-		offsetBankTableEntry.w	DAC_94_Setup
-		offsetBankTableEntry.w	DAC_95_Setup
-		offsetBankTableEntry.w	DAC_96_Setup
-		offsetBankTableEntry.w	DAC_97_Setup
-		offsetBankTableEntry.w	DAC_98_Setup
-		offsetBankTableEntry.w	DAC_99_Setup
-		offsetBankTableEntry.w	DAC_9A_Setup
-		offsetBankTableEntry.w	DAC_9B_Setup
-		offsetBankTableEntry.w	DAC_9C_Setup
-		offsetBankTableEntry.w	DAC_9D_Setup
-		offsetBankTableEntry.w	DAC_9E_Setup
-		offsetBankTableEntry.w	DAC_9F_Setup
-
-		offsetBankTableEntry.w	DAC_A0_Setup
-		offsetBankTableEntry.w	DAC_A1_Setup
-		offsetBankTableEntry.w	DAC_A2_Setup
-		offsetBankTableEntry.w	DAC_A3_Setup
-		offsetBankTableEntry.w	DAC_A4_Setup
-		offsetBankTableEntry.w	DAC_A5_Setup
-		offsetBankTableEntry.w	DAC_A6_Setup
-		offsetBankTableEntry.w	DAC_A7_Setup
-		offsetBankTableEntry.w	DAC_A8_Setup
-		offsetBankTableEntry.w	DAC_A9_Setup
-		offsetBankTableEntry.w	DAC_AA_Setup
-		offsetBankTableEntry.w	DAC_AB_Setup
-		offsetBankTableEntry.w	DAC_AC_Setup
-		offsetBankTableEntry.w	DAC_AD_Setup
-		offsetBankTableEntry.w	DAC_AE_Setup
-		offsetBankTableEntry.w	DAC_AF_Setup
-
-		offsetBankTableEntry.w	DAC_B0_Setup
-		offsetBankTableEntry.w	DAC_B1_Setup
-		offsetBankTableEntry.w	DAC_B2_Setup
-		offsetBankTableEntry.w	DAC_B3_Setup
-		offsetBankTableEntry.w	DAC_B4_Setup
-		offsetBankTableEntry.w	DAC_B5_Setup
-		offsetBankTableEntry.w	DAC_B6_Setup
-		offsetBankTableEntry.w	DAC_B7_Setup
-		offsetBankTableEntry.w	DAC_B8_B9_Setup
-		offsetBankTableEntry.w	DAC_B8_B9_Setup
-		offsetBankTableEntry.w	DAC_BA_Setup
-		offsetBankTableEntry.w	DAC_BB_Setup
-		offsetBankTableEntry.w	DAC_BC_Setup
-		offsetBankTableEntry.w	DAC_BD_Setup
-		offsetBankTableEntry.w	DAC_BE_Setup
-		offsetBankTableEntry.w	DAC_BF_Setup
-
-		offsetBankTableEntry.w	DAC_C0_Setup
-		offsetBankTableEntry.w	DAC_C1_Setup
-		offsetBankTableEntry.w	DAC_C2_Setup
-		offsetBankTableEntry.w	DAC_C3_Setup
-		offsetBankTableEntry.w	DAC_C4_Setup
-
-DAC_81_Setup:			DAC_Setup $04,DAC_81_Data
-DAC_82_Setup:			DAC_Setup $0E,DAC_82_83_84_85_Data
-DAC_83_Setup:			DAC_Setup $14,DAC_82_83_84_85_Data
-DAC_84_Setup:			DAC_Setup $1A,DAC_82_83_84_85_Data
-DAC_85_Setup:			DAC_Setup $20,DAC_82_83_84_85_Data
-DAC_86_Setup:			DAC_Setup $04,DAC_86_Data
-DAC_87_Setup:			DAC_Setup $04,DAC_87_Data
-DAC_88_Setup:			DAC_Setup $06,DAC_88_Data
-DAC_89_Setup:			DAC_Setup $0A,DAC_89_Data
-DAC_8A_Setup:			DAC_Setup $14,DAC_8A_8B_Data
-DAC_8B_Setup:			DAC_Setup $1B,DAC_8A_8B_Data
-DAC_8C_Setup:			DAC_Setup $08,DAC_8C_Data
-DAC_8D_Setup:			DAC_Setup $0B,DAC_8D_8E_Data
-DAC_8E_Setup:			DAC_Setup $11,DAC_8D_8E_Data
-DAC_8F_Setup:			DAC_Setup $08,DAC_8F_Data
-DAC_90_Setup:			DAC_Setup $03,DAC_90_91_92_93_Data
-DAC_91_Setup:			DAC_Setup $07,DAC_90_91_92_93_Data
-DAC_92_Setup:			DAC_Setup $0A,DAC_90_91_92_93_Data
-DAC_93_Setup:			DAC_Setup $0E,DAC_90_91_92_93_Data
-DAC_94_Setup:			DAC_Setup $06,DAC_94_95_96_97_Data
-DAC_95_Setup:			DAC_Setup $0A,DAC_94_95_96_97_Data
-DAC_96_Setup:			DAC_Setup $0D,DAC_94_95_96_97_Data
-DAC_97_Setup:			DAC_Setup $12,DAC_94_95_96_97_Data
-DAC_98_Setup:			DAC_Setup $0B,DAC_98_99_9A_Data
-DAC_99_Setup:			DAC_Setup $13,DAC_98_99_9A_Data
-DAC_9A_Setup:			DAC_Setup $16,DAC_98_99_9A_Data
-DAC_9B_Setup:			DAC_Null_Setup $0C
-DAC_A2_Setup:			DAC_Null_Setup $0A
-DAC_A3_Setup:			DAC_Null_Setup $18
-DAC_A4_Setup:			DAC_Null_Setup $18
-DAC_A5_Setup:			DAC_Null_Setup $0C
-DAC_A6_Setup:			DAC_Null_Setup $09
-DAC_A7_Setup:			DAC_Null_Setup $18
-DAC_A8_Setup:			DAC_Null_Setup $18
-DAC_A9_Setup:			DAC_Null_Setup $0C
-DAC_AA_Setup:			DAC_Null_Setup $0A
-DAC_AB_Setup:			DAC_Null_Setup $0D
-DAC_AC_Setup:			DAC_Null_Setup $06
-DAC_AD_Setup:			DAC_Null_Setup $10
-DAC_AE_Setup:			DAC_Null_Chain $18,DAC_AD_Setup
-DAC_AF_Setup:			DAC_Null_Setup $09
-DAC_B0_Setup:			DAC_Null_Chain $12,DAC_AF_Setup
-DAC_B1_Setup:			DAC_Null_Setup $18
-DAC_B2_Setup:			DAC_Null_Setup $16
-DAC_B3_Setup:			DAC_Null_Chain $20,DAC_B2_Setup
-DAC_B4_Setup:			DAC_Null_Setup $0C
-DAC_B5_Setup:			DAC_Null_Setup $0C
-DAC_B6_Setup:			DAC_Null_Setup $0C
-DAC_B7_Setup:			DAC_Null_Setup $18
-DAC_B8_B9_Setup:		DAC_Null_Setup $0C
-DAC_BA_Setup:			DAC_Null_Setup $18
-DAC_BB_Setup:			DAC_Null_Setup $18
-DAC_BC_Setup:			DAC_Null_Setup $18
-DAC_BD_Setup:			DAC_Null_Setup $0C
-DAC_BE_Setup:			DAC_Null_Setup $0C
-DAC_BF_Setup:			DAC_Null_Setup $1C
-DAC_C0_Setup:			DAC_Null_Setup $0B
-DAC_C1_Setup:			DAC_Null_Chain $0F,DAC_B4_Setup
-DAC_C2_Setup:			DAC_Null_Chain $11,DAC_C1_Setup
-DAC_C3_Setup:			DAC_Null_Chain $12,DAC_C2_Setup
-DAC_C4_Setup:			DAC_Null_Chain $0B,DAC_C3_Setup
-DAC_9C_Setup:			DAC_Null_Setup $0A
-DAC_9D_Setup:			DAC_Null_Setup $18
-DAC_9E_Setup:			DAC_Null_Setup $18
-DAC_9F_Setup:			DAC_Null_Setup $0C
-DAC_A0_Setup:			DAC_Null_Setup $0C
-DAC_A1_Setup:			DAC_Null_Setup $0A
-; ---------------------------------------------------------------------------
-
-DAC_86_Data:			DACBINCLUDE "Sound/DAC/86.bin"
-DAC_81_Data:			DACBINCLUDE "Sound/DAC/81.bin"
-DAC_82_83_84_85_Data:		DACBINCLUDE "Sound/DAC/82-85.bin"
-DAC_94_95_96_97_Data:		DACBINCLUDE "Sound/DAC/94-97.bin"
-DAC_90_91_92_93_Data:		DACBINCLUDE "Sound/DAC/90-93.bin"
-DAC_88_Data:			DACBINCLUDE "Sound/DAC/88.bin"
-DAC_8A_8B_Data:			DACBINCLUDE "Sound/DAC/8A-8B.bin"
-DAC_8C_Data:			DACBINCLUDE "Sound/DAC/8C.bin"
-DAC_8D_8E_Data:			DACBINCLUDE "Sound/DAC/8D-8E.bin"
-DAC_87_Data:			DACBINCLUDE "Sound/DAC/87.bin"
-DAC_8F_Data:			DACBINCLUDE "Sound/DAC/8F.bin"
-DAC_89_Data:			DACBINCLUDE "Sound/DAC/89.bin"
-DAC_98_99_9A_Data:		DACBINCLUDE "Sound/DAC/98-9A.bin"
-
-	finishBank
-
-		align $1000
-
-Z80_SoundDriver:
-		binclude "Sound/Sonic 3 Z80 Sound Driver.bin"
-
-; ---------------------------------------------------------------------------
-; Dac Bank 2
-; ---------------------------------------------------------------------------
-DacBank2:	startBank
-		offsetBankTableEntry.w	DAC_81_Setup2
-		offsetBankTableEntry.w	DAC_82_Setup2
-		offsetBankTableEntry.w	DAC_83_Setup2
-		offsetBankTableEntry.w	DAC_84_Setup2
-		offsetBankTableEntry.w	DAC_85_Setup2
-		offsetBankTableEntry.w	DAC_86_Setup2
-		offsetBankTableEntry.w	DAC_87_Setup2
-		offsetBankTableEntry.w	DAC_88_Setup2
-		offsetBankTableEntry.w	DAC_89_Setup2
-		offsetBankTableEntry.w	DAC_8A_Setup2
-		offsetBankTableEntry.w	DAC_8B_Setup2
-		offsetBankTableEntry.w	DAC_8C_Setup2
-		offsetBankTableEntry.w	DAC_8D_Setup2
-		offsetBankTableEntry.w	DAC_8E_Setup2
-		offsetBankTableEntry.w	DAC_8F_Setup2
-
-		offsetBankTableEntry.w	DAC_90_Setup2
-		offsetBankTableEntry.w	DAC_91_Setup2
-		offsetBankTableEntry.w	DAC_92_Setup2
-		offsetBankTableEntry.w	DAC_93_Setup2
-		offsetBankTableEntry.w	DAC_94_Setup2
-		offsetBankTableEntry.w	DAC_95_Setup2
-		offsetBankTableEntry.w	DAC_96_Setup2
-		offsetBankTableEntry.w	DAC_97_Setup2
-		offsetBankTableEntry.w	DAC_98_Setup2
-		offsetBankTableEntry.w	DAC_99_Setup2
-		offsetBankTableEntry.w	DAC_9A_Setup2
-		offsetBankTableEntry.w	DAC_9B_Setup2
-		offsetBankTableEntry.w	DAC_9C_Setup2
-		offsetBankTableEntry.w	DAC_9D_Setup2
-		offsetBankTableEntry.w	DAC_9E_Setup2
-		offsetBankTableEntry.w	DAC_9F_Setup2
-
-		offsetBankTableEntry.w	DAC_A0_Setup2
-		offsetBankTableEntry.w	DAC_A1_Setup2
-		offsetBankTableEntry.w	DAC_A2_Setup2
-		offsetBankTableEntry.w	DAC_A3_Setup2
-		offsetBankTableEntry.w	DAC_A4_Setup2
-		offsetBankTableEntry.w	DAC_A5_Setup2
-		offsetBankTableEntry.w	DAC_A6_Setup2
-		offsetBankTableEntry.w	DAC_A7_Setup2
-		offsetBankTableEntry.w	DAC_A8_Setup2
-		offsetBankTableEntry.w	DAC_A9_Setup2
-		offsetBankTableEntry.w	DAC_AA_Setup2
-		offsetBankTableEntry.w	DAC_AB_Setup2
-		offsetBankTableEntry.w	DAC_AC_Setup2
-		offsetBankTableEntry.w	DAC_AD_Setup2
-		offsetBankTableEntry.w	DAC_AE_Setup2
-		offsetBankTableEntry.w	DAC_AF_Setup2
-
-		offsetBankTableEntry.w	DAC_B0_Setup2
-		offsetBankTableEntry.w	DAC_B1_Setup2
-		offsetBankTableEntry.w	DAC_B2_Setup2
-		offsetBankTableEntry.w	DAC_B3_Setup2
-		offsetBankTableEntry.w	DAC_B4_Setup2
-		offsetBankTableEntry.w	DAC_B5_Setup2
-		offsetBankTableEntry.w	DAC_B6_Setup2
-		offsetBankTableEntry.w	DAC_B7_Setup2
-		offsetBankTableEntry.w	DAC_B8_B9_Setup2
-		offsetBankTableEntry.w	DAC_B8_B9_Setup2
-		offsetBankTableEntry.w	DAC_BA_Setup2
-		offsetBankTableEntry.w	DAC_BB_Setup2
-		offsetBankTableEntry.w	DAC_BC_Setup2
-		offsetBankTableEntry.w	DAC_BD_Setup2
-		offsetBankTableEntry.w	DAC_BE_Setup2
-		offsetBankTableEntry.w	DAC_BF_Setup2
-
-		offsetBankTableEntry.w	DAC_C0_Setup2
-		offsetBankTableEntry.w	DAC_C1_Setup2
-		offsetBankTableEntry.w	DAC_C2_Setup2
-		offsetBankTableEntry.w	DAC_C3_Setup2
-		offsetBankTableEntry.w	DAC_C4_Setup2
-
-DAC_81_Setup2:			DAC_Null_Setup $04
-DAC_82_Setup2:			DAC_Null_Setup $0E
-DAC_83_Setup2:			DAC_Null_Chain $14,DAC_82_Setup2
-DAC_84_Setup2:			DAC_Null_Chain $1A,DAC_83_Setup2
-DAC_85_Setup2:			DAC_Null_Chain $20,DAC_84_Setup2
-DAC_86_Setup2:			DAC_Null_Setup $04
-DAC_87_Setup2:			DAC_Null_Setup $04
-DAC_88_Setup2:			DAC_Null_Setup $06
-DAC_89_Setup2:			DAC_Null_Setup $0A
-DAC_8A_Setup2:			DAC_Null_Setup $14
-DAC_8B_Setup2:			DAC_Null_Chain $1B,DAC_8A_Setup2
-DAC_8C_Setup2:			DAC_Null_Setup $08
-DAC_8D_Setup2:			DAC_Null_Setup $0B
-DAC_8E_Setup2:			DAC_Null_Chain $11,DAC_8D_Setup2
-DAC_8F_Setup2:			DAC_Null_Setup $08
-DAC_90_Setup2:			DAC_Null_Setup $03
-DAC_91_Setup2:			DAC_Null_Chain $07,DAC_90_Setup2
-DAC_92_Setup2:			DAC_Null_Chain $0A,DAC_91_Setup2
-DAC_93_Setup2:			DAC_Null_Chain $0E,DAC_92_Setup2
-DAC_94_Setup2:			DAC_Null_Setup $06
-DAC_95_Setup2:			DAC_Null_Chain $0A,DAC_94_Setup2
-DAC_96_Setup2:			DAC_Null_Chain $0D,DAC_95_Setup2
-DAC_97_Setup2:			DAC_Null_Chain $12,DAC_96_Setup2
-DAC_98_Setup2:			DAC_Null_Setup $0B
-DAC_99_Setup2:			DAC_Null_Chain $13,DAC_98_Setup2
-DAC_9A_Setup2:			DAC_Null_Chain $16,DAC_99_Setup2
-DAC_9B_Setup2:			DAC_Setup $0C,DAC_9B_Data
-DAC_A2_Setup2:			DAC_Setup $0A,DAC_A2_Data
-DAC_A3_Setup2:			DAC_Setup $18,DAC_A3_Data
-DAC_A4_Setup2:			DAC_Setup $18,DAC_A4_Data
-DAC_A5_Setup2:			DAC_Setup $0C,DAC_A5_Data
-DAC_A6_Setup2:			DAC_Setup $09,DAC_A6_Data
-DAC_A7_Setup2:			DAC_Setup $18,DAC_A7_Data
-DAC_A8_Setup2:			DAC_Setup $18,DAC_A8_Data
-DAC_A9_Setup2:			DAC_Setup $0C,DAC_A9_Data
-DAC_AA_Setup2:			DAC_Setup $0A,DAC_AA_Data
-DAC_AB_Setup2:			DAC_Null_Setup $0D
-DAC_AC_Setup2:			DAC_Null_Setup $06
-DAC_AD_Setup2:			DAC_Null_Setup $10
-DAC_AE_Setup2:			DAC_Null_Chain $18,DAC_AD_Setup2
-DAC_AF_Setup2:			DAC_Null_Setup $09
-DAC_B0_Setup2:			DAC_Null_Chain $12,DAC_AF_Setup2
-DAC_B1_Setup2:			DAC_Null_Setup $18
-DAC_B2_Setup2:			DAC_Null_Setup $16
-DAC_B3_Setup2:			DAC_Null_Chain $20,DAC_B2_Setup2
-DAC_B4_Setup2:			DAC_Null_Setup $0C
-DAC_B5_Setup2:			DAC_Null_Setup $0C
-DAC_B6_Setup2:			DAC_Null_Setup $0C
-DAC_B7_Setup2:			DAC_Null_Setup $18
-DAC_B8_B9_Setup2:		DAC_Null_Setup $0C
-DAC_BA_Setup2:			DAC_Null_Setup $18
-DAC_BB_Setup2:			DAC_Null_Setup $18
-DAC_BC_Setup2:			DAC_Null_Setup $18
-DAC_BD_Setup2:			DAC_Null_Setup $0C
-DAC_BE_Setup2:			DAC_Null_Setup $0C
-DAC_BF_Setup2:			DAC_Null_Setup $1C
-DAC_C0_Setup2:			DAC_Null_Setup $0B
-DAC_C1_Setup2:			DAC_Null_Chain $0F,DAC_B4_Setup2
-DAC_C2_Setup2:			DAC_Null_Chain $11,DAC_C1_Setup2
-DAC_C3_Setup2:			DAC_Null_Chain $12,DAC_C2_Setup2
-DAC_C4_Setup2:			DAC_Null_Chain $0B,DAC_C3_Setup2
-DAC_9C_Setup2:			DAC_Setup $0A,DAC_9C_Data
-DAC_9D_Setup2:			DAC_Setup $18,DAC_9D_Data
-DAC_9E_Setup2:			DAC_Setup $18,DAC_9E_Data
-DAC_9F_Setup2:			DAC_Setup $0C,DAC_9F_Data
-DAC_A0_Setup2:			DAC_Setup $0C,DAC_A0_Data
-DAC_A1_Setup2:			DAC_Setup $0A,DAC_A1_Data
-
-DAC_9B_Data:			DACBINCLUDE "Sound/DAC/9B.bin"
-DAC_9C_Data:			DACBINCLUDE "Sound/DAC/9C.bin"
-DAC_9D_Data:			DACBINCLUDE "Sound/DAC/9D.bin"
-DAC_9E_Data:			DACBINCLUDE "Sound/DAC/9E.bin"
-DAC_9F_Data:			DACBINCLUDE "Sound/DAC/9F.bin"
-DAC_A0_Data:			DACBINCLUDE "Sound/DAC/A0.bin"
-DAC_A1_Data:			DACBINCLUDE "Sound/DAC/A1.bin"
-DAC_A2_Data:			DACBINCLUDE "Sound/DAC/A2.bin"
-DAC_A3_Data:			DACBINCLUDE "Sound/DAC/A3.bin"
-DAC_A4_Data:			DACBINCLUDE "Sound/DAC/A4.bin"
-DAC_A5_Data:			DACBINCLUDE "Sound/DAC/A5.bin"
-DAC_A6_Data:			DACBINCLUDE "Sound/DAC/A6.bin"
-DAC_A7_Data:			DACBINCLUDE "Sound/DAC/A7.bin"
-DAC_A8_Data:			DACBINCLUDE "Sound/DAC/A8.bin"
-DAC_A9_Data:			DACBINCLUDE "Sound/DAC/A9.bin"
-DAC_AA_Data:			DACBINCLUDE "Sound/DAC/AA.bin"
-
-	finishBank
-
-; ---------------------------------------------------------------------------
-; Dac Bank 3
-; ---------------------------------------------------------------------------
-DacBank3:	startBank
-		offsetBankTableEntry.w	DAC_81_Setup3
-		offsetBankTableEntry.w	DAC_82_Setup3
-		offsetBankTableEntry.w	DAC_83_Setup3
-		offsetBankTableEntry.w	DAC_84_Setup3
-		offsetBankTableEntry.w	DAC_85_Setup3
-		offsetBankTableEntry.w	DAC_86_Setup3
-		offsetBankTableEntry.w	DAC_87_Setup3
-		offsetBankTableEntry.w	DAC_88_Setup3
-		offsetBankTableEntry.w	DAC_89_Setup3
-		offsetBankTableEntry.w	DAC_8A_Setup3
-		offsetBankTableEntry.w	DAC_8B_Setup3
-		offsetBankTableEntry.w	DAC_8C_Setup3
-		offsetBankTableEntry.w	DAC_8D_Setup3
-		offsetBankTableEntry.w	DAC_8E_Setup3
-		offsetBankTableEntry.w	DAC_8F_Setup3
-
-		offsetBankTableEntry.w	DAC_90_Setup3
-		offsetBankTableEntry.w	DAC_91_Setup3
-		offsetBankTableEntry.w	DAC_92_Setup3
-		offsetBankTableEntry.w	DAC_93_Setup3
-		offsetBankTableEntry.w	DAC_94_Setup3
-		offsetBankTableEntry.w	DAC_95_Setup3
-		offsetBankTableEntry.w	DAC_96_Setup3
-		offsetBankTableEntry.w	DAC_97_Setup3
-		offsetBankTableEntry.w	DAC_98_Setup3
-		offsetBankTableEntry.w	DAC_99_Setup3
-		offsetBankTableEntry.w	DAC_9A_Setup3
-		offsetBankTableEntry.w	DAC_9B_Setup3
-		offsetBankTableEntry.w	DAC_9C_Setup3
-		offsetBankTableEntry.w	DAC_9D_Setup3
-		offsetBankTableEntry.w	DAC_9E_Setup3
-		offsetBankTableEntry.w	DAC_9F_Setup3
-
-		offsetBankTableEntry.w	DAC_A0_Setup3
-		offsetBankTableEntry.w	DAC_A1_Setup3
-		offsetBankTableEntry.w	DAC_A2_Setup3
-		offsetBankTableEntry.w	DAC_A3_Setup3
-		offsetBankTableEntry.w	DAC_A4_Setup3
-		offsetBankTableEntry.w	DAC_A5_Setup3
-		offsetBankTableEntry.w	DAC_A6_Setup3
-		offsetBankTableEntry.w	DAC_A7_Setup3
-		offsetBankTableEntry.w	DAC_A8_Setup3
-		offsetBankTableEntry.w	DAC_A9_Setup3
-		offsetBankTableEntry.w	DAC_AA_Setup3
-		offsetBankTableEntry.w	DAC_AB_Setup3
-		offsetBankTableEntry.w	DAC_AC_Setup3
-		offsetBankTableEntry.w	DAC_AD_Setup3
-		offsetBankTableEntry.w	DAC_AE_Setup3
-		offsetBankTableEntry.w	DAC_AF_Setup3
-
-		offsetBankTableEntry.w	DAC_B0_Setup3
-		offsetBankTableEntry.w	DAC_B1_Setup3
-		offsetBankTableEntry.w	DAC_B2_Setup3
-		offsetBankTableEntry.w	DAC_B3_Setup3
-		offsetBankTableEntry.w	DAC_B4_Setup3
-		offsetBankTableEntry.w	DAC_B5_Setup3
-		offsetBankTableEntry.w	DAC_B6_Setup3
-		offsetBankTableEntry.w	DAC_B7_Setup3
-		offsetBankTableEntry.w	DAC_B8_B9_Setup3
-		offsetBankTableEntry.w	DAC_B8_B9_Setup3
-		offsetBankTableEntry.w	DAC_BA_Setup3
-		offsetBankTableEntry.w	DAC_BB_Setup3
-		offsetBankTableEntry.w	DAC_BC_Setup3
-		offsetBankTableEntry.w	DAC_BD_Setup3
-		offsetBankTableEntry.w	DAC_BE_Setup3
-		offsetBankTableEntry.w	DAC_BF_Setup3
-
-		offsetBankTableEntry.w	DAC_C0_Setup3
-		offsetBankTableEntry.w	DAC_C1_Setup3
-		offsetBankTableEntry.w	DAC_C2_Setup3
-		offsetBankTableEntry.w	DAC_C3_Setup3
-		offsetBankTableEntry.w	DAC_C4_Setup3
-
-DAC_81_Setup3:			DAC_Null_Setup $04
-DAC_82_Setup3:			DAC_Null_Setup $0E
-DAC_83_Setup3:			DAC_Null_Chain $14,DAC_82_Setup3
-DAC_84_Setup3:			DAC_Null_Chain $1A,DAC_83_Setup3
-DAC_85_Setup3:			DAC_Null_Chain $20,DAC_84_Setup3
-DAC_86_Setup3:			DAC_Null_Setup $04
-DAC_87_Setup3:			DAC_Null_Setup $04
-DAC_88_Setup3:			DAC_Null_Setup $06
-DAC_89_Setup3:			DAC_Null_Setup $0A
-DAC_8A_Setup3:			DAC_Null_Setup $14
-DAC_8B_Setup3:			DAC_Null_Chain $1B,DAC_8A_Setup3
-DAC_8C_Setup3:			DAC_Null_Setup $08
-DAC_8D_Setup3:			DAC_Null_Setup $0B
-DAC_8E_Setup3:			DAC_Null_Chain $11,DAC_8D_Setup3
-DAC_8F_Setup3:			DAC_Null_Setup $08
-DAC_90_Setup3:			DAC_Null_Setup $03
-DAC_91_Setup3:			DAC_Null_Chain $07,DAC_90_Setup3
-DAC_92_Setup3:			DAC_Null_Chain $0A,DAC_91_Setup3
-DAC_93_Setup3:			DAC_Null_Chain $0E,DAC_92_Setup3
-DAC_94_Setup3:			DAC_Null_Setup $06
-DAC_95_Setup3:			DAC_Null_Chain $0A,DAC_94_Setup3
-DAC_96_Setup3:			DAC_Null_Chain $0D,DAC_95_Setup3
-DAC_97_Setup3:			DAC_Null_Chain $12,DAC_96_Setup3
-DAC_98_Setup3:			DAC_Null_Setup $0B
-DAC_99_Setup3:			DAC_Null_Chain $13,DAC_98_Setup3
-DAC_9A_Setup3:			DAC_Null_Chain $16,DAC_99_Setup3
-DAC_9B_Setup3:			DAC_Null_Setup $0C
-DAC_A2_Setup3:			DAC_Null_Setup $0A
-DAC_A3_Setup3:			DAC_Null_Setup $18
-DAC_A4_Setup3:			DAC_Null_Setup $18
-DAC_A5_Setup3:			DAC_Null_Setup $0C
-DAC_A6_Setup3:			DAC_Null_Setup $09
-DAC_A7_Setup3:			DAC_Null_Setup $18
-DAC_A8_Setup3:			DAC_Null_Setup $18
-DAC_A9_Setup3:			DAC_Null_Setup $0C
-DAC_AA_Setup3:			DAC_Null_Setup $0A
-DAC_AB_Setup3:			DAC_Setup $0D,DAC_AB_Data
-DAC_AC_Setup3:			DAC_Setup $06,DAC_AC_Data
-DAC_AD_Setup3:			DAC_Setup $10,DAC_AD_AE_Data
-DAC_AE_Setup3:			DAC_Setup $18,DAC_AD_AE_Data
-DAC_AF_Setup3:			DAC_Setup $09,DAC_AF_Data
-DAC_B0_Setup3:			DAC_Setup $12,DAC_AF_Data
-DAC_B1_Setup3:			DAC_Setup $18,DAC_B1_Data
-DAC_B2_Setup3:			DAC_Setup $16,DAC_B2_B3_Data
-DAC_B3_Setup3:			DAC_Setup $20,DAC_B2_B3_Data
-DAC_B4_Setup3:			DAC_Setup $0C,DAC_B4_C1_C2_C3_C4_Data
-DAC_B5_Setup3:			DAC_Setup $0C,DAC_B5_Data
-DAC_B6_Setup3:			DAC_Setup $0C,DAC_B6_Data
-DAC_B7_Setup3:			DAC_Setup $18,DAC_B7_Data
-DAC_B8_B9_Setup3:		DAC_Setup $0C,DAC_B8_B9_Data
-DAC_BA_Setup3:			DAC_Setup $18,DAC_BA_Data
-DAC_BB_Setup3:			DAC_Setup $18,DAC_BB_Data
-DAC_BC_Setup3:			DAC_Setup $18,DAC_BC_Data
-DAC_BD_Setup3:			DAC_Setup $0C,DAC_BD_Data
-DAC_BE_Setup3:			DAC_Setup $0C,DAC_BE_Data
-DAC_BF_Setup3:			DAC_Setup $1C,DAC_BF_Data
-DAC_C0_Setup3:			DAC_Setup $0B,DAC_C0_Data
-DAC_C1_Setup3:			DAC_Setup $0F,DAC_B4_C1_C2_C3_C4_Data
-DAC_C2_Setup3:			DAC_Setup $11,DAC_B4_C1_C2_C3_C4_Data
-DAC_C3_Setup3:			DAC_Setup $12,DAC_B4_C1_C2_C3_C4_Data
-DAC_C4_Setup3:			DAC_Setup $0B,DAC_B4_C1_C2_C3_C4_Data
-DAC_9C_Setup3:			DAC_Null_Setup $0A
-DAC_9D_Setup3:			DAC_Null_Setup $18
-DAC_9E_Setup3:			DAC_Null_Setup $18
-DAC_9F_Setup3:			DAC_Null_Setup $0C
-DAC_A0_Setup3:			DAC_Null_Setup $0C
-DAC_A1_Setup3:			DAC_Null_Setup $0A
-
-DAC_AB_Data:			DACBINCLUDE "Sound/DAC/AB.bin"
-DAC_AC_Data:			DACBINCLUDE "Sound/DAC/AC.bin"
-DAC_AD_AE_Data:			DACBINCLUDE "Sound/DAC/AD-AE.bin"
-DAC_AF_Data:			DACBINCLUDE "Sound/DAC/AF.bin"
-DAC_B0_Data:			DACBINCLUDE "Sound/DAC/B0.bin"
-DAC_B1_Data:			DACBINCLUDE "Sound/DAC/B1.bin"
-DAC_B2_B3_Data:			DACBINCLUDE "Sound/DAC/B2-B3 (Sonic 3).bin"
-DAC_B4_C1_C2_C3_C4_Data:	DACBINCLUDE "Sound/DAC/B4C1-C4.bin"
-DAC_B5_Data:			DACBINCLUDE "Sound/DAC/B5.bin"
-DAC_B6_Data:			DACBINCLUDE "Sound/DAC/B6.bin"
-DAC_B7_Data:			DACBINCLUDE "Sound/DAC/B7.bin"
-DAC_B8_B9_Data:			DACBINCLUDE "Sound/DAC/B8-B9.bin"
-DAC_BA_Data:			DACBINCLUDE "Sound/DAC/BA.bin"
-DAC_BB_Data:			DACBINCLUDE "Sound/DAC/BB.bin"
-DAC_BC_Data:			DACBINCLUDE "Sound/DAC/BC.bin"
-DAC_BD_Data:			DACBINCLUDE "Sound/DAC/BD.bin"
-DAC_BE_Data:			DACBINCLUDE "Sound/DAC/BE.bin"
-DAC_BF_Data:			DACBINCLUDE "Sound/DAC/BF.bin"
-DAC_C0_Data:			DACBINCLUDE "Sound/DAC/C0.bin"
-
-	finishBank
-
-; ===========================================================================
-; Sound Bank
-; ===========================================================================
-SndBank:			startBank
-
-SEGA_PCM:	binclude "Sound/Sega PCM.bin"
-		align 2
-Sound_33:	include "Sound/SFX/33.asm"
-Sound_34:	include "Sound/SFX/34.asm"
-Sound_35:	include "Sound/SFX/35.asm"
-Sound_36:	include "Sound/SFX/36.asm"
-Sound_37:	include "Sound/SFX/37.asm"
-Sound_38:	include "Sound/SFX/38.asm"
-Sound_39:	include "Sound/SFX/39.asm"
-Sound_3A:	include "Sound/SFX/3A.asm"
-Sound_3B:	include "Sound/SFX/3B.asm"
-Sound_3C:	include "Sound/SFX/3C.asm"
-Sound_3D:	include "Sound/SFX/3D.asm"
-Sound_3E:	include "Sound/SFX/3E.asm"
-Sound_3F:	include "Sound/SFX/3F.asm"
-Sound_40:	include "Sound/SFX/40.asm"
-Sound_41:	include "Sound/SFX/41.asm"
-Sound_42:	include "Sound/SFX/42.asm"
-Sound_43:	include "Sound/SFX/43.asm"
-Sound_44:	include "Sound/SFX/44.asm"
-Sound_45:	include "Sound/SFX/45.asm"
-Sound_46:	include "Sound/SFX/46.asm"
-Sound_47:	include "Sound/SFX/47.asm"
-Sound_48:	include "Sound/SFX/48.asm"
-Sound_49:	include "Sound/SFX/49.asm"
-Sound_4A:	include "Sound/SFX/4A.asm"
-Sound_4B:	include "Sound/SFX/4B.asm"
-Sound_4C:	include "Sound/SFX/4C.asm"
-Sound_4D:	include "Sound/SFX/4D.asm"
-Sound_4E:	include "Sound/SFX/4E.asm"
-Sound_4F:	include "Sound/SFX/4F.asm"
-Sound_50:	include "Sound/SFX/50.asm"
-Sound_51:	include "Sound/SFX/51.asm"
-Sound_52:	include "Sound/SFX/52.asm"
-Sound_53:	include "Sound/SFX/53.asm"
-Sound_54:	include "Sound/SFX/54.asm"
-Sound_55:	include "Sound/SFX/55.asm"
-Sound_56:	include "Sound/SFX/56.asm"
-Sound_57:	include "Sound/SFX/57.asm"
-Sound_58:	include "Sound/SFX/58.asm"
-Sound_59:	include "Sound/SFX/59.asm"
-Sound_5A:	include "Sound/SFX/5A.asm"
-Sound_5B:	include "Sound/SFX/5B.asm"
-Sound_5C:	include "Sound/SFX/5C.asm"
-Sound_5D:	include "Sound/SFX/5D.asm"
-Sound_5E:	include "Sound/SFX/5E.asm"
-Sound_5F:	include "Sound/SFX/5F.asm"
-Sound_60:	include "Sound/SFX/60.asm"
-Sound_61:	include "Sound/SFX/61.asm"
-Sound_62:	include "Sound/SFX/62.asm"
-Sound_63:	include "Sound/SFX/63.asm"
-Sound_64:	include "Sound/SFX/64.asm"
-Sound_65:	include "Sound/SFX/65.asm"
-Sound_66:	include "Sound/SFX/66.asm"
-Sound_67:	include "Sound/SFX/67.asm"
-Sound_68:	include "Sound/SFX/68.asm"
-Sound_69:	include "Sound/SFX/69.asm"
-Sound_6A:	include "Sound/SFX/6A.asm"
-Sound_6B:	include "Sound/SFX/6B.asm"
-Sound_6C:	include "Sound/SFX/6C.asm"
-Sound_6D:	include "Sound/SFX/6D.asm"
-Sound_6E:	include "Sound/SFX/6E.asm"
-Sound_6F:	include "Sound/SFX/6F.asm"
-Sound_70:	include "Sound/SFX/70.asm"
-Sound_71:	include "Sound/SFX/71.asm"
-Sound_72:	include "Sound/SFX/72.asm"
-Sound_73:	include "Sound/SFX/73.asm"
-Sound_74:	include "Sound/SFX/74.asm"
-Sound_75:	include "Sound/SFX/75.asm"
-Sound_76:	include "Sound/SFX/76.asm"
-Sound_77:	include "Sound/SFX/77.asm"
-Sound_78:	include "Sound/SFX/78.asm"
-Sound_79:	include "Sound/SFX/79.asm"
-Sound_7A:	include "Sound/SFX/7A.asm"
-Sound_7B:	include "Sound/SFX/7B.asm"
-Sound_7C:	include "Sound/SFX/7C.asm"
-Sound_7D:	include "Sound/SFX/7D.asm"
-Sound_7E:	include "Sound/SFX/7E.asm"
-Sound_7F:	include "Sound/SFX/7F.asm"
-Sound_80:	include "Sound/SFX/80.asm"
-Sound_81:	include "Sound/SFX/81.asm"
-Sound_82:	include "Sound/SFX/82.asm"
-Sound_83:	include "Sound/SFX/83.asm"
-Sound_84:	include "Sound/SFX/84.asm"
-Sound_85:	include "Sound/SFX/85.asm"
-Sound_86:	include "Sound/SFX/86.asm"
-Sound_87:	include "Sound/SFX/87.asm"
-Sound_88:	include "Sound/SFX/88.asm"
-Sound_89:	include "Sound/SFX/89.asm"
-Sound_8A:	include "Sound/SFX/8A.asm"
-Sound_8B:	include "Sound/SFX/8B.asm"
-Sound_8C:	include "Sound/SFX/8C.asm"
-Sound_8D:	include "Sound/SFX/8D.asm"
-Sound_8E:	include "Sound/SFX/8E.asm"
-Sound_8F:	include "Sound/SFX/8F.asm"
-Sound_90:	include "Sound/SFX/90.asm"
-Sound_91:	include "Sound/SFX/91.asm"
-Sound_92:	include "Sound/SFX/92.asm"
-Sound_93:	include "Sound/SFX/93.asm"
-Sound_94:	include "Sound/SFX/94.asm"
-Sound_95:	include "Sound/SFX/95.asm"
-Sound_96:	include "Sound/SFX/96.asm"
-Sound_97:	include "Sound/SFX/97.asm"
-Sound_98:	include "Sound/SFX/98.asm"
-Sound_99:	include "Sound/SFX/99.asm"
-Sound_9A:	include "Sound/SFX/9A.asm"
-Sound_9B:	include "Sound/SFX/9B (Sonic 3).asm"
-Sound_9C:	include "Sound/SFX/9C.asm"
-Sound_9D:	include "Sound/SFX/9D.asm"
-Sound_9E:	include "Sound/SFX/9E.asm"
-Sound_9F:	include "Sound/SFX/9F.asm"
-Sound_A0:	include "Sound/SFX/A0.asm"
-Sound_A1:	include "Sound/SFX/A1.asm"
-Sound_A2:	include "Sound/SFX/A2.asm"
-Sound_A3:	include "Sound/SFX/A3.asm"
-Sound_A4:	include "Sound/SFX/A4.asm"
-Sound_A5:	include "Sound/SFX/A5.asm"
-Sound_A6:	include "Sound/SFX/A6.asm"
-Sound_A7:	include "Sound/SFX/A7.asm"
-Sound_A8:	include "Sound/SFX/A8.asm"
-Sound_A9:	include "Sound/SFX/A9.asm"
-Sound_AA:	include "Sound/SFX/AA.asm"
-Sound_AB:	include "Sound/SFX/AB.asm"
-Sound_AC:	include "Sound/SFX/AC.asm"
-Sound_AD:	include "Sound/SFX/AD (Sonic 3).asm"
-Sound_AE:	include "Sound/SFX/AE.asm"
-Sound_AF:	include "Sound/SFX/AF.asm"
-Sound_B0:	include "Sound/SFX/B0.asm"
-Sound_B1:	include "Sound/SFX/B1.asm"
-Sound_B2:	include "Sound/SFX/B2.asm"
-Sound_B3:	include "Sound/SFX/B3.asm"
-Sound_B4:	include "Sound/SFX/B4.asm"
-Sound_B5:	include "Sound/SFX/B5.asm"
-Sound_B6:	include "Sound/SFX/B6.asm"
-Sound_B7:	include "Sound/SFX/B7.asm"
-Sound_B8:	include "Sound/SFX/B8.asm"
-Sound_B9:	include "Sound/SFX/B9.asm"
-Sound_BA:	include "Sound/SFX/BA.asm"
-Sound_BB:	include "Sound/SFX/BB.asm"
-Sound_BC:	include "Sound/SFX/BC.asm"
-Sound_BD:	include "Sound/SFX/BD.asm"
-Sound_BE:	include "Sound/SFX/BE.asm"
-Sound_BF:	include "Sound/SFX/BF.asm"
-Sound_C0:	include "Sound/SFX/C0.asm"
-Sound_C1:	include "Sound/SFX/C1.asm"
-Sound_C2:	include "Sound/SFX/C2.asm"
-Sound_C3:	include "Sound/SFX/C3.asm"
-Sound_C4:	include "Sound/SFX/C4.asm"
-Sound_C5:	include "Sound/SFX/C5.asm"
-Sound_C6:	include "Sound/SFX/C6.asm"
-Sound_C7:	include "Sound/SFX/C7.asm"
-Sound_C8:	include "Sound/SFX/C8.asm"
-Sound_C9:	include "Sound/SFX/C9.asm"
-Sound_CA:	include "Sound/SFX/CA.asm"
-Sound_CB:	include "Sound/SFX/CB.asm"
-Sound_CC:	include "Sound/SFX/CC.asm"
-Sound_CD:	include "Sound/SFX/CD.asm"
-Sound_CE:	include "Sound/SFX/CE.asm"
-Sound_CF:	include "Sound/SFX/CF.asm"
-Sound_D0:	include "Sound/SFX/D0.asm"
-Sound_D1:	include "Sound/SFX/D1.asm"
-Sound_D2:	include "Sound/SFX/D2.asm"
-Sound_D3:	include "Sound/SFX/D3.asm"
-Sound_D4:	include "Sound/SFX/D4.asm"
-Sound_D5:	include "Sound/SFX/D5.asm"
-Sound_D6:	include "Sound/SFX/D6.asm"
-Sound_D7:	include "Sound/SFX/D7.asm"
-Sound_D8:	include "Sound/SFX/D8.asm"
-Sound_D9:	include "Sound/SFX/D9.asm"
-Sound_DA:	include "Sound/SFX/DA.asm"
-Sound_DB:	include "Sound/SFX/DB.asm"
-
-	finishBank
-
-		align $8000
 ArtUnc_Sonic:	binclude "General/Sprites/Sonic/Art/Sonic.bin"
 		even
 ArtUnc_Tails:	binclude "General/Sprites/Tails/Art/Tails.bin"
@@ -118360,6 +117521,779 @@ Pachinko_128x128_Kos:
 Slots_16x16_Kos:
 ArtKosM_Slots:
 Slots_128x128_Kos:
+; ===========================================================================
+; Music Banks
+; ===========================================================================
+	cnop -Size_of_Snd_Bank1, $8000	; aligned to end of bank
+
+; ---------------------------------------------------------------------------
+; Music Bank 1
+; ---------------------------------------------------------------------------
+Snd_Bank1_Start:
+Snd_Minib:	include "Sound/Music/Miniboss (Sonic 3).asm"
+Snd_FinalBoss:	include "Sound/Music/Final Boss.asm"
+Snd_Bank1_End
+
+	if Snd_Bank1_End - Snd_Bank1_Start > $8000
+		fatal "Snd_Bank1_Start must fit within $8000 bytes, but was $\{Snd_Bank1_End-Snd_Bank1_Start }. Try moving something to the other bank."
+	endif
+	if Snd_Bank1_End - Snd_Bank1_Start > Size_of_Snd_Bank1
+		fatal "Size_of_Snd_Bank1 = $\{Size_of_Snd_Bank1}, but you have $\{Snd_Bank1_End-Snd_Bank1_Start} bytes of music."
+	endif
+
+; ---------------------------------------------------------------------------
+; Music Bank 2
+; ---------------------------------------------------------------------------
+Snd_Bank2_Start:	startBank
+Snd_AIZ1:	include "Sound/Music/AIZ1.asm"
+Snd_AIZ2:	include "Sound/Music/AIZ2.asm"
+Snd_HCZ1:	include "Sound/Music/HCZ1.asm"
+Snd_HCZ2:	include "Sound/Music/HCZ2.asm"
+Snd_MGZ1:	include "Sound/Music/MGZ1.asm"
+Snd_MGZ2:	include "Sound/Music/MGZ2.asm"
+Snd_CNZ2:	include "Sound/Music/CNZ2.asm"
+Snd_CNZ1:	include "Sound/Music/CNZ1.asm"
+Snd_FBZ1:	include "Sound/Music/FBZ1 (Sonic 3).asm"
+Snd_FBZ2:	include "Sound/Music/FBZ2.asm"
+Snd_DDZ:	include "Sound/Music/DDZ.asm"
+
+	finishBank
+
+; ---------------------------------------------------------------------------
+; Music Bank 3
+; ---------------------------------------------------------------------------
+Snd_Bank3_Start:	startBank
+Snd_ICZ2:	include "Sound/Music/ICZ2.asm"
+Snd_ICZ1:	include "Sound/Music/ICZ1.asm"
+Snd_LBZ2:	include "Sound/Music/LBZ2.asm"
+Snd_LBZ1:	include "Sound/Music/LBZ1.asm"
+Snd_MHZ1:	include "Sound/Music/MHZ1.asm"
+Snd_MHZ2:	include "Sound/Music/MHZ2.asm"
+Snd_SOZ1:	include "Sound/Music/SOZ1.asm"
+Snd_SOZ2:	include "Sound/Music/SOZ2.asm"
+Snd_LRZ1:	include "Sound/Music/LRZ1.asm"
+Snd_LRZ2:	include "Sound/Music/LRZ2.asm"
+Snd_SSZ:	include "Sound/Music/SSZ (Sonic 3).asm"
+Snd_DEZ1:	include "Sound/Music/DEZ1.asm"
+Snd_DEZ2:	include "Sound/Music/DEZ2.asm"
+Snd_Minib_SK:	include "Sound/Music/Miniboss (Sonic & Knuckles).asm"
+Snd_Boss:	include "Sound/Music/Zone Boss.asm"
+Snd_PachBonus:	include "Sound/Music/Pachinko.asm"
+Snd_SpecialS:	include "Sound/Music/Special Stage.asm"
+Snd_Results:	include "Sound/Music/Level Outro.asm"
+Snd_Menu:	include "Sound/Music/Menu (Sonic 3).asm"
+
+	finishBank
+
+; ---------------------------------------------------------------------------
+; Music Bank 4
+; ---------------------------------------------------------------------------
+Snd_Bank4_Start:	startBank
+Snd_SlotBonus:	include "Sound/Music/Slots.asm"
+Snd_GumBonus:	include "Sound/Music/Gum Ball Machine.asm"
+Snd_Knux:	include "Sound/Music/Knuckles (Sonic 3).asm"
+Snd_ALZ:	include "Sound/Music/Azure Lake.asm"
+Snd_BPZ:	include "Sound/Music/Balloon Park.asm"
+Snd_DPZ:	include "Sound/Music/Desert Palace.asm"
+Snd_CGZ:	include "Sound/Music/Chrome Gadget.asm"
+Snd_EMZ:	include "Sound/Music/Endless Mine.asm"
+Snd_Title:	include "Sound/Music/Title (Sonic 3).asm"
+Snd_S3Credits:	include "Sound/Music/Credits (Sonic 3).asm"
+Snd_GameOver:	include "Sound/Music/Game Over.asm"
+Snd_Continue:	include "Sound/Music/Continue (Sonic 3).asm"
+Snd_1UP:	include "Sound/Music/1UP (Sonic 3).asm"
+Snd_Emerald:	include "Sound/Music/Chaos Emerald.asm"
+Snd_Invic:	include "Sound/Music/Invincible (Sonic 3).asm"
+Snd_2PMenu:	include "Sound/Music/Competition Menu.asm"
+Snd_Drown:	include "Sound/Music/Countdown.asm"
+Snd_PresSega:	include "Sound/Music/Game Complete (Sonic 3).asm"
+
+	finishBank
+
+; ---------------------------------------------------------------------------
+; ===========================================================================
+; DAC Banks
+; ===========================================================================
+; DAC Bank 1
+; ---------------------------------------------------------------------------
+DacBank1:			startBank
+
+DAC_Offsets:
+		offsetBankTableEntry.w	DAC_81_Setup
+		offsetBankTableEntry.w	DAC_82_Setup
+		offsetBankTableEntry.w	DAC_83_Setup
+		offsetBankTableEntry.w	DAC_84_Setup
+		offsetBankTableEntry.w	DAC_85_Setup
+		offsetBankTableEntry.w	DAC_86_Setup
+		offsetBankTableEntry.w	DAC_87_Setup
+		offsetBankTableEntry.w	DAC_88_Setup
+		offsetBankTableEntry.w	DAC_89_Setup
+		offsetBankTableEntry.w	DAC_8A_Setup
+		offsetBankTableEntry.w	DAC_8B_Setup
+		offsetBankTableEntry.w	DAC_8C_Setup
+		offsetBankTableEntry.w	DAC_8D_Setup
+		offsetBankTableEntry.w	DAC_8E_Setup
+		offsetBankTableEntry.w	DAC_8F_Setup
+
+		offsetBankTableEntry.w	DAC_90_Setup
+		offsetBankTableEntry.w	DAC_91_Setup
+		offsetBankTableEntry.w	DAC_92_Setup
+		offsetBankTableEntry.w	DAC_93_Setup
+		offsetBankTableEntry.w	DAC_94_Setup
+		offsetBankTableEntry.w	DAC_95_Setup
+		offsetBankTableEntry.w	DAC_96_Setup
+		offsetBankTableEntry.w	DAC_97_Setup
+		offsetBankTableEntry.w	DAC_98_Setup
+		offsetBankTableEntry.w	DAC_99_Setup
+		offsetBankTableEntry.w	DAC_9A_Setup
+		offsetBankTableEntry.w	DAC_9B_Setup
+		offsetBankTableEntry.w	DAC_9C_Setup
+		offsetBankTableEntry.w	DAC_9D_Setup
+		offsetBankTableEntry.w	DAC_9E_Setup
+		offsetBankTableEntry.w	DAC_9F_Setup
+
+		offsetBankTableEntry.w	DAC_A0_Setup
+		offsetBankTableEntry.w	DAC_A1_Setup
+		offsetBankTableEntry.w	DAC_A2_Setup
+		offsetBankTableEntry.w	DAC_A3_Setup
+		offsetBankTableEntry.w	DAC_A4_Setup
+		offsetBankTableEntry.w	DAC_A5_Setup
+		offsetBankTableEntry.w	DAC_A6_Setup
+		offsetBankTableEntry.w	DAC_A7_Setup
+		offsetBankTableEntry.w	DAC_A8_Setup
+		offsetBankTableEntry.w	DAC_A9_Setup
+		offsetBankTableEntry.w	DAC_AA_Setup
+		offsetBankTableEntry.w	DAC_AB_Setup
+		offsetBankTableEntry.w	DAC_AC_Setup
+		offsetBankTableEntry.w	DAC_AD_Setup
+		offsetBankTableEntry.w	DAC_AE_Setup
+		offsetBankTableEntry.w	DAC_AF_Setup
+
+		offsetBankTableEntry.w	DAC_B0_Setup
+		offsetBankTableEntry.w	DAC_B1_Setup
+		offsetBankTableEntry.w	DAC_B2_Setup
+		offsetBankTableEntry.w	DAC_B3_Setup
+		offsetBankTableEntry.w	DAC_B4_Setup
+		offsetBankTableEntry.w	DAC_B5_Setup
+		offsetBankTableEntry.w	DAC_B6_Setup
+		offsetBankTableEntry.w	DAC_B7_Setup
+		offsetBankTableEntry.w	DAC_B8_B9_Setup
+		offsetBankTableEntry.w	DAC_B8_B9_Setup
+		offsetBankTableEntry.w	DAC_BA_Setup
+		offsetBankTableEntry.w	DAC_BB_Setup
+		offsetBankTableEntry.w	DAC_BC_Setup
+		offsetBankTableEntry.w	DAC_BD_Setup
+		offsetBankTableEntry.w	DAC_BE_Setup
+		offsetBankTableEntry.w	DAC_BF_Setup
+
+		offsetBankTableEntry.w	DAC_C0_Setup
+		offsetBankTableEntry.w	DAC_C1_Setup
+		offsetBankTableEntry.w	DAC_C2_Setup
+		offsetBankTableEntry.w	DAC_C3_Setup
+		offsetBankTableEntry.w	DAC_C4_Setup
+
+DAC_81_Setup:		DAC_Setup $04,DAC_81_Data
+DAC_82_Setup:		DAC_Setup $0E,DAC_82_83_84_85_Data
+DAC_83_Setup:		DAC_Setup $14,DAC_82_83_84_85_Data
+DAC_84_Setup:		DAC_Setup $1A,DAC_82_83_84_85_Data
+DAC_85_Setup:		DAC_Setup $20,DAC_82_83_84_85_Data
+DAC_86_Setup:		DAC_Setup $04,DAC_86_Data
+DAC_87_Setup:		DAC_Setup $04,DAC_87_Data
+DAC_88_Setup:		DAC_Setup $06,DAC_88_Data
+DAC_89_Setup:		DAC_Setup $0A,DAC_89_Data
+DAC_8A_Setup:		DAC_Setup $14,DAC_8A_8B_Data
+DAC_8B_Setup:		DAC_Setup $1B,DAC_8A_8B_Data
+DAC_8C_Setup:		DAC_Setup $08,DAC_8C_Data
+DAC_8D_Setup:		DAC_Setup $0B,DAC_8D_8E_Data
+DAC_8E_Setup:		DAC_Setup $11,DAC_8D_8E_Data
+DAC_8F_Setup:		DAC_Setup $08,DAC_8F_Data
+DAC_90_Setup:		DAC_Setup $03,DAC_90_91_92_93_Data
+DAC_91_Setup:		DAC_Setup $07,DAC_90_91_92_93_Data
+DAC_92_Setup:		DAC_Setup $0A,DAC_90_91_92_93_Data
+DAC_93_Setup:		DAC_Setup $0E,DAC_90_91_92_93_Data
+DAC_94_Setup:		DAC_Setup $06,DAC_94_95_96_97_Data
+DAC_95_Setup:		DAC_Setup $0A,DAC_94_95_96_97_Data
+DAC_96_Setup:		DAC_Setup $0D,DAC_94_95_96_97_Data
+DAC_97_Setup:		DAC_Setup $12,DAC_94_95_96_97_Data
+DAC_98_Setup:		DAC_Setup $0B,DAC_98_99_9A_Data
+DAC_99_Setup:		DAC_Setup $13,DAC_98_99_9A_Data
+DAC_9A_Setup:		DAC_Setup $16,DAC_98_99_9A_Data
+DAC_9B_Setup:		DAC_Setup $0C,DAC_9B_Data
+DAC_A2_Setup:		DAC_Setup $0A,DAC_A2_Data
+DAC_A3_Setup:		DAC_Setup $18,DAC_A3_Data
+DAC_A4_Setup:		DAC_Setup $18,DAC_A4_Data
+DAC_A5_Setup:		DAC_Setup $0C,DAC_A5_Data
+DAC_A6_Setup:		DAC_Setup $09,DAC_A6_Data
+DAC_A7_Setup:		DAC_Setup $18,DAC_A7_Data
+DAC_A8_Setup:		DAC_Setup $18,DAC_A8_Data
+DAC_A9_Setup:		DAC_Setup $0C,DAC_A9_Data
+DAC_AA_Setup:		DAC_Setup $0A,DAC_AA_Data
+DAC_AB_Setup:		DAC_Setup $0D,DAC_AB_Data
+DAC_AC_Setup:		DAC_Setup $06,DAC_AC_Data
+DAC_AD_Setup:		DAC_Setup $10,DAC_AD_AE_Data
+DAC_AE_Setup:		DAC_Setup $18,DAC_AD_AE_Data
+DAC_AF_Setup:		DAC_Setup $09,DAC_AF_Data
+DAC_B0_Setup:		DAC_Setup $12,DAC_AF_Data
+DAC_B1_Setup:		DAC_Setup $18,DAC_B1_Data
+DAC_B2_Setup:		DAC_Setup $16,DAC_B2_B3_Data
+DAC_B3_Setup:		DAC_Setup $20,DAC_B2_B3_Data
+DAC_B4_Setup:		DAC_Setup $0C,DAC_B4_C1_C2_C3_C4_Data
+DAC_B5_Setup:		DAC_Setup $0C,DAC_B5_Data
+DAC_B6_Setup:		DAC_Setup $0C,DAC_B6_Data
+DAC_B7_Setup:		DAC_Setup $18,DAC_B7_Data
+DAC_B8_B9_Setup:	DAC_Setup $0C,DAC_B8_B9_Data
+DAC_BA_Setup:		DAC_Setup $18,DAC_BA_Data
+DAC_BB_Setup:		DAC_Setup $18,DAC_BB_Data
+DAC_BC_Setup:		DAC_Setup $18,DAC_BC_Data
+DAC_BD_Setup:		DAC_Setup $0C,DAC_BD_Data
+DAC_BE_Setup:		DAC_Setup $0C,DAC_BE_Data
+DAC_BF_Setup:		DAC_Setup $1C,DAC_BF_Data
+DAC_C0_Setup:		DAC_Setup $0B,DAC_C0_Data
+DAC_C1_Setup:		DAC_Setup $0F,DAC_B4_C1_C2_C3_C4_Data
+DAC_C2_Setup:		DAC_Setup $11,DAC_B4_C1_C2_C3_C4_Data
+DAC_C3_Setup:		DAC_Setup $12,DAC_B4_C1_C2_C3_C4_Data
+DAC_C4_Setup:		DAC_Setup $0B,DAC_B4_C1_C2_C3_C4_Data
+DAC_9C_Setup:		DAC_Setup $0A,DAC_9C_Data
+DAC_9D_Setup:		DAC_Setup $18,DAC_9D_Data
+DAC_9E_Setup:		DAC_Setup $18,DAC_9E_Data
+DAC_9F_Setup:		DAC_Setup $0C,DAC_9F_Data
+DAC_A0_Setup:		DAC_Setup $0C,DAC_A0_Data
+DAC_A1_Setup:		DAC_Setup $0A,DAC_A1_Data
+; ---------------------------------------------------------------------------
+
+DAC_86_Data:		DACBINCLUDE "Sound/DAC/86.bin"
+DAC_81_Data:		DACBINCLUDE "Sound/DAC/81.bin"
+DAC_82_83_84_85_Data:	DACBINCLUDE "Sound/DAC/82-85.bin"
+DAC_94_95_96_97_Data:	DACBINCLUDE "Sound/DAC/94-97.bin"
+DAC_90_91_92_93_Data:	DACBINCLUDE "Sound/DAC/90-93.bin"
+DAC_88_Data:		DACBINCLUDE "Sound/DAC/88.bin"
+DAC_8A_8B_Data:		DACBINCLUDE "Sound/DAC/8A-8B.bin"
+DAC_8C_Data:		DACBINCLUDE "Sound/DAC/8C.bin"
+DAC_8D_8E_Data:		DACBINCLUDE "Sound/DAC/8D-8E.bin"
+DAC_87_Data:		DACBINCLUDE "Sound/DAC/87.bin"
+DAC_8F_Data:		DACBINCLUDE "Sound/DAC/8F.bin"
+DAC_89_Data:		DACBINCLUDE "Sound/DAC/89.bin"
+DAC_98_99_9A_Data:	DACBINCLUDE "Sound/DAC/98-9A.bin"
+DAC_9B_Data:		DACBINCLUDE "Sound/DAC/9B.bin"
+DAC_B2_B3_Data:		DACBINCLUDE "Sound/DAC/B2-B3 (Sonic & Knuckles).bin"
+
+	finishBank
+
+		align $10
+
+; ---------------------------------------------------------------------------
+; Dac Bank 2
+; ---------------------------------------------------------------------------
+DacBank2:	startBank
+		offsetBankTableEntry.w	DAC_81_Setup2
+		offsetBankTableEntry.w	DAC_82_Setup2
+		offsetBankTableEntry.w	DAC_83_Setup2
+		offsetBankTableEntry.w	DAC_84_Setup2
+		offsetBankTableEntry.w	DAC_85_Setup2
+		offsetBankTableEntry.w	DAC_86_Setup2
+		offsetBankTableEntry.w	DAC_87_Setup2
+		offsetBankTableEntry.w	DAC_88_Setup2
+		offsetBankTableEntry.w	DAC_89_Setup2
+		offsetBankTableEntry.w	DAC_8A_Setup2
+		offsetBankTableEntry.w	DAC_8B_Setup2
+		offsetBankTableEntry.w	DAC_8C_Setup2
+		offsetBankTableEntry.w	DAC_8D_Setup2
+		offsetBankTableEntry.w	DAC_8E_Setup2
+		offsetBankTableEntry.w	DAC_8F_Setup2
+
+		offsetBankTableEntry.w	DAC_90_Setup2
+		offsetBankTableEntry.w	DAC_91_Setup2
+		offsetBankTableEntry.w	DAC_92_Setup2
+		offsetBankTableEntry.w	DAC_93_Setup2
+		offsetBankTableEntry.w	DAC_94_Setup2
+		offsetBankTableEntry.w	DAC_95_Setup2
+		offsetBankTableEntry.w	DAC_96_Setup2
+		offsetBankTableEntry.w	DAC_97_Setup2
+		offsetBankTableEntry.w	DAC_98_Setup2
+		offsetBankTableEntry.w	DAC_99_Setup2
+		offsetBankTableEntry.w	DAC_9A_Setup2
+		offsetBankTableEntry.w	DAC_9B_Setup2
+		offsetBankTableEntry.w	DAC_9C_Setup2
+		offsetBankTableEntry.w	DAC_9D_Setup2
+		offsetBankTableEntry.w	DAC_9E_Setup2
+		offsetBankTableEntry.w	DAC_9F_Setup2
+
+		offsetBankTableEntry.w	DAC_A0_Setup2
+		offsetBankTableEntry.w	DAC_A1_Setup2
+		offsetBankTableEntry.w	DAC_A2_Setup2
+		offsetBankTableEntry.w	DAC_A3_Setup2
+		offsetBankTableEntry.w	DAC_A4_Setup2
+		offsetBankTableEntry.w	DAC_A5_Setup2
+		offsetBankTableEntry.w	DAC_A6_Setup2
+		offsetBankTableEntry.w	DAC_A7_Setup2
+		offsetBankTableEntry.w	DAC_A8_Setup2
+		offsetBankTableEntry.w	DAC_A9_Setup2
+		offsetBankTableEntry.w	DAC_AA_Setup2
+		offsetBankTableEntry.w	DAC_AB_Setup2
+		offsetBankTableEntry.w	DAC_AC_Setup2
+		offsetBankTableEntry.w	DAC_AD_Setup2
+		offsetBankTableEntry.w	DAC_AE_Setup2
+		offsetBankTableEntry.w	DAC_AF_Setup2
+
+		offsetBankTableEntry.w	DAC_B0_Setup2
+		offsetBankTableEntry.w	DAC_B1_Setup2
+		offsetBankTableEntry.w	DAC_B2_Setup2
+		offsetBankTableEntry.w	DAC_B3_Setup2
+		offsetBankTableEntry.w	DAC_B4_Setup2
+		offsetBankTableEntry.w	DAC_B5_Setup2
+		offsetBankTableEntry.w	DAC_B6_Setup2
+		offsetBankTableEntry.w	DAC_B7_Setup2
+		offsetBankTableEntry.w	DAC_B8_B9_Setup2
+		offsetBankTableEntry.w	DAC_B8_B9_Setup2
+		offsetBankTableEntry.w	DAC_BA_Setup2
+		offsetBankTableEntry.w	DAC_BB_Setup2
+		offsetBankTableEntry.w	DAC_BC_Setup2
+		offsetBankTableEntry.w	DAC_BD_Setup2
+		offsetBankTableEntry.w	DAC_BE_Setup2
+		offsetBankTableEntry.w	DAC_BF_Setup2
+
+		offsetBankTableEntry.w	DAC_C0_Setup2
+		offsetBankTableEntry.w	DAC_C1_Setup2
+		offsetBankTableEntry.w	DAC_C2_Setup2
+		offsetBankTableEntry.w	DAC_C3_Setup2
+		offsetBankTableEntry.w	DAC_C4_Setup2
+
+DAC_81_Setup2:			DAC_Null_Setup $04
+DAC_82_Setup2:			DAC_Null_Setup $0E
+DAC_83_Setup2:			DAC_Null_Chain $14,DAC_82_Setup2
+DAC_84_Setup2:			DAC_Null_Chain $1A,DAC_83_Setup2
+DAC_85_Setup2:			DAC_Null_Chain $20,DAC_84_Setup2
+DAC_86_Setup2:			DAC_Null_Setup $04
+DAC_87_Setup2:			DAC_Null_Setup $04
+DAC_88_Setup2:			DAC_Null_Setup $06
+DAC_89_Setup2:			DAC_Null_Setup $0A
+DAC_8A_Setup2:			DAC_Null_Setup $14
+DAC_8B_Setup2:			DAC_Null_Chain $1B,DAC_8A_Setup2
+DAC_8C_Setup2:			DAC_Null_Setup $08
+DAC_8D_Setup2:			DAC_Null_Setup $0B
+DAC_8E_Setup2:			DAC_Null_Chain $11,DAC_8D_Setup2
+DAC_8F_Setup2:			DAC_Null_Setup $08
+DAC_90_Setup2:			DAC_Null_Setup $03
+DAC_91_Setup2:			DAC_Null_Chain $07,DAC_90_Setup2
+DAC_92_Setup2:			DAC_Null_Chain $0A,DAC_91_Setup2
+DAC_93_Setup2:			DAC_Null_Chain $0E,DAC_92_Setup2
+DAC_94_Setup2:			DAC_Null_Setup $06
+DAC_95_Setup2:			DAC_Null_Chain $0A,DAC_94_Setup2
+DAC_96_Setup2:			DAC_Null_Chain $0D,DAC_95_Setup2
+DAC_97_Setup2:			DAC_Null_Chain $12,DAC_96_Setup2
+DAC_98_Setup2:			DAC_Null_Setup $0B
+DAC_99_Setup2:			DAC_Null_Chain $13,DAC_98_Setup2
+DAC_9A_Setup2:			DAC_Null_Chain $16,DAC_99_Setup2
+DAC_9B_Setup2:			DAC_Setup $0C,DAC_9B_Data
+DAC_A2_Setup2:			DAC_Setup $0A,DAC_A2_Data
+DAC_A3_Setup2:			DAC_Setup $18,DAC_A3_Data
+DAC_A4_Setup2:			DAC_Setup $18,DAC_A4_Data
+DAC_A5_Setup2:			DAC_Setup $0C,DAC_A5_Data
+DAC_A6_Setup2:			DAC_Setup $09,DAC_A6_Data
+DAC_A7_Setup2:			DAC_Setup $18,DAC_A7_Data
+DAC_A8_Setup2:			DAC_Setup $18,DAC_A8_Data
+DAC_A9_Setup2:			DAC_Setup $0C,DAC_A9_Data
+DAC_AA_Setup2:			DAC_Setup $0A,DAC_AA_Data
+DAC_AB_Setup2:			DAC_Null_Setup $0D
+DAC_AC_Setup2:			DAC_Null_Setup $06
+DAC_AD_Setup2:			DAC_Null_Setup $10
+DAC_AE_Setup2:			DAC_Null_Chain $18,DAC_AD_Setup2
+DAC_AF_Setup2:			DAC_Null_Setup $09
+DAC_B0_Setup2:			DAC_Null_Chain $12,DAC_AF_Setup2
+DAC_B1_Setup2:			DAC_Null_Setup $18
+DAC_B2_Setup2:			DAC_Null_Setup $16
+DAC_B3_Setup2:			DAC_Null_Chain $20,DAC_B2_Setup2
+DAC_B4_Setup2:			DAC_Null_Setup $0C
+DAC_B5_Setup2:			DAC_Null_Setup $0C
+DAC_B6_Setup2:			DAC_Null_Setup $0C
+DAC_B7_Setup2:			DAC_Null_Setup $18
+DAC_B8_B9_Setup2:		DAC_Null_Setup $0C
+DAC_BA_Setup2:			DAC_Null_Setup $18
+DAC_BB_Setup2:			DAC_Null_Setup $18
+DAC_BC_Setup2:			DAC_Null_Setup $18
+DAC_BD_Setup2:			DAC_Null_Setup $0C
+DAC_BE_Setup2:			DAC_Null_Setup $0C
+DAC_BF_Setup2:			DAC_Null_Setup $1C
+DAC_C0_Setup2:			DAC_Null_Setup $0B
+DAC_C1_Setup2:			DAC_Null_Chain $0F,DAC_B4_Setup2
+DAC_C2_Setup2:			DAC_Null_Chain $11,DAC_C1_Setup2
+DAC_C3_Setup2:			DAC_Null_Chain $12,DAC_C2_Setup2
+DAC_C4_Setup2:			DAC_Null_Chain $0B,DAC_C3_Setup2
+DAC_9C_Setup2:			DAC_Setup $0A,DAC_9C_Data
+DAC_9D_Setup2:			DAC_Setup $18,DAC_9D_Data
+DAC_9E_Setup2:			DAC_Setup $18,DAC_9E_Data
+DAC_9F_Setup2:			DAC_Setup $0C,DAC_9F_Data
+DAC_A0_Setup2:			DAC_Setup $0C,DAC_A0_Data
+DAC_A1_Setup2:			DAC_Setup $0A,DAC_A1_Data
+
+DAC_9B_Data:			DACBINCLUDE "Sound/DAC/9B.bin"
+DAC_9C_Data:			DACBINCLUDE "Sound/DAC/9C.bin"
+DAC_9D_Data:			DACBINCLUDE "Sound/DAC/9D.bin"
+DAC_9E_Data:			DACBINCLUDE "Sound/DAC/9E.bin"
+DAC_9F_Data:			DACBINCLUDE "Sound/DAC/9F.bin"
+DAC_A0_Data:			DACBINCLUDE "Sound/DAC/A0.bin"
+DAC_A1_Data:			DACBINCLUDE "Sound/DAC/A1.bin"
+DAC_A2_Data:			DACBINCLUDE "Sound/DAC/A2.bin"
+DAC_A3_Data:			DACBINCLUDE "Sound/DAC/A3.bin"
+DAC_A4_Data:			DACBINCLUDE "Sound/DAC/A4.bin"
+DAC_A5_Data:			DACBINCLUDE "Sound/DAC/A5.bin"
+DAC_A6_Data:			DACBINCLUDE "Sound/DAC/A6.bin"
+DAC_A7_Data:			DACBINCLUDE "Sound/DAC/A7.bin"
+DAC_A8_Data:			DACBINCLUDE "Sound/DAC/A8.bin"
+DAC_A9_Data:			DACBINCLUDE "Sound/DAC/A9.bin"
+DAC_AA_Data:			DACBINCLUDE "Sound/DAC/AA.bin"
+
+	finishBank
+
+; ---------------------------------------------------------------------------
+; Dac Bank 3
+; ---------------------------------------------------------------------------
+DacBank3:	startBank
+		offsetBankTableEntry.w	DAC_81_Setup3
+		offsetBankTableEntry.w	DAC_82_Setup3
+		offsetBankTableEntry.w	DAC_83_Setup3
+		offsetBankTableEntry.w	DAC_84_Setup3
+		offsetBankTableEntry.w	DAC_85_Setup3
+		offsetBankTableEntry.w	DAC_86_Setup3
+		offsetBankTableEntry.w	DAC_87_Setup3
+		offsetBankTableEntry.w	DAC_88_Setup3
+		offsetBankTableEntry.w	DAC_89_Setup3
+		offsetBankTableEntry.w	DAC_8A_Setup3
+		offsetBankTableEntry.w	DAC_8B_Setup3
+		offsetBankTableEntry.w	DAC_8C_Setup3
+		offsetBankTableEntry.w	DAC_8D_Setup3
+		offsetBankTableEntry.w	DAC_8E_Setup3
+		offsetBankTableEntry.w	DAC_8F_Setup3
+
+		offsetBankTableEntry.w	DAC_90_Setup3
+		offsetBankTableEntry.w	DAC_91_Setup3
+		offsetBankTableEntry.w	DAC_92_Setup3
+		offsetBankTableEntry.w	DAC_93_Setup3
+		offsetBankTableEntry.w	DAC_94_Setup3
+		offsetBankTableEntry.w	DAC_95_Setup3
+		offsetBankTableEntry.w	DAC_96_Setup3
+		offsetBankTableEntry.w	DAC_97_Setup3
+		offsetBankTableEntry.w	DAC_98_Setup3
+		offsetBankTableEntry.w	DAC_99_Setup3
+		offsetBankTableEntry.w	DAC_9A_Setup3
+		offsetBankTableEntry.w	DAC_9B_Setup3
+		offsetBankTableEntry.w	DAC_9C_Setup3
+		offsetBankTableEntry.w	DAC_9D_Setup3
+		offsetBankTableEntry.w	DAC_9E_Setup3
+		offsetBankTableEntry.w	DAC_9F_Setup3
+
+		offsetBankTableEntry.w	DAC_A0_Setup3
+		offsetBankTableEntry.w	DAC_A1_Setup3
+		offsetBankTableEntry.w	DAC_A2_Setup3
+		offsetBankTableEntry.w	DAC_A3_Setup3
+		offsetBankTableEntry.w	DAC_A4_Setup3
+		offsetBankTableEntry.w	DAC_A5_Setup3
+		offsetBankTableEntry.w	DAC_A6_Setup3
+		offsetBankTableEntry.w	DAC_A7_Setup3
+		offsetBankTableEntry.w	DAC_A8_Setup3
+		offsetBankTableEntry.w	DAC_A9_Setup3
+		offsetBankTableEntry.w	DAC_AA_Setup3
+		offsetBankTableEntry.w	DAC_AB_Setup3
+		offsetBankTableEntry.w	DAC_AC_Setup3
+		offsetBankTableEntry.w	DAC_AD_Setup3
+		offsetBankTableEntry.w	DAC_AE_Setup3
+		offsetBankTableEntry.w	DAC_AF_Setup3
+
+		offsetBankTableEntry.w	DAC_B0_Setup3
+		offsetBankTableEntry.w	DAC_B1_Setup3
+		offsetBankTableEntry.w	DAC_B2_Setup3
+		offsetBankTableEntry.w	DAC_B3_Setup3
+		offsetBankTableEntry.w	DAC_B4_Setup3
+		offsetBankTableEntry.w	DAC_B5_Setup3
+		offsetBankTableEntry.w	DAC_B6_Setup3
+		offsetBankTableEntry.w	DAC_B7_Setup3
+		offsetBankTableEntry.w	DAC_B8_B9_Setup3
+		offsetBankTableEntry.w	DAC_B8_B9_Setup3
+		offsetBankTableEntry.w	DAC_BA_Setup3
+		offsetBankTableEntry.w	DAC_BB_Setup3
+		offsetBankTableEntry.w	DAC_BC_Setup3
+		offsetBankTableEntry.w	DAC_BD_Setup3
+		offsetBankTableEntry.w	DAC_BE_Setup3
+		offsetBankTableEntry.w	DAC_BF_Setup3
+
+		offsetBankTableEntry.w	DAC_C0_Setup3
+		offsetBankTableEntry.w	DAC_C1_Setup3
+		offsetBankTableEntry.w	DAC_C2_Setup3
+		offsetBankTableEntry.w	DAC_C3_Setup3
+		offsetBankTableEntry.w	DAC_C4_Setup3
+
+DAC_81_Setup3:			DAC_Null_Setup $04
+DAC_82_Setup3:			DAC_Null_Setup $0E
+DAC_83_Setup3:			DAC_Null_Chain $14,DAC_82_Setup3
+DAC_84_Setup3:			DAC_Null_Chain $1A,DAC_83_Setup3
+DAC_85_Setup3:			DAC_Null_Chain $20,DAC_84_Setup3
+DAC_86_Setup3:			DAC_Null_Setup $04
+DAC_87_Setup3:			DAC_Null_Setup $04
+DAC_88_Setup3:			DAC_Null_Setup $06
+DAC_89_Setup3:			DAC_Null_Setup $0A
+DAC_8A_Setup3:			DAC_Null_Setup $14
+DAC_8B_Setup3:			DAC_Null_Chain $1B,DAC_8A_Setup3
+DAC_8C_Setup3:			DAC_Null_Setup $08
+DAC_8D_Setup3:			DAC_Null_Setup $0B
+DAC_8E_Setup3:			DAC_Null_Chain $11,DAC_8D_Setup3
+DAC_8F_Setup3:			DAC_Null_Setup $08
+DAC_90_Setup3:			DAC_Null_Setup $03
+DAC_91_Setup3:			DAC_Null_Chain $07,DAC_90_Setup3
+DAC_92_Setup3:			DAC_Null_Chain $0A,DAC_91_Setup3
+DAC_93_Setup3:			DAC_Null_Chain $0E,DAC_92_Setup3
+DAC_94_Setup3:			DAC_Null_Setup $06
+DAC_95_Setup3:			DAC_Null_Chain $0A,DAC_94_Setup3
+DAC_96_Setup3:			DAC_Null_Chain $0D,DAC_95_Setup3
+DAC_97_Setup3:			DAC_Null_Chain $12,DAC_96_Setup3
+DAC_98_Setup3:			DAC_Null_Setup $0B
+DAC_99_Setup3:			DAC_Null_Chain $13,DAC_98_Setup3
+DAC_9A_Setup3:			DAC_Null_Chain $16,DAC_99_Setup3
+DAC_9B_Setup3:			DAC_Null_Setup $0C
+DAC_A2_Setup3:			DAC_Null_Setup $0A
+DAC_A3_Setup3:			DAC_Null_Setup $18
+DAC_A4_Setup3:			DAC_Null_Setup $18
+DAC_A5_Setup3:			DAC_Null_Setup $0C
+DAC_A6_Setup3:			DAC_Null_Setup $09
+DAC_A7_Setup3:			DAC_Null_Setup $18
+DAC_A8_Setup3:			DAC_Null_Setup $18
+DAC_A9_Setup3:			DAC_Null_Setup $0C
+DAC_AA_Setup3:			DAC_Null_Setup $0A
+DAC_AB_Setup3:			DAC_Setup $0D,DAC_AB_Data
+DAC_AC_Setup3:			DAC_Setup $06,DAC_AC_Data
+DAC_AD_Setup3:			DAC_Setup $10,DAC_AD_AE_Data
+DAC_AE_Setup3:			DAC_Setup $18,DAC_AD_AE_Data
+DAC_AF_Setup3:			DAC_Setup $09,DAC_AF_Data
+DAC_B0_Setup3:			DAC_Setup $12,DAC_AF_Data
+DAC_B1_Setup3:			DAC_Setup $18,DAC_B1_Data
+DAC_B2_Setup3:			DAC_Setup $16,DAC_B2_B3_Data
+DAC_B3_Setup3:			DAC_Setup $20,DAC_B2_B3_Data
+DAC_B4_Setup3:			DAC_Setup $0C,DAC_B4_C1_C2_C3_C4_Data
+DAC_B5_Setup3:			DAC_Setup $0C,DAC_B5_Data
+DAC_B6_Setup3:			DAC_Setup $0C,DAC_B6_Data
+DAC_B7_Setup3:			DAC_Setup $18,DAC_B7_Data
+DAC_B8_B9_Setup3:		DAC_Setup $0C,DAC_B8_B9_Data
+DAC_BA_Setup3:			DAC_Setup $18,DAC_BA_Data
+DAC_BB_Setup3:			DAC_Setup $18,DAC_BB_Data
+DAC_BC_Setup3:			DAC_Setup $18,DAC_BC_Data
+DAC_BD_Setup3:			DAC_Setup $0C,DAC_BD_Data
+DAC_BE_Setup3:			DAC_Setup $0C,DAC_BE_Data
+DAC_BF_Setup3:			DAC_Setup $1C,DAC_BF_Data
+DAC_C0_Setup3:			DAC_Setup $0B,DAC_C0_Data
+DAC_C1_Setup3:			DAC_Setup $0F,DAC_B4_C1_C2_C3_C4_Data
+DAC_C2_Setup3:			DAC_Setup $11,DAC_B4_C1_C2_C3_C4_Data
+DAC_C3_Setup3:			DAC_Setup $12,DAC_B4_C1_C2_C3_C4_Data
+DAC_C4_Setup3:			DAC_Setup $0B,DAC_B4_C1_C2_C3_C4_Data
+DAC_9C_Setup3:			DAC_Null_Setup $0A
+DAC_9D_Setup3:			DAC_Null_Setup $18
+DAC_9E_Setup3:			DAC_Null_Setup $18
+DAC_9F_Setup3:			DAC_Null_Setup $0C
+DAC_A0_Setup3:			DAC_Null_Setup $0C
+DAC_A1_Setup3:			DAC_Null_Setup $0A
+
+DAC_AB_Data:			DACBINCLUDE "Sound/DAC/AB.bin"
+DAC_AC_Data:			DACBINCLUDE "Sound/DAC/AC.bin"
+DAC_AD_AE_Data:			DACBINCLUDE "Sound/DAC/AD-AE.bin"
+DAC_AF_Data:			DACBINCLUDE "Sound/DAC/AF.bin"
+DAC_B0_Data:			DACBINCLUDE "Sound/DAC/B0.bin"
+DAC_B1_Data:			DACBINCLUDE "Sound/DAC/B1.bin"
+DAC_B2_B3_Data:			DACBINCLUDE "Sound/DAC/B2-B3 (Sonic 3).bin"
+DAC_B4_C1_C2_C3_C4_Data:	DACBINCLUDE "Sound/DAC/B4C1-C4.bin"
+DAC_B5_Data:			DACBINCLUDE "Sound/DAC/B5.bin"
+DAC_B6_Data:			DACBINCLUDE "Sound/DAC/B6.bin"
+DAC_B7_Data:			DACBINCLUDE "Sound/DAC/B7.bin"
+DAC_B8_B9_Data:			DACBINCLUDE "Sound/DAC/B8-B9.bin"
+DAC_BA_Data:			DACBINCLUDE "Sound/DAC/BA.bin"
+DAC_BB_Data:			DACBINCLUDE "Sound/DAC/BB.bin"
+DAC_BC_Data:			DACBINCLUDE "Sound/DAC/BC.bin"
+DAC_BD_Data:			DACBINCLUDE "Sound/DAC/BD.bin"
+DAC_BE_Data:			DACBINCLUDE "Sound/DAC/BE.bin"
+DAC_BF_Data:			DACBINCLUDE "Sound/DAC/BF.bin"
+DAC_C0_Data:			DACBINCLUDE "Sound/DAC/C0.bin"
+
+	finishBank
+		include "Sound/Z80 Sound Driver.asm"
+
+
+; ===========================================================================
+; Sound Bank
+; ===========================================================================
+SndBank:			startBank
+
+SEGA_PCM:	binclude "Sound/Sega PCM.bin"
+		align 2
+Sound_33:	include "Sound/SFX/33.asm"
+Sound_34:	include "Sound/SFX/34.asm"
+Sound_35:	include "Sound/SFX/35.asm"
+Sound_36:	include "Sound/SFX/36.asm"
+Sound_37:	include "Sound/SFX/37.asm"
+Sound_38:	include "Sound/SFX/38.asm"
+Sound_39:	include "Sound/SFX/39.asm"
+Sound_3A:	include "Sound/SFX/3A.asm"
+Sound_3B:	include "Sound/SFX/3B.asm"
+Sound_3C:	include "Sound/SFX/3C.asm"
+Sound_3D:	include "Sound/SFX/3D.asm"
+Sound_3E:	include "Sound/SFX/3E.asm"
+Sound_3F:	include "Sound/SFX/3F.asm"
+Sound_40:	include "Sound/SFX/40.asm"
+Sound_41:	include "Sound/SFX/41.asm"
+Sound_42:	include "Sound/SFX/42.asm"
+Sound_43:	include "Sound/SFX/43.asm"
+Sound_44:	include "Sound/SFX/44.asm"
+Sound_45:	include "Sound/SFX/45.asm"
+Sound_46:	include "Sound/SFX/46.asm"
+Sound_47:	include "Sound/SFX/47.asm"
+Sound_48:	include "Sound/SFX/48.asm"
+Sound_49:	include "Sound/SFX/49.asm"
+Sound_4A:	include "Sound/SFX/4A.asm"
+Sound_4B:	include "Sound/SFX/4B.asm"
+Sound_4C:	include "Sound/SFX/4C.asm"
+Sound_4D:	include "Sound/SFX/4D.asm"
+Sound_4E:	include "Sound/SFX/4E.asm"
+Sound_4F:	include "Sound/SFX/4F.asm"
+Sound_50:	include "Sound/SFX/50.asm"
+Sound_51:	include "Sound/SFX/51.asm"
+Sound_52:	include "Sound/SFX/52.asm"
+Sound_53:	include "Sound/SFX/53.asm"
+Sound_54:	include "Sound/SFX/54.asm"
+Sound_55:	include "Sound/SFX/55.asm"
+Sound_56:	include "Sound/SFX/56.asm"
+Sound_57:	include "Sound/SFX/57.asm"
+Sound_58:	include "Sound/SFX/58.asm"
+Sound_59:	include "Sound/SFX/59.asm"
+Sound_5A:	include "Sound/SFX/5A.asm"
+Sound_5B:	include "Sound/SFX/5B.asm"
+Sound_5C:	include "Sound/SFX/5C.asm"
+Sound_5D:	include "Sound/SFX/5D.asm"
+Sound_5E:	include "Sound/SFX/5E.asm"
+Sound_5F:	include "Sound/SFX/5F.asm"
+Sound_60:	include "Sound/SFX/60.asm"
+Sound_61:	include "Sound/SFX/61.asm"
+Sound_62:	include "Sound/SFX/62.asm"
+Sound_63:	include "Sound/SFX/63.asm"
+Sound_64:	include "Sound/SFX/64.asm"
+Sound_65:	include "Sound/SFX/65.asm"
+Sound_66:	include "Sound/SFX/66.asm"
+Sound_67:	include "Sound/SFX/67.asm"
+Sound_68:	include "Sound/SFX/68.asm"
+Sound_69:	include "Sound/SFX/69.asm"
+Sound_6A:	include "Sound/SFX/6A.asm"
+Sound_6B:	include "Sound/SFX/6B.asm"
+Sound_6C:	include "Sound/SFX/6C.asm"
+Sound_6D:	include "Sound/SFX/6D.asm"
+Sound_6E:	include "Sound/SFX/6E.asm"
+Sound_6F:	include "Sound/SFX/6F.asm"
+Sound_70:	include "Sound/SFX/70.asm"
+Sound_71:	include "Sound/SFX/71.asm"
+Sound_72:	include "Sound/SFX/72.asm"
+Sound_73:	include "Sound/SFX/73.asm"
+Sound_74:	include "Sound/SFX/74.asm"
+Sound_75:	include "Sound/SFX/75.asm"
+Sound_76:	include "Sound/SFX/76.asm"
+Sound_77:	include "Sound/SFX/77.asm"
+Sound_78:	include "Sound/SFX/78.asm"
+Sound_79:	include "Sound/SFX/79.asm"
+Sound_7A:	include "Sound/SFX/7A.asm"
+Sound_7B:	include "Sound/SFX/7B.asm"
+Sound_7C:	include "Sound/SFX/7C.asm"
+Sound_7D:	include "Sound/SFX/7D.asm"
+Sound_7E:	include "Sound/SFX/7E.asm"
+Sound_7F:	include "Sound/SFX/7F.asm"
+Sound_80:	include "Sound/SFX/80.asm"
+Sound_81:	include "Sound/SFX/81.asm"
+Sound_82:	include "Sound/SFX/82.asm"
+Sound_83:	include "Sound/SFX/83.asm"
+Sound_84:	include "Sound/SFX/84.asm"
+Sound_85:	include "Sound/SFX/85.asm"
+Sound_86:	include "Sound/SFX/86.asm"
+Sound_87:	include "Sound/SFX/87.asm"
+Sound_88:	include "Sound/SFX/88.asm"
+Sound_89:	include "Sound/SFX/89.asm"
+Sound_8A:	include "Sound/SFX/8A.asm"
+Sound_8B:	include "Sound/SFX/8B.asm"
+Sound_8C:	include "Sound/SFX/8C.asm"
+Sound_8D:	include "Sound/SFX/8D.asm"
+Sound_8E:	include "Sound/SFX/8E.asm"
+Sound_8F:	include "Sound/SFX/8F.asm"
+Sound_90:	include "Sound/SFX/90.asm"
+Sound_91:	include "Sound/SFX/91.asm"
+Sound_92:	include "Sound/SFX/92.asm"
+Sound_93:	include "Sound/SFX/93.asm"
+Sound_94:	include "Sound/SFX/94.asm"
+Sound_95:	include "Sound/SFX/95.asm"
+Sound_96:	include "Sound/SFX/96.asm"
+Sound_97:	include "Sound/SFX/97.asm"
+Sound_98:	include "Sound/SFX/98.asm"
+Sound_99:	include "Sound/SFX/99.asm"
+Sound_9A:	include "Sound/SFX/9A.asm"
+Sound_9B:	include "Sound/SFX/9B (Sonic 3).asm"
+Sound_9C:	include "Sound/SFX/9C.asm"
+Sound_9D:	include "Sound/SFX/9D.asm"
+Sound_9E:	include "Sound/SFX/9E.asm"
+Sound_9F:	include "Sound/SFX/9F.asm"
+Sound_A0:	include "Sound/SFX/A0.asm"
+Sound_A1:	include "Sound/SFX/A1.asm"
+Sound_A2:	include "Sound/SFX/A2.asm"
+Sound_A3:	include "Sound/SFX/A3.asm"
+Sound_A4:	include "Sound/SFX/A4.asm"
+Sound_A5:	include "Sound/SFX/A5.asm"
+Sound_A6:	include "Sound/SFX/A6.asm"
+Sound_A7:	include "Sound/SFX/A7.asm"
+Sound_A8:	include "Sound/SFX/A8.asm"
+Sound_A9:	include "Sound/SFX/A9.asm"
+Sound_AA:	include "Sound/SFX/AA.asm"
+Sound_AB:	include "Sound/SFX/AB.asm"
+Sound_AC:	include "Sound/SFX/AC.asm"
+Sound_AD:	include "Sound/SFX/AD (Sonic 3).asm"
+Sound_AE:	include "Sound/SFX/AE.asm"
+Sound_AF:	include "Sound/SFX/AF.asm"
+Sound_B0:	include "Sound/SFX/B0.asm"
+Sound_B1:	include "Sound/SFX/B1.asm"
+Sound_B2:	include "Sound/SFX/B2.asm"
+Sound_B3:	include "Sound/SFX/B3.asm"
+Sound_B4:	include "Sound/SFX/B4.asm"
+Sound_B5:	include "Sound/SFX/B5.asm"
+Sound_B6:	include "Sound/SFX/B6.asm"
+Sound_B7:	include "Sound/SFX/B7.asm"
+Sound_B8:	include "Sound/SFX/B8.asm"
+Sound_B9:	include "Sound/SFX/B9.asm"
+Sound_BA:	include "Sound/SFX/BA.asm"
+Sound_BB:	include "Sound/SFX/BB.asm"
+Sound_BC:	include "Sound/SFX/BC.asm"
+Sound_BD:	include "Sound/SFX/BD.asm"
+Sound_BE:	include "Sound/SFX/BE.asm"
+Sound_BF:	include "Sound/SFX/BF.asm"
+Sound_C0:	include "Sound/SFX/C0.asm"
+Sound_C1:	include "Sound/SFX/C1.asm"
+Sound_C2:	include "Sound/SFX/C2.asm"
+Sound_C3:	include "Sound/SFX/C3.asm"
+Sound_C4:	include "Sound/SFX/C4.asm"
+Sound_C5:	include "Sound/SFX/C5.asm"
+Sound_C6:	include "Sound/SFX/C6.asm"
+Sound_C7:	include "Sound/SFX/C7.asm"
+Sound_C8:	include "Sound/SFX/C8.asm"
+Sound_C9:	include "Sound/SFX/C9.asm"
+Sound_CA:	include "Sound/SFX/CA.asm"
+Sound_CB:	include "Sound/SFX/CB.asm"
+Sound_CC:	include "Sound/SFX/CC.asm"
+Sound_CD:	include "Sound/SFX/CD.asm"
+Sound_CE:	include "Sound/SFX/CE.asm"
+Sound_CF:	include "Sound/SFX/CF.asm"
+Sound_D0:	include "Sound/SFX/D0.asm"
+Sound_D1:	include "Sound/SFX/D1.asm"
+Sound_D2:	include "Sound/SFX/D2.asm"
+Sound_D3:	include "Sound/SFX/D3.asm"
+Sound_D4:	include "Sound/SFX/D4.asm"
+Sound_D5:	include "Sound/SFX/D5.asm"
+Sound_D6:	include "Sound/SFX/D6.asm"
+Sound_D7:	include "Sound/SFX/D7.asm"
+Sound_D8:	include "Sound/SFX/D8.asm"
+Sound_D9:	include "Sound/SFX/D9.asm"
+Sound_DA:	include "Sound/SFX/DA.asm"
+Sound_DB:	include "Sound/SFX/DB.asm"
+
+	finishBank
+
+		align $8000
 ;		org $200000
 EndOfROM:
 		END

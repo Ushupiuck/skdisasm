@@ -14,6 +14,9 @@ sub_24280 <---- Something to do with shields
 
 sub_86180 <---- ObjectMove Variant?
 
+SpecialVInt_Array <--------- Dummied out for some reason
+
 Offs_PLC = PLC request table
 To-Do:
-Rename "MoveSprite" and "MoveSprite2" to "ObjectMoveAndFall" and "ObjectMove" respectively
+
+_unkEEB0 <--- Test this motherfucker
