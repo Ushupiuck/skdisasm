@@ -30277,9 +30277,10 @@ loc_1A96C:
 		bne.s	loc_1A9BE
 		cmpi.w	#2,(Player_mode).w
 		beq.s	loc_1A9BE
-		lea	(AIZ1_16x16_MainLevel_Kos).l,a1
-		lea	(Block_table+$268).w,a2
-		jsr	(Queue_Kos).l
+		lea	(AIZ_16x16_Primary_Kos).l,a0
+		lea	(Block_table).w,a1
+		clr.w	d0
+		jsr	(Eni_Decomp).l
 		lea	(AIZ1_8x8_MainLevel_KosM).l,a1
 		move.w	#$17C0,d2
 		jsr	(Queue_Kos_Module).l
@@ -30462,9 +30463,10 @@ AIZ2_Resize4:
 		bcs.s	locret_1ABE2
 		tst.b	(Kos_modules_left).w
 		bne.s	locret_1ABE2
-		lea	(AIZ2_16x16_BomberShip_Kos).l,a1
-		lea	(Block_table+$AB8).w,a2
-		jsr	(Queue_Kos).l
+		lea	(AIZ_16x16_BomberShip_Kos).l,a0
+		lea	(Block_table).w,a1
+		clr.w	d0
+		jsr	(Eni_Decomp).l
 		lea	(AIZ2_8x8_BomberShip_KosM).l,a1
 		move.w	#$3F80,d2
 		jsr	(Queue_Kos_Module).l
@@ -68224,15 +68226,13 @@ loc_3AE1C:
 		cmpi.w	#$190,(Camera_Y_pos_BG_copy).w
 		bcs.w	loc_3AECA
 		movem.l	d7-a0/a2-a3,-(sp)
-		lea	(AIZ2_128x128_Kos).l,a1
+		lea	(AIZ_128x128_Secondary_Kos).l,a1
 		lea	(RAM_start).l,a2
 		jsr	(Queue_Kos).l
-		lea	(AIZ2_16x16_Primary_Kos).l,a1
-		lea	(Block_table).w,a2
-		jsr	(Queue_Kos).l
-		lea	(AIZ2_16x16_Secondary_Kos).l,a1
-		lea	(Block_table+$AB8).w,a2
-		jsr	(Queue_Kos).l
+		lea	(AIZ_16x16_Secondary_Kos).l,a0
+		lea	(Block_table).w,a1
+		clr.w	d0
+		jsr	(Eni_Decomp).l
 		lea	(AIZ2_8x8_Primary_KosM).l,a1
 		move.w	#0,d2
 		jsr	(Queue_Kos_Module).l
@@ -69667,12 +69667,13 @@ HCZ1BGE_Normal:
 		beq.s	loc_3C336
 		clr.w	(Events_fg_5).w
 		movem.l	d7-a0/a2-a3,-(sp)
-		lea	(HCZ2_128x128_Secondary_Kos).l,a1
-		lea	(RAM_start+$A00).l,a2
+		lea	(HCZ_128x128_Secondary_Kos).l,a1
+		lea	(RAM_start).l,a2
 		jsr	(Queue_Kos).l
-		lea	(HCZ2_16x16_Secondary_Kos).l,a1
-		lea	(Block_table+$558).w,a2
-		jsr	(Queue_Kos).l
+		lea	(HCZ_16x16_Secondary_Kos).l,a0
+		lea	(Block_table).w,a1
+		clr.w	d0
+		jsr	(Eni_Decomp).l
 		lea	(HCZ2_8x8_Secondary_KosM).l,a1
 		move.w	#$2360,d2
 		jsr	(Queue_Kos_Module).l
@@ -70224,12 +70225,13 @@ MGZ1BGE_Normal:
 		beq.s	loc_3C8B4
 		clr.w	(Events_fg_5).w
 		movem.l	d7-a0/a2-a3,-(sp)
-		lea	(MGZ2_128x128_Secondary_Kos).l,a1
-		lea	(RAM_start+$6B00).l,a2
+		lea	(MGZ_128x128_Secondary_Kos).l,a1
+		lea	(RAM_start).l,a2
 		jsr	(Queue_Kos).l
-		lea	(MGZ2_16x16_Secondary_Kos).l,a1
-		lea	(Block_table+$C60).w,a2
-		jsr	(Queue_Kos).l
+		lea	(MGZ_16x16_Secondary_Kos).l,a0
+		lea	(Block_table).w,a1
+		clr.w	d0
+		jsr	(Eni_Decomp).l
 		lea	(MGZ2_8x8_Secondary_KosM).l,a1
 		move.w	#$4A40,d2
 		jsr	(Queue_Kos_Module).l
@@ -70877,7 +70879,7 @@ MGZ2_ModifyChunk:
 
 
 sub_3CF00:
-		lea	(MGZ2_QuakeChunks).l,a4
+		lea	(MGZ_QuakeChunks).l,a4
 		adda.w	(a1,d0.w),a4
 		moveq	#7,d1
 
@@ -114099,8 +114101,7 @@ loc_5A990:
 		move.w	#-$200,$18(a0)
 		move.w	#-$200,$1A(a0)
 		moveq	#signextendB(sfx_Thump),d0
-		jsr	(Play_SFX).l
-		rts
+		jmp	(Play_SFX).l
 ; ---------------------------------------------------------------------------
 
 loc_5A9AC:
@@ -114238,79 +114239,86 @@ ObjDat3_5AAEE:	dc.l Map_RobotnikShip
 		dc.b 5
 		dc.b $FC
 		dc.b 0
-;		1st PLC		palette                          2nd 8x8 data                                       2nd 16x16 data                                     2nd 128x128 data
-;			2nd PLC           1st 8x8 data                                    1st 16x16 data                                      1st 128x128 data
-LevelLoadBlock:	levartptrs $B,  $B,  $A,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Intro_KosM, AIZ1_16x16_Primary_Kos,   AIZ1_16x16_Intro_Kos, AIZ1_128x128_Kos,        AIZ1_128x128_Kos
-		levartptrs $C,  $C,  $B,  AIZ2_8x8_Primary_KosM, AIZ2_8x8_Secondary_KosM, AIZ2_16x16_Primary_Kos,   AIZ2_16x16_Secondary_Kos, AIZ2_128x128_Kos,        AIZ2_128x128_Kos
-		levartptrs $E,  $F,  $C,  HCZ_8x8_Primary_KosM,  HCZ1_8x8_Secondary_KosM, HCZ_16x16_Primary_Kos,    HCZ1_16x16_Secondary_Kos, HCZ_128x128_Primary_Kos, HCZ1_128x128_Secondary_Kos
-		levartptrs $10, $11, $D,  HCZ_8x8_Primary_KosM,  HCZ2_8x8_Secondary_KosM, HCZ_16x16_Primary_Kos,    HCZ2_16x16_Secondary_Kos, HCZ_128x128_Primary_Kos, HCZ2_128x128_Secondary_Kos
-		levartptrs $12, $12, $E,  MGZ_8x8_Primary_KosM,  MGZ1_8x8_Secondary_KosM, MGZ_16x16_Primary_Kos,    MGZ1_16x16_Secondary_Kos, MGZ_128x128_Primary_Kos, MGZ1_128x128_Secondary_Kos
-		levartptrs $14, $14, $F,  MGZ_8x8_Primary_KosM,  MGZ2_8x8_Secondary_KosM, MGZ_16x16_Primary_Kos,    MGZ2_16x16_Secondary_Kos, MGZ_128x128_Primary_Kos, MGZ2_128x128_Secondary_Kos
-		levartptrs $16, $17, $10, CNZ_8x8_KosM,          CNZ_8x8_KosM,            CNZ_16x16_Kos,            CNZ_16x16_Kos,            CNZ_128x128_Kos,         CNZ_128x128_Kos
-		levartptrs $18, $19, $11, CNZ_8x8_KosM,          CNZ_8x8_KosM,            CNZ_16x16_Kos,            CNZ_16x16_Kos,            CNZ_128x128_Kos,         CNZ_128x128_Kos
-		levartptrs $1A, $1A, $12, FBZ1_8x8_KosM,         FBZ1_8x8_KosM,           FBZ1_16x16_Kos,           FBZ1_16x16_Kos,           FBZ1_128x128_Kos,        FBZ1_128x128_Kos
-		levartptrs $1C, $1C, $13, FBZ2_8x8_KosM,         FBZ2_8x8_KosM,           FBZ2_16x16_Kos,           FBZ2_16x16_Kos,           FBZ2_128x128_Kos,        FBZ2_128x128_Kos
-		levartptrs $1E, $1E, $14, ICZ_8x8_Primary_KosM,  ICZ1_8x8_Secondary_KosM, ICZ_16x16_Primary_Kos,    ICZ1_16x16_Secondary_Kos, ICZ_128x128_Primary_Kos, ICZ1_128x128_Secondary_Kos
-		levartptrs $20, $20, $15, ICZ_8x8_Primary_KosM,  ICZ2_8x8_Secondary_KosM, ICZ_16x16_Primary_Kos,    ICZ2_16x16_Secondary_Kos, ICZ_128x128_Primary_Kos, ICZ2_128x128_Secondary_Kos
-		levartptrs $22, $22, $16, LBZ_8x8_Primary_KosM,  LBZ1_8x8_Secondary_KosM, LBZ_16x16_Primary_Kos,    LBZ1_16x16_Secondary_Kos, LBZ1_128x128_Kos,        LBZ1_128x128_Kos
-		levartptrs $24, $25, $17, LBZ_8x8_Primary_KosM,  LBZ2_8x8_Secondary_KosM, LBZ_16x16_Primary_Kos,    LBZ2_16x16_Secondary_Kos, LBZ2_128x128_Kos,        LBZ2_128x128_Kos
-		levartptrs $26, $26, $18, ArtKosM_MHZ,           ArtKosM_MHZ,             MHZ_16x16_Kos,            MHZ_16x16_Kos,            MHZ_128x128_Kos,         MHZ_128x128_Kos
-		levartptrs $28, $28, $19, ArtKosM_MHZ,           ArtKosM_MHZ,             MHZ_16x16_Kos,            MHZ_16x16_Kos,            MHZ_128x128_Kos,         MHZ_128x128_Kos
-		levartptrs $B,  $B,  $A,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Intro_KosM, AIZ1_16x16_Intro_Kos, AIZ1_16x16_Intro_Kos, AIZ1_128x128_Kos,        AIZ1_128x128_Kos
-		levartptrs $C,  $C,  $B,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Intro_KosM, AIZ1_16x16_Intro_Kos, AIZ1_16x16_Intro_Kos, AIZ1_128x128_Kos,        AIZ1_128x128_Kos
-		levartptrs $2E, $2E, $1C, ArtKosM_LRZ,           ArtKosM_LRZ,             LRZ_16x16_Kos,            LRZ_16x16_Kos,            LRZ_128x128_Kos,         LRZ_128x128_Kos
-		levartptrs $30, $30, $1D, ArtKosM_LRZ,           ArtKosM_LRZ,             LRZ_16x16_Kos,            LRZ_16x16_Kos,            LRZ_128x128_Kos,         LRZ_128x128_Kos
-		levartptrs $B,  $B,  $A,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Intro_KosM, AIZ1_16x16_Intro_Kos, AIZ1_16x16_Intro_Kos, AIZ1_128x128_Kos,        AIZ1_128x128_Kos
-		levartptrs $C,  $C,  $B,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Intro_KosM, AIZ1_16x16_Intro_Kos, AIZ1_16x16_Intro_Kos, AIZ1_128x128_Kos,        AIZ1_128x128_Kos
-		levartptrs $B,  $B,  $A,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Intro_KosM, AIZ1_16x16_Intro_Kos, AIZ1_16x16_Intro_Kos, AIZ1_128x128_Kos,        AIZ1_128x128_Kos
-		levartptrs $C,  $C,  $B,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Intro_KosM, AIZ1_16x16_Intro_Kos, AIZ1_16x16_Intro_Kos, AIZ1_128x128_Kos,        AIZ1_128x128_Kos
-		levartptrs $B,  $B,  $A,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Intro_KosM, AIZ1_16x16_Intro_Kos, AIZ1_16x16_Intro_Kos, AIZ1_128x128_Kos,        AIZ1_128x128_Kos
-		levartptrs $C,  $C,  $B,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Intro_KosM, AIZ1_16x16_Intro_Kos, AIZ1_16x16_Intro_Kos, AIZ1_128x128_Kos,        AIZ1_128x128_Kos
-		levartptrs $B,  $B,  $2A, AIZ1_8x8_Primary_KosM, AIZ1_8x8_MainLevel_KosM, AIZ1_16x16_Primary_Kos,   AIZ1_16x16_MainLevel_Kos, AIZ1_128x128_Kos,        AIZ1_128x128_Kos
-		levartptrs $C,  $C,  $B,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Intro_KosM, AIZ1_16x16_Intro_Kos, AIZ1_16x16_Intro_Kos, AIZ1_128x128_Kos,        AIZ1_128x128_Kos
-		levartptrs $42, $42, $26, ALZ_8x8_KosM,          ALZ_8x8_KosM,            ALZ_16x16_Kos,            ALZ_16x16_Kos,            ALZ_128x128_Kos,         ALZ_128x128_Kos
-		levartptrs $42, $42, $27, ALZ_8x8_KosM,          ALZ_8x8_KosM,            ALZ_16x16_Kos,            ALZ_16x16_Kos,            ALZ_128x128_Kos,         ALZ_128x128_Kos
-		levartptrs $43, $43, $28, BPZ_8x8_KosM,          BPZ_8x8_KosM,            BPZ_16x16_Kos,            BPZ_16x16_Kos,            BPZ_128x128_Kos,         BPZ_128x128_Kos
-		levartptrs $43, $43, $29, BPZ_8x8_KosM,          BPZ_8x8_KosM,            BPZ_16x16_Kos,            BPZ_16x16_Kos,            BPZ_128x128_Kos,         BPZ_128x128_Kos
-		levartptrs $44, $44, $34, DPZ_8x8_KosM,          DPZ_8x8_KosM,            DPZ_16x16_Kos,            DPZ_16x16_Kos,            DPZ_128x128_Kos,         DPZ_128x128_Kos
-		levartptrs $44, $44, $34, DPZ_8x8_KosM,          DPZ_8x8_KosM,            DPZ_16x16_Kos,            DPZ_16x16_Kos,            DPZ_128x128_Kos,         DPZ_128x128_Kos
-		levartptrs $45, $45, $35, CGZ_8x8_KosM,          CGZ_8x8_KosM,            CGZ_16x16_Kos,            CGZ_16x16_Kos,            CGZ_128x128_Kos,         CGZ_128x128_Kos
-		levartptrs $45, $45, $35, CGZ_8x8_KosM,          CGZ_8x8_KosM,            CGZ_16x16_Kos,            CGZ_16x16_Kos,            CGZ_128x128_Kos,         CGZ_128x128_Kos
-		levartptrs $46, $46, $36, EMZ_8x8_KosM,          EMZ_8x8_KosM,            EMZ_16x16_Kos,            EMZ_16x16_Kos,            EMZ_128x128_Kos,         EMZ_128x128_Kos
-		levartptrs $46, $46, $36, EMZ_8x8_KosM,          EMZ_8x8_KosM,            EMZ_16x16_Kos,            EMZ_16x16_Kos,            EMZ_128x128_Kos,         EMZ_128x128_Kos
-		levartptrs $47, $47, $33, Gumball_8x8_KosM,      Gumball_8x8_KosM,        Gumball_16x16_Kos,        Gumball_16x16_Kos,        Gumball_128x128_Kos,     Gumball_128x128_Kos
-		levartptrs $47, $47, $33, Gumball_8x8_KosM,      Gumball_8x8_KosM,        Gumball_16x16_Kos,        Gumball_16x16_Kos,        Gumball_128x128_Kos,     Gumball_128x128_Kos
-		levartptrs $47, $47, $37, ArtKosM_Pachinko,      ArtKosM_Pachinko,        Pachinko_16x16_Kos,       Pachinko_16x16_Kos,       Pachinko_128x128_Kos,    Pachinko_128x128_Kos
-		levartptrs $47, $47, $37, ArtKosM_Pachinko,      ArtKosM_Pachinko,        Pachinko_16x16_Kos,       Pachinko_16x16_Kos,       Pachinko_128x128_Kos,    Pachinko_128x128_Kos
-		levartptrs $47, $47, $38, ArtKosM_Slots,         ArtKosM_Slots,           Slots_16x16_Kos,          Slots_16x16_Kos,          Slots_128x128_Kos,       Slots_128x128_Kos
-		levartptrs $47, $47, $38, ArtKosM_Slots,         ArtKosM_Slots,           Slots_16x16_Kos,          Slots_16x16_Kos,          Slots_128x128_Kos,       Slots_128x128_Kos
-		levartptrs $B,  $B,  $A,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Intro_KosM, AIZ1_16x16_Intro_Kos, AIZ1_16x16_Intro_Kos, AIZ1_128x128_Kos,        AIZ1_128x128_Kos
-		levartptrs $C,  $C,  $B,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Intro_KosM, AIZ1_16x16_Intro_Kos, AIZ1_16x16_Intro_Kos, AIZ1_128x128_Kos,        AIZ1_128x128_Kos
-		levartptrs $B,  $B,  $A,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Intro_KosM, AIZ1_16x16_Intro_Kos, AIZ1_16x16_Intro_Kos, AIZ1_128x128_Kos,        AIZ1_128x128_Kos
-		levartptrs $C,  $C,  $B,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Intro_KosM, AIZ1_16x16_Intro_Kos, AIZ1_16x16_Intro_Kos, AIZ1_128x128_Kos,        AIZ1_128x128_Kos
-Offs_PLC:	dc.w PLC_00-Offs_PLC
-		dc.w PLC_01-Offs_PLC
-		dc.w PLC_02-Offs_PLC
-		dc.w PLC_03-Offs_PLC
-		dc.w PLC_04-Offs_PLC
-		dc.w PLC_05-Offs_PLC
-		dc.w PLC_06-Offs_PLC
-		dc.w PLC_07-Offs_PLC
-		dc.w PLC_08-Offs_PLC
-		dc.w PLC_09-Offs_PLC
-		dc.w PLC_0A-Offs_PLC
-		dc.w PLC_0B-Offs_PLC
+LevelLoadBlock:
+;	1st PLC		palette                          2nd 8x8 data                                     2nd 16x16 data                                     2nd 128x128 data
+;		2nd PLC           1st 8x8 data                                    1st 16x16 data                                    1st 128x128 data
+	levartptrs $B,  $B,  $A,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Intro_KosM,     AIZ_16x16_Intro_Kos,    AIZ_16x16_Intro_Kos,      AIZ_128x128_Primary_Kos,  AIZ_128x128_Primary_Kos
+	levartptrs $C,  $C,  $B,  AIZ2_8x8_Primary_KosM, AIZ2_8x8_Secondary_KosM, AIZ_16x16_Secondary_Kos,AIZ_16x16_Secondary_Kos,  AIZ_128x128_Secondary_Kos,AIZ_128x128_Secondary_Kos
+	levartptrs $E,  $F,  $C,  HCZ_8x8_Primary_KosM,  HCZ1_8x8_Secondary_KosM, HCZ_16x16_Primary_Kos,  HCZ_16x16_Primary_Kos,    HCZ_128x128_Primary_Kos,  HCZ_128x128_Primary_Kos
+	levartptrs $10, $11, $D,  HCZ_8x8_Primary_KosM,  HCZ2_8x8_Secondary_KosM, HCZ_16x16_Secondary_Kos,HCZ_16x16_Secondary_Kos,  HCZ_128x128_Secondary_Kos,HCZ_128x128_Secondary_Kos
+	levartptrs $12, $12, $E,  MGZ_8x8_Primary_KosM,  MGZ1_8x8_Secondary_KosM, MGZ_16x16_Primary_Kos,  MGZ_16x16_Primary_Kos,    MGZ_128x128_Primary_Kos,  MGZ_128x128_Primary_Kos
+	levartptrs $14, $14, $F,  MGZ_8x8_Primary_KosM,  MGZ2_8x8_Secondary_KosM, MGZ_16x16_Secondary_Kos,MGZ_16x16_Secondary_Kos,  MGZ_128x128_Secondary_Kos,MGZ_128x128_Secondary_Kos
+	levartptrs $16, $17, $10, CNZ_8x8_KosM,          CNZ_8x8_KosM,            CNZ_16x16_Kos,          CNZ_16x16_Kos,            CNZ_128x128_Kos,          CNZ_128x128_Kos
+	levartptrs $18, $19, $11, CNZ_8x8_KosM,          CNZ_8x8_KosM,            CNZ_16x16_Kos,          CNZ_16x16_Kos,            CNZ_128x128_Kos,          CNZ_128x128_Kos
+	levartptrs $1A, $1A, $12, FBZ1_8x8_KosM,         FBZ1_8x8_KosM,           FBZ1_16x16_Kos,         FBZ1_16x16_Kos,           FBZ1_128x128_Kos,         FBZ1_128x128_Kos
+	levartptrs $1C, $1C, $13, FBZ2_8x8_KosM,         FBZ2_8x8_KosM,           FBZ2_16x16_Kos,         FBZ2_16x16_Kos,           FBZ2_128x128_Kos,         FBZ2_128x128_Kos
+	levartptrs $1E, $1E, $14, ICZ_8x8_Primary_KosM,  ICZ1_8x8_Secondary_KosM, ICZ_16x16_Primary_Kos,  ICZ1_16x16_Secondary_Kos, ICZ_128x128_Primary_Kos,  ICZ1_128x128_Secondary_Kos
+	levartptrs $20, $20, $15, ICZ_8x8_Primary_KosM,  ICZ2_8x8_Secondary_KosM, ICZ_16x16_Primary_Kos,  ICZ2_16x16_Secondary_Kos, ICZ_128x128_Primary_Kos,  ICZ2_128x128_Secondary_Kos
+	levartptrs $22, $22, $16, LBZ_8x8_Primary_KosM,  LBZ1_8x8_Secondary_KosM, LBZ_16x16_Primary_Kos,  LBZ1_16x16_Secondary_Kos, LBZ1_128x128_Kos,         LBZ1_128x128_Kos
+	levartptrs $24, $25, $17, LBZ_8x8_Primary_KosM,  LBZ2_8x8_Secondary_KosM, LBZ_16x16_Primary_Kos,  LBZ2_16x16_Secondary_Kos, LBZ2_128x128_Kos,         LBZ2_128x128_Kos
+	levartptrs $26, $26, $18, ArtKosM_MHZ,           ArtKosM_MHZ,             MHZ_16x16_Kos,          MHZ_16x16_Kos,            MHZ_128x128_Kos,          MHZ_128x128_Kos
+	levartptrs $28, $28, $19, ArtKosM_MHZ,           ArtKosM_MHZ,             MHZ_16x16_Kos,          MHZ_16x16_Kos,            MHZ_128x128_Kos,          MHZ_128x128_Kos
+	levartptrs $B,  $B,  $A,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Intro_KosM,     AIZ_16x16_Intro_Kos,    AIZ_16x16_Intro_Kos,      AIZ_128x128_Primary_Kos,  AIZ_128x128_Primary_Kos
+	levartptrs $C,  $C,  $B,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Intro_KosM,     AIZ_16x16_Intro_Kos,    AIZ_16x16_Intro_Kos,      AIZ_128x128_Primary_Kos,  AIZ_128x128_Primary_Kos
+	levartptrs $2E, $2E, $1C, ArtKosM_LRZ,           ArtKosM_LRZ,             LRZ_16x16_Kos,          LRZ_16x16_Kos,            LRZ_128x128_Kos,          LRZ_128x128_Kos
+	levartptrs $30, $30, $1D, ArtKosM_LRZ,           ArtKosM_LRZ,             LRZ_16x16_Kos,          LRZ_16x16_Kos,            LRZ_128x128_Kos,          LRZ_128x128_Kos
+	levartptrs $B,  $B,  $A,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Intro_KosM,     AIZ_16x16_Intro_Kos,    AIZ_16x16_Intro_Kos,      AIZ_128x128_Primary_Kos,  AIZ_128x128_Primary_Kos
+	levartptrs $C,  $C,  $B,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Intro_KosM,     AIZ_16x16_Intro_Kos,    AIZ_16x16_Intro_Kos,      AIZ_128x128_Primary_Kos,  AIZ_128x128_Primary_Kos
+	levartptrs $B,  $B,  $A,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Intro_KosM,     AIZ_16x16_Intro_Kos,    AIZ_16x16_Intro_Kos,      AIZ_128x128_Primary_Kos,  AIZ_128x128_Primary_Kos
+	levartptrs $C,  $C,  $B,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Intro_KosM,     AIZ_16x16_Intro_Kos,    AIZ_16x16_Intro_Kos,      AIZ_128x128_Primary_Kos,  AIZ_128x128_Primary_Kos
+	levartptrs $B,  $B,  $A,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Intro_KosM,     AIZ_16x16_Intro_Kos,    AIZ_16x16_Intro_Kos,      AIZ_128x128_Primary_Kos,  AIZ_128x128_Primary_Kos
+	levartptrs $C,  $C,  $B,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Intro_KosM,     AIZ_16x16_Intro_Kos,    AIZ_16x16_Intro_Kos,      AIZ_128x128_Primary_Kos,  AIZ_128x128_Primary_Kos
+
+	levartptrs $B,  $B,  $2A, AIZ1_8x8_Primary_KosM, AIZ1_8x8_MainLevel_KosM, AIZ_16x16_Primary_Kos,  AIZ_16x16_Primary_Kos,    AIZ_128x128_Primary_Kos,  AIZ_128x128_Primary_Kos
+	levartptrs $C,  $C,  $B,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Intro_KosM,     AIZ_16x16_Intro_Kos,    AIZ_16x16_Intro_Kos,      AIZ_128x128_Primary_Kos,  AIZ_128x128_Primary_Kos
+
+	levartptrs $42, $42, $26, ALZ_8x8_KosM,          ALZ_8x8_KosM,            ALZ_16x16_Kos,          ALZ_16x16_Kos,            ALZ_128x128_Kos,          ALZ_128x128_Kos
+	levartptrs $42, $42, $27, ALZ_8x8_KosM,          ALZ_8x8_KosM,            ALZ_16x16_Kos,          ALZ_16x16_Kos,            ALZ_128x128_Kos,          ALZ_128x128_Kos
+	levartptrs $43, $43, $28, BPZ_8x8_KosM,          BPZ_8x8_KosM,            BPZ_16x16_Kos,          BPZ_16x16_Kos,            BPZ_128x128_Kos,          BPZ_128x128_Kos
+	levartptrs $43, $43, $29, BPZ_8x8_KosM,          BPZ_8x8_KosM,            BPZ_16x16_Kos,          BPZ_16x16_Kos,            BPZ_128x128_Kos,          BPZ_128x128_Kos
+	levartptrs $44, $44, $34, DPZ_8x8_KosM,          DPZ_8x8_KosM,            DPZ_16x16_Kos,          DPZ_16x16_Kos,            DPZ_128x128_Kos,          DPZ_128x128_Kos
+	levartptrs $44, $44, $34, DPZ_8x8_KosM,          DPZ_8x8_KosM,            DPZ_16x16_Kos,          DPZ_16x16_Kos,            DPZ_128x128_Kos,          DPZ_128x128_Kos
+	levartptrs $45, $45, $35, CGZ_8x8_KosM,          CGZ_8x8_KosM,            CGZ_16x16_Kos,          CGZ_16x16_Kos,            CGZ_128x128_Kos,          CGZ_128x128_Kos
+	levartptrs $45, $45, $35, CGZ_8x8_KosM,          CGZ_8x8_KosM,            CGZ_16x16_Kos,          CGZ_16x16_Kos,            CGZ_128x128_Kos,          CGZ_128x128_Kos
+	levartptrs $46, $46, $36, EMZ_8x8_KosM,          EMZ_8x8_KosM,            EMZ_16x16_Kos,          EMZ_16x16_Kos,            EMZ_128x128_Kos,          EMZ_128x128_Kos
+	levartptrs $46, $46, $36, EMZ_8x8_KosM,          EMZ_8x8_KosM,            EMZ_16x16_Kos,          EMZ_16x16_Kos,            EMZ_128x128_Kos,          EMZ_128x128_Kos
+
+	levartptrs $47, $47, $33, Gumball_8x8_KosM,      Gumball_8x8_KosM,        Gumball_16x16_Kos,      Gumball_16x16_Kos,        Gumball_128x128_Kos,      Gumball_128x128_Kos
+	levartptrs $47, $47, $33, Gumball_8x8_KosM,      Gumball_8x8_KosM,        Gumball_16x16_Kos,      Gumball_16x16_Kos,        Gumball_128x128_Kos,      Gumball_128x128_Kos
+	levartptrs $47, $47, $37, ArtKosM_Pachinko,      ArtKosM_Pachinko,        Pachinko_16x16_Kos,     Pachinko_16x16_Kos,       Pachinko_128x128_Kos,     Pachinko_128x128_Kos
+	levartptrs $47, $47, $37, ArtKosM_Pachinko,      ArtKosM_Pachinko,        Pachinko_16x16_Kos,     Pachinko_16x16_Kos,       Pachinko_128x128_Kos,     Pachinko_128x128_Kos
+	levartptrs $47, $47, $38, ArtKosM_Slots,         ArtKosM_Slots,           Slots_16x16_Kos,        Slots_16x16_Kos,          Slots_128x128_Kos,        Slots_128x128_Kos
+	levartptrs $47, $47, $38, ArtKosM_Slots,         ArtKosM_Slots,           Slots_16x16_Kos,        Slots_16x16_Kos,          Slots_128x128_Kos,        Slots_128x128_Kos
+
+	levartptrs $B,  $B,  $A,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Intro_KosM,     AIZ_16x16_Intro_Kos,    AIZ_16x16_Intro_Kos,      AIZ_128x128_Primary_Kos,  AIZ_128x128_Primary_Kos
+	levartptrs $C,  $C,  $B,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Intro_KosM,     AIZ_16x16_Intro_Kos,    AIZ_16x16_Intro_Kos,      AIZ_128x128_Primary_Kos,  AIZ_128x128_Primary_Kos
+	levartptrs $B,  $B,  $A,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Intro_KosM,     AIZ_16x16_Intro_Kos,    AIZ_16x16_Intro_Kos,      AIZ_128x128_Primary_Kos,  AIZ_128x128_Primary_Kos
+	levartptrs $C,  $C,  $B,  AIZ1_8x8_Primary_KosM, AIZ1_8x8_Intro_KosM,     AIZ_16x16_Intro_Kos,    AIZ_16x16_Intro_Kos,      AIZ_128x128_Primary_Kos,  AIZ_128x128_Primary_Kos
+
+; ---------------------------------------------------------------------------
+Offs_PLC:	dc.w PLC_00-Offs_PLC					; Unused
+		dc.w PLC_01-Offs_PLC					; Sonic life icon/universal level graphics
+		dc.w PLC_02-Offs_PLC					; Explosions + Squirrel/Flicky
+		dc.w PLC_03-Offs_PLC					; Game Over text
+		dc.w PLC_04-Offs_PLC					; Signpost art
+		dc.w PLC_05-Offs_PLC					; Knuckles life icon/universal level graphics
+		dc.w PLC_06-Offs_PLC					; 2P mode specific art
+		dc.w PLC_07-Offs_PLC					; Tails life icon/universal level graphics
+		dc.w PLC_08-Offs_PLC					; Monitor art only
+		dc.w PLC_09-Offs_PLC					; Repeat of 08
+		dc.w PLC_0A-Offs_PLC					; AIZ Intro graphics
+		dc.w PLC_0B-Offs_PLC					; AIZ 1 PLCs
+		dc.w PLC_0C_0D-Offs_PLC					; AIZ 2 PLCs
 		dc.w PLC_0C_0D-Offs_PLC
-		dc.w PLC_0C_0D-Offs_PLC
-		dc.w PLC_0E-Offs_PLC
-		dc.w PLC_0F-Offs_PLC
-		dc.w PLC_10-Offs_PLC
-		dc.w PLC_11-Offs_PLC
-		dc.w PLC_12_13-Offs_PLC
-		dc.w PLC_12_13-Offs_PLC
-		dc.w PLC_14_15-Offs_PLC
-		dc.w PLC_14_15-Offs_PLC
-		dc.w PLC_16_17_18_19-Offs_PLC
+		dc.w PLC_0E-Offs_PLC					; HCZ 1 PLC 1
+		dc.w PLC_0F-Offs_PLC					; HCZ 1 PLC 2
+		dc.w PLC_10-Offs_PLC					; HCZ 2 PLC 1
+		dc.w PLC_11-Offs_PLC					; HCZ 2 PLC 2
+		dc.w PLC_12_13-Offs_PLC					; MGZ 1
+		dc.w PLC_12_13-Offs_PLC					; MGZ 1
+		dc.w PLC_14_15-Offs_PLC					; MGZ 2
+		dc.w PLC_14_15-Offs_PLC					; MGZ 2
+		dc.w PLC_16_17_18_19-Offs_PLC				; CNZ
 		dc.w PLC_16_17_18_19-Offs_PLC
 		dc.w PLC_16_17_18_19-Offs_PLC
 		dc.w PLC_16_17_18_19-Offs_PLC
@@ -114325,7 +114333,7 @@ Offs_PLC:	dc.w PLC_00-Offs_PLC
 		dc.w PLC_22_23-Offs_PLC
 		dc.w PLC_22_23-Offs_PLC
 		dc.w PLC_24-Offs_PLC
-		dc.w PLC_25-Offs_PLC
+		dc.w PLC_25-Offs_PLC			; LBZ 2 Misc art
 		dc.w PLC_26_Through_2D-Offs_PLC
 		dc.w PLC_26_Through_2D-Offs_PLC
 		dc.w PLC_26_Through_2D-Offs_PLC
@@ -118128,6 +118136,9 @@ MapUnc_SaveScreenStatic4:
 ArtKos_SaveScreenMisc:
 		binclude "General/Save Menu/Kosinski Art/Misc.bin"
 		even
+; ---------------------------------------------------------------------------
+; Compressed graphics - primary patterns and block mappings
+; ---------------------------------------------------------------------------
 AIZ1_8x8_Intro_KosM:
 		binclude "Levels/AIZ/Tiles/Act 1 Intro.kosm"
 		even
@@ -118140,27 +118151,6 @@ AIZ1_8x8_MainLevel_KosM:
 AIZ1_8x8_Flames_KosM:
 		binclude "Levels/AIZ/Tiles/Act 1 Fire Overlay.kosm"
 		even
-AIZ1_16x16_Intro_Kos:
-		binclude "Levels/AIZ/Blocks/Act 1 Intro.kos"
-		even
-AIZ1_16x16_Primary_Kos:
-		binclude "Levels/AIZ/Blocks/Act 1 Primary.kos"
-		even
-AIZ1_16x16_MainLevel_Kos:
-		binclude "Levels/AIZ/Blocks/Act 1 Main Level.kos"
-		even
-AIZ1_128x128_Kos:
-		binclude "Levels/AIZ/Chunks/Act 1.kos"
-		even
-AIZ2_16x16_Primary_Kos:
-		binclude "Levels/AIZ/Blocks/Act 2 Primary.kos"
-		even
-AIZ2_16x16_Secondary_Kos:
-		binclude "Levels/AIZ/Blocks/Act 2 Secondary.kos"
-		even
-AIZ2_16x16_BomberShip_Kos:
-		binclude "Levels/AIZ/Blocks/Act 2 BomberShip.kos"
-		even
 AIZ2_8x8_Primary_KosM:
 		binclude "Levels/AIZ/Tiles/Act 2 Primary.kosm"
 		even
@@ -118170,78 +118160,89 @@ AIZ2_8x8_Secondary_KosM:
 AIZ2_8x8_BomberShip_KosM:
 		binclude "Levels/AIZ/Tiles/Act 2 Bombership.kosm"
 		even
-AIZ2_128x128_Kos:
+AIZ_16x16_Intro_Kos:
+		binclude "Levels/AIZ/Blocks/Act 1 Intro.eni"
+		even
+AIZ_16x16_Primary_Kos:
+		binclude "Levels/AIZ/Blocks/Act 1.eni"
+		even
+AIZ_16x16_Secondary_Kos:
+		binclude "Levels/AIZ/Blocks/Act 2.eni"
+		even
+AIZ_16x16_BomberShip_Kos:
+		binclude "Levels/AIZ/Blocks/Act 2 BomberShip.eni"
+		even
+AIZ_128x128_Primary_Kos:
+		binclude "Levels/AIZ/Chunks/Act 1.kos"
+		even
+AIZ_128x128_Secondary_Kos:
 		binclude "Levels/AIZ/Chunks/Act 2.kos"
 		even
-HCZ_16x16_Primary_Kos:
-		binclude "Levels/HCZ/Blocks/Primary.bin"
-		even
+; ---------------------------------------------------------------------------
 HCZ_8x8_Primary_KosM:
-		binclude "Levels/HCZ/Tiles/Primary.bin"
-		even
-HCZ_128x128_Primary_Kos:
-		binclude "Levels/HCZ/Chunks/Primary.bin"
-		even
-HCZ1_16x16_Secondary_Kos:
-		binclude "Levels/HCZ/Blocks/Act 1 Secondary.bin"
+		binclude "Levels/HCZ/Tiles/Primary.kosm"
 		even
 HCZ1_8x8_Secondary_KosM:
-		binclude "Levels/HCZ/Tiles/Act 1 Secondary.bin"
-		even
-HCZ1_128x128_Secondary_Kos:
-		binclude "Levels/HCZ/Chunks/Act 1 Secondary.bin"
-		even
-HCZ2_16x16_Secondary_Kos:
-		binclude "Levels/HCZ/Blocks/Act 2 Secondary.bin"
+		binclude "Levels/HCZ/Tiles/Act 1 Secondary.kosm"
 		even
 HCZ2_8x8_Secondary_KosM:
-		binclude "Levels/HCZ/Tiles/Act 2 Secondary.bin"
+		binclude "Levels/HCZ/Tiles/Act 2 Secondary.kosm"
 		even
-HCZ2_128x128_Secondary_Kos:
-		binclude "Levels/HCZ/Chunks/Act 2 Secondary.bin"
+HCZ_16x16_Primary_Kos:
+		binclude "Levels/HCZ/Blocks/Act 1.eni"
 		even
-MGZ_16x16_Primary_Kos:
-		binclude "Levels/MGZ/Blocks/Primary.bin"
+HCZ_16x16_Secondary_Kos:
+		binclude "Levels/HCZ/Blocks/Act 2.eni"
 		even
+HCZ_128x128_Primary_Kos:
+		binclude "Levels/HCZ/Chunks/Act 1.kos"
+		even
+HCZ_128x128_Secondary_Kos:
+		binclude "Levels/HCZ/Chunks/Act 2.kos"
+		even
+; ---------------------------------------------------------------------------
 MGZ_8x8_Primary_KosM:
-		binclude "Levels/MGZ/Tiles/Primary.bin"
-		even
-MGZ_128x128_Primary_Kos:
-		binclude "Levels/MGZ/Chunks/Primary.bin"
-		even
-MGZ1_16x16_Secondary_Kos:
-		binclude "Levels/MGZ/Blocks/Act 1 Secondary.bin"
+		binclude "Levels/MGZ/Tiles/Primary.kosm"
 		even
 MGZ1_8x8_Secondary_KosM:
-		binclude "Levels/MGZ/Tiles/Act 1 Secondary.bin"
-		even
-MGZ1_128x128_Secondary_Kos:
-		binclude "Levels/MGZ/Chunks/Act 1 Secondary.bin"
-		even
-MGZ2_16x16_Secondary_Kos:
-		binclude "Levels/MGZ/Blocks/Act 2 Secondary.bin"
+		binclude "Levels/MGZ/Tiles/Act 1 Secondary.kosm"
 		even
 MGZ2_8x8_Secondary_KosM:
-		binclude "Levels/MGZ/Tiles/Act 2 Secondary.bin"
+		binclude "Levels/MGZ/Tiles/Act 2 Secondary.kosm"
 		even
-MGZ2_128x128_Secondary_Kos:
-		binclude "Levels/MGZ/Chunks/Act 2 Secondary.bin"
+MGZ_16x16_Primary_Kos:
+		binclude "Levels/MGZ/Blocks/Act 1.eni"
 		even
-MGZ2_QuakeChunks:
+MGZ_16x16_Secondary_Kos:
+		binclude "Levels/MGZ/Blocks/Act 2.eni"
+		even
+MGZ_128x128_Primary_Kos:
+		binclude "Levels/MGZ/Chunks/Act 1.kos"
+		even
+MGZ_128x128_Secondary_Kos:
+		binclude "Levels/MGZ/Chunks/Act 2.kos"
+		even
+MGZ_QuakeChunks:
 		binclude "Levels/MGZ/Misc/Act 2 Quake Chunks.bin"
 		even
-CNZ_16x16_Kos:	binclude "Levels/CNZ/Blocks/Primary.bin"
+; ---------------------------------------------------------------------------
+CNZ_8x8_KosM:
+		binclude "Levels/CNZ/Tiles/Primary.bin"
 		even
-CNZ_8x8_KosM:	binclude "Levels/CNZ/Tiles/Primary.bin"
+CNZ_16x16_Kos:
+		binclude "Levels/CNZ/Blocks/Primary.bin"
 		even
-CNZ_128x128_Kos:binclude "Levels/CNZ/Chunks/Primary.bin"
+CNZ_128x128_Kos:
+		binclude "Levels/CNZ/Chunks/Primary.bin"
 		even
+; ---------------------------------------------------------------------------
 FBZ1_16x16_Kos:
 FBZ1_8x8_KosM:
 FBZ1_128x128_Kos:
 FBZ2_16x16_Kos:
 FBZ2_8x8_KosM:
 FBZ2_128x128_Kos:
+; ---------------------------------------------------------------------------
 ICZ_16x16_Primary_Kos:
 		binclude "Levels/ICZ/Blocks/Primary.bin"
 		even
@@ -118269,6 +118270,7 @@ ICZ2_8x8_Secondary_KosM:
 ICZ2_128x128_Secondary_Kos:
 		binclude "Levels/ICZ/Chunks/Act 2 Secondary.bin"
 		even
+; ---------------------------------------------------------------------------
 LBZ_16x16_Primary_Kos:
 		binclude "Levels/LBZ/Blocks/Primary.bin"
 		even
@@ -118305,12 +118307,15 @@ LBZ2_128x128_Kos:
 LBZ2_128x128_DeathEgg_Kos:
 		binclude "Levels/LBZ/Chunks/Act 2 Death Egg.bin"
 		even
+; ---------------------------------------------------------------------------
 MHZ_16x16_Kos:
 ArtKosM_MHZ:
 MHZ_128x128_Kos:
+; ---------------------------------------------------------------------------
 LRZ_16x16_Kos:
 ArtKosM_LRZ:
 LRZ_128x128_Kos:
+; ---------------------------------------------------------------------------
 ALZ_16x16_Kos:	binclude "Levels/ALZ/Blocks/Primary.bin"
 		even
 ALZ_8x8_KosM:	binclude "Levels/ALZ/Tiles/Primary.bin"
