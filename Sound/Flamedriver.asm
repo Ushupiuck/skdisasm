@@ -1,7 +1,7 @@
 ; ---------------------------------------------------------------------------
 ; ===========================================================================
 ; |                                                                         |
-; |	                        SONIC&K SOUND DRIVER                            |
+; |	                        SONIC&K SOUND DRIVER                        |
 ; |                                                                         |
 ; ===========================================================================
 ; Disassembled by MarkeyJester
@@ -237,8 +237,10 @@ zNumMusicPSGTracks = (zTracksEnd-zSongPSG1)/zTrack.len
 zNumSFXTracks = (zTracksSFXEnd-zTracksSFXStart)/zTrack.len
 zNumSaveTracks = (zTracksSaveEnd-zTracksSaveStart)/zTrack.len
 ; ---------------------------------------------------------------------------
-		!org z80_SoundDriverStart
+		!org z80_SoundDriverStart	; Rewind the ROM address to where we were earlier (allocating the RAM above messes with it)
+; z80_SoundDriver:
 z80_SoundDriver:
+;		org		z80_SoundDriver+Size_of_Snd_driver_guess	; This 'org' inserts some padding that we can paste the compressed sound driver over later (see the 's3p2bin' tool)
 		save
 		!org	0							; z80 Align, handled by the build process
 		CPU Z80
@@ -4614,9 +4616,10 @@ z80_SoundDriverPointersEnd:
 ; ===========================================================================
 		restore
 		padding off
-		!org		z80_SoundDriver+Size_of_Snd_driver_guess
+		!org		z80_SoundDriver+Size_of_Snd_driver_guess	; The assembler still thinks we're in Z80 memory, so use an 'org' to switch back to the cartridge
 
 Z80_Snd_Driver_End:
+;		org z80_SoundDriver+Size_of_Snd_driver_guess	; Once again, create some padding that we can paste the compressed data over later
 
 little_endian function x,((x)<<8)&$FF00|((x)>>8)&$FF
 
@@ -5355,7 +5358,7 @@ Mus_Bank2_Start:	startBank
 MusData_Title:			include	"Sound/Music/Title.asm"
 MusData_1UP:			include	"Sound/Music/1UP.asm"
 MusData_Emerald:		include	"Sound/Music/Chaos Emerald.asm"
-MusData_AIZ1:			include	"Sound/Music/AIZ1.asm"
+MusData_AIZ1:			include	"Sound/Music/SLZ.asm"
 MusData_AIZ2:			include	"Sound/Music/AIZ2.asm"
 MusData_HCZ1:			include	"Sound/Music/HCZ1.asm"
 MusData_HCZ2:			include	"Sound/Music/HCZ2.asm"

@@ -963,9 +963,9 @@ mus_Stop			ds.b 1		; $E2 - stop music and sound effects
 mus_MutePSG			ds.b 1		; $E3 - mute all PSG channels
 mus_StopSFX			ds.b 1		; $E4 - stop all sound effects
 mus_FadeOut2			ds.b 1		; $E5 - fade out music (duplicate)
-mus__EndCmd =			*		; next ID after last sound command
+Mus__EndCmd =			*		; next ID after last sound command
 
-mus_S2SEGA =			$FA		; $FA - SEGA sound ID in Sonic 2
+mus_FA =			$FA		; $FA - ???
 mus_StopSEGA =			$FE		; $FE - Stop SEGA sound
 mus_SEGA =			$FF		; $FF - Play SEGA sound
 	dephase
@@ -973,7 +973,7 @@ mus_SEGA =			$FF		; $FF - Play SEGA sound
 ; Music ID's list. These do not affect the sound driver, be careful.
 
 	phase $01
-mus__First =			*		; ID of the first music
+Mus__First =			*		; ID of the first music
 mus_AIZ1			ds.b 1		; $01
 mus_AIZ2			ds.b 1		; $02
 mus_HCZ1			ds.b 1		; $03
@@ -993,16 +993,16 @@ mus_MHZ2			ds.b 1		; $10
 mus_SOZ1			ds.b 1		; $11
 mus_SOZ2			ds.b 1		; $12
 mus_LRZ1			ds.b 1		; $13
-mus_LRZ2			ds.b 1		; $14
+mus_HPZ				ds.b 1		; $14
 mus_SSZ				ds.b 1		; $15
 mus_DEZ1			ds.b 1		; $16
 mus_DEZ2			ds.b 1		; $17
 mus_MinibossK			ds.b 1		; $18
 mus_EndBoss			ds.b 1		; $19
 mus_DDZ				ds.b 1		; $1A
-mus_Pachinko			ds.b 1		; $1B
+mus_MagneticOrbs		ds.b 1		; $1B
 mus_SpecialStage		ds.b 1		; $1C
-mus_Slots			ds.b 1		; $1D
+mus_SlotMachine			ds.b 1		; $1D
 mus_Gumball			ds.b 1		; $1E
 mus_Knuckles			ds.b 1		; $1F
 mus_ALZ				ds.b 1		; $20
@@ -1024,14 +1024,15 @@ mus_DataSelect			ds.b 1		; $2F
 mus_FinalBoss			ds.b 1		; $30
 mus_Drowning			ds.b 1		; $31
 mus_Ending			ds.b 1		; $32
-mus__End =			*		; next ID after last music
+mus_CreditsK			ds.b 1		; $DC - Can also be treated as SFX?
+Mus__End =			*		; next ID after last music
 	dephase
 
 ; ---------------------------------------------------------------------------
 ; Sound effect ID's list. These do not affect the sound driver, be careful.
 
-	phase $33
-sfx__First =			*		; ID of the first sound effect
+	phase $34
+sfx_First =			*		; ID of the first sound effect
 sfx_RingRight			ds.b 1		; $33
 sfx_RingLeft			ds.b 1		; $34
 sfx_Death			ds.b 1		; $35
@@ -1065,7 +1066,7 @@ sfx_BossActivate		ds.b 1		; $50
 sfx_MissileThrow		ds.b 1		; $51
 sfx_SpikeMove			ds.b 1		; $52
 sfx_Charging			ds.b 1		; $53
-sfx_BossLaser			ds.b 1		; $54
+sfx_BossLazer			ds.b 1		; $54
 sfx_BlockConveyor		ds.b 1		; $55
 sfx_FlipBridge			ds.b 1		; $56
 sfx_Geyser			ds.b 1		; $57
@@ -1075,7 +1076,7 @@ sfx_UnknownCharge		ds.b 1		; $5A
 sfx_Switch			ds.b 1		; $5B
 sfx_MechaSpark			ds.b 1		; $5C
 sfx_FloorThump			ds.b 1		; $5D
-sfx_Laser			ds.b 1		; $5E
+sfx_Lazer			ds.b 1		; $5E
 sfx_Crash			ds.b 1		; $5F
 sfx_BossZoom			ds.b 1		; $60
 sfx_BossHitFloor		ds.b 1		; $61
@@ -1202,7 +1203,6 @@ sfx_UnknownSaw			ds.b 1		; $D8
 sfx_MagneticSpike		ds.b 1		; $D9
 sfx_LeafBlower			ds.b 1		; $DA
 sfx_WaterSkid			ds.b 1		; $DB
-mus_CreditsK			ds.b 1		; $DC - Can also be treated as SFX?
 				ds.b 3		; unused SFX slots, the driver will happily play them though
 sfx__End =			*		; next ID after the last sound effect
 
