@@ -1,0 +1,36 @@
+{
+    "Flex": 2,
+    "name": "",
+    "node": "968e73ab-2db1-486d-b5b6-a32ab53e867e",
+    "objects": [
+        {
+            "uuid": "968e73ab-2db1-486d-b5b6-a32ab53e867e",
+            "format": "Sonic 3&K Object.js",
+            "name": "Spring",
+            "palettes": [
+                {
+                    "path": "General\\Sprites\\Sonic\\Palettes\\SonicAndTails.bin",
+                    "length": 1
+                },
+                {
+                    "path": "Levels\\AIZ\\Palettes\\Main.bin",
+                    "length": 2
+                }
+            ],
+            "art": {
+                "path": "General\\Sprites\\Level Misc\\Horizontal Spring.unc.bin",
+                "compression": "Uncompressed",
+                "offset": 0
+            },
+            "mappings": {
+                "path": "",
+                "label": ""
+            },
+            "dplcs": {
+                "enabled": false,
+                "path": "",
+                "label": ""
+            }
+        }
+    ]
+}
