@@ -255,6 +255,7 @@ _unkA880 :=			HScroll_table+$80	; used in SSZ screen/background events
 _unkA8E0 :=			HScroll_table+$E0	; used in SSZ screen/background events
 Nem_code_table			ds.b $200		; code table is built up here and then used during decompression
 Sprite_table_input		ds.b $400		; 8 priority levels, $80 bytes per level
+Sprite_table_input_End:
 
 Object_RAM =			*			; $1FCC bytes ; $4A bytes per object, 110 objects
 Player_1			ds.b object_size	; main character in 1 player mode, player 1 in Competition mode
@@ -280,7 +281,6 @@ Object_RAM_end =		*
 			ds.b $14			; unused
 Conveyor_belt_load_array	ds.b $E			; each subtype of hcz conveyor belt uses a different byte to check if it's already loaded. Since they're so wide, the object loader may try loading them multiple times
 			ds.b $12			; unused
-
 Kos_decomp_buffer		ds.b $1000		; each module in a KosM archive is decompressed here and then DMAed to VRAM
 H_scroll_buffer			ds.b $380		; horizontal scroll table is built up here and then DMAed to VRAM
 Collision_response_list		ds.b $80		; only objects in this list are processed by the collision response routines
@@ -304,7 +304,8 @@ H_scroll_amount			ds.w 1			; number of pixels camera scrolled horizontally in th
 V_scroll_amount			ds.w 1			; number of pixels camera scrolled vertically in the last frame * $100
 H_scroll_amount_P2		ds.w 1
 V_scroll_amount_P2		ds.w 1
-				ds.w 1			; unused
+_unkEE08			ds.b 1			; this is actually unused
+			ds.b 1				; unused
 Scroll_lock			ds.b 1			; if this is set scrolling routines aren't called
 Scroll_lock_P2			ds.b 1
 Camera_target_min_X_pos		ds.w 1
@@ -342,11 +343,11 @@ Apparent_zone_and_act =		*
 Apparent_zone			ds.b 1			; always equal to actual zone
 Apparent_act			ds.b 1			; for example, after AIZ gets burnt, this indicates act 1 even though it's actually act 2
 Palette_fade_timer		ds.w 1			; the palette gets faded in until this timer expires
-Competition_time_record		ds.l 1		; player 1's recorded time for the current run, to be displayed in menus and the result screen 
+Competition_time_record		ds.l 1		; player 1's recorded time for the current run, to be displayed in menus and the result screen
 Competition_time_record_minute =			Competition_time_record+1
 Competition_time_record_second =			Competition_time_record+2
 Competition_time_record_frame =			Competition_time_record+3
-Competition_time_record_P2	ds.l 1		; player 2's recorded time for the current run, to be displayed in menus and the result screen 
+Competition_time_record_P2	ds.l 1		; player 2's recorded time for the current run, to be displayed in menus and the result screen
 Competition_time_record_minute_P2 =		Competition_time_record_P2+1
 Competition_time_record_second_P2 =		Competition_time_record_P2+2
 Competition_time_record_frame_P2 =		Competition_time_record_P2+3
@@ -394,7 +395,7 @@ Special_events_routine		ds.w 1			; routine counter for various special events. U
 Events_fg_0			ds.w 1			; various flags used by screen events
 Events_fg_1			ds.w 1			; various flags used by screen events
 Events_fg_2			ds.w 1			; various flags used by screen events
-_unkEEBA			ds.w 1			;
+_unkEEBA			ds.w 1			; only used in Sonic 3
 Level_repeat_offset		ds.w 1			; the number of pixels the screen was moved this frame, used to offset level objects horizontally. Used only for level repeat sections, such as AIZ airship.
 Events_fg_3			ds.w 1			; various flags used by screen events
 Events_routine_fg		ds.w 1			; screen events routine counter
@@ -419,7 +420,9 @@ _unkEEF2			ds.w 1			; used exclusively in SSZ background events code
 _unkEEF4			ds.w 1			; used exclusively in SSZ background events code
 _unkEEF6			ds.l 1			; used exclusively in SSZ background events code
 _unkEEFA			ds.w 1			; used exclusively in SSZ background events code
-			ds.b $3E			; used in some instances (see above)
+				ds.b $6			; used in some instances (see above)
+			ds.b $38			; used in some instances (see above)
+Camera_RAM_End:
 
 Spritemask_flag			ds.w 1			; when set, indicates that special sprites are used for sprite masking
 Use_normal_sprite_table		ds.w 1			; if this is set Sprite_table_buffer and Sprite_table_buffer_P2 will be DMAed instead of Sprite_table_buffer_2 and Sprite_table_buffer_P2_2
@@ -483,7 +486,7 @@ Ctrl_1_pressed			ds.b 1			; buttons being pressed newly this frame
 Ctrl_2 =			*			; both held and pressed
 Ctrl_2_held			ds.b 1
 Ctrl_2_pressed			ds.b 1
-			ds.b 6				; unused
+_tempF608		ds.b 6				; this is used in Sonic 3 Alone, but unused in Sonic & Knuckles and Sonic 3 Complete
 
 VDP_reg_1_command		ds.w 1			; AND the lower byte by $BF and write to VDP control port to disable display, OR by $40 to enable
 			ds.l 1				; unused
@@ -491,11 +494,12 @@ Demo_timer			ds.w 1			; the time left for a demo to start/run
 V_scroll_value =		*			; both foreground and background
 V_scroll_value_FG		ds.w 1
 V_scroll_value_BG		ds.w 1
-				ds.l 1			; unused
+_unkF61A			ds.l 1			; unused
 V_scroll_value_P2 =		*
 V_scroll_value_FG_P2		ds.w 1
 V_scroll_value_BG_P2		ds.w 1
-				ds.w 1			; unused
+Teleport_active_timer		ds.b 1			; left over from Sonic 2
+Teleport_active_flag		ds.b 1			; left over from Sonic 2
 H_int_counter_command		ds.w 1			; contains a command to write to VDP register $0A (line interrupt counter)
 H_int_counter =			H_int_counter_command+1	; just the counter part of the command
 Palette_fade_info =		*			; both index and count
@@ -692,7 +696,8 @@ _unkFAC1			ds.b 1
 _unkFAC2			ds.w 1
 _unkFAC4			ds.w 1
 			ds.w 1				; unused
-_unkFAC8			ds.l 1
+_unkFAC8			ds.w 1
+			ds.w 1				; unused
 _unkFACC			ds.b 1
 _unkFACD			ds.b 1
 Pal_fade_delay2			ds.w 1			; timer for palette fade from white routine
@@ -709,8 +714,8 @@ SSZ_MTZ_boss_laser_timer			ds.w 1	; counts down until a laser is fired in Sky Sa
 			ds.w 1				; unused
 
 DMA_queue			ds.w $12*7		; stores all the VDP commands necessary to initiate a DMA transfer
-DMA_queue_slot			ds.l 1			; points to the next free slot on the queue
-
+DMA_queue_slot			ds.w 1			; points to the next free slot on the queue
+;			ds.w 1				; unused
 Normal_palette			ds.b $80
 Normal_palette_line_2 =		Normal_palette+$20	; $20 bytes
 Normal_palette_line_3 =		Normal_palette+$40	; $20 bytes
@@ -829,7 +834,8 @@ Competition_total_laps			ds.b 1		; total number of laps in competition mode (typ
 			ds.b 1				; unused
 Competition_current_lap			ds.b 1		; current lap number for player 1 in competition mode
 Competition_current_lap_2P		ds.b 1		; current lap number for player 2 in competition mode
-			ds.b $24			; unused
+Loser_time_left			ds.b 1			; left over from Sonic 2
+			ds.b $23			; unused
 Results_screen_2P		ds.w 1			; left over from Sonic 2
 Perfect_rings_left		ds.w 1			; left over from Sonic 2
 _unkFF06			ds.w 1			; unknown
@@ -845,13 +851,14 @@ Kos_description_field		ds.w 1			; used by the Kosinski queue processor the same 
 Kos_decomp_queue		ds.l 2*4		; 2 longwords per entry, first is source location and second is decompression location
 Kos_decomp_source =		Kos_decomp_queue	; long ; the compressed data location for the first entry in the queue
 Kos_decomp_destination =	Kos_decomp_queue+4	; long ; the decompression location for the first entry in the queue
+Kos_decomp_queue_end
 Kos_modules_left		ds.b 1			; the number of modules left to decompresses. Sign bit set indicates a module is being decompressed/has been decompressed
 			ds.b 1				; unused
 Kos_last_module_size		ds.w 1			; the uncompressed size of the last module in words. All other modules are $800 words
 Kos_module_queue		ds.w 3*4		; 6 bytes per entry, first longword is source location and next word is VRAM destination
 Kos_module_source =		Kos_module_queue	; long ; the compressed data location for the first module in the queue
 Kos_module_destination =	Kos_module_queue+4	; word ; the VRAM destination for the first module in the queue
-
+Kos_module_queue_end
 _unkFF7C			ds.w 1
 _unkFF7E			ds.w 1
 Level_select_repeat		ds.w 1			; delay counter for repeating the button press. Allows the menu move even when up/down is held down
@@ -859,18 +866,18 @@ Level_select_option		ds.w 1			; the current selected option in the level select
 Sound_test_sound		ds.w 1
 Title_screen_option		ds.b 1
 			ds.b 1				; unused
-			ds.w 1				; this is used in Sonic 3 Alone, but unused in Sonic & Knuckles and Sonic 3 Complete
+_tempFF88		ds.w 1				; this is used in Sonic 3 Alone, but unused in Sonic & Knuckles and Sonic 3 Complete
 Competition_settings =		*			; both items and game type
 Competition_items		ds.b 1			; 0 = Enabled, FF = Disabled.
 Competition_type		ds.b 1			; 0 = grand prix, 3 = match race, -1 = time attack
-Options_menu_box		ds.b 1			; this is used in Sonic 3 Alone, but unused in Sonic & Knuckles and Sonic 3 Complete
+_tempFF8C		ds.b 1				; this is used in Sonic 3 Alone, but unused in Sonic & Knuckles and Sonic 3 Complete
 			ds.b 1				; unused
 Total_bonus_countup		ds.w 1			; the total points to be added due to various bonuses this frame in the end of level results screen
 Current_music			ds.w 1
 Collected_special_ring_array	ds.l 1			; each bit indicates a special stage entry ring in the current zone
 Saved2_status_secondary		ds.b 1
 Respawn_table_keep		ds.b 1			; if set, respawn table is not reset during level load
-				ds.w 1			; unused
+_tempFF98		ds.w 1				; this is used in Sonic 3 Alone, but unused in Sonic & Knuckles and Sonic 3 Complete
 Saved_apparent_zone_and_act	ds.w 1
 Saved2_apparent_zone_and_act	ds.w 1
 			ds.b 1				; unused

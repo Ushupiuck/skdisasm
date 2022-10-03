@@ -46,8 +46,3 @@ byte_1EB32:	dc.b $96
 		dc.b $95
 		dc.b 0
 ; ---------------------------------------------------------------------------
-Map_S2LavaMarker:
-		include "General/Sprites/Level Misc/Map - Lava Marker S2.asm"
-Map_S2LavaMarkerDebug:
-		include "General/Sprites/Level Misc/Map - Lava Marker S2 Debug.asm"
-; ---------------------------------------------------------------------------

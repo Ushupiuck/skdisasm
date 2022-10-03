@@ -897,12 +897,6 @@ AIZ2_BGDeformMake:
 		dc.b    3,   4,   8, $1C, $20
 		dc.b    1,   6, $1E
 		dc.b  $FF,   0
-Pal_AIZBattleship:
-		binclude "Levels/AIZ/Palettes/Battleship.bin"
-		even
-Pal_AIZBossSmall:
-		binclude "Levels/AIZ/Palettes/Boss Small.bin"
-		even
 AIZBattleShip_BobbingMotion:
 		dc.b   4,  4,  3,  3,  2,  1,  1,  0,  0,  0,  1,  1,  2,  3,  3,  4
 AIZBattleship_BombScript:
@@ -956,18 +950,6 @@ AIZMakeTreeScript:
 		dc.w  $50C, $380
 		dc.w  $557, $280
 		dc.w $FFFF
-Map_AIZShipPropeller:
-		include "Levels/AIZ/Misc Object Data/Map - Act 2 Ship Propeller.asm"
-Ani_AIZShipPropeller:
-		include "Levels/AIZ/Misc Object Data/Anim - Act 2 Ship Propeller.asm"
-Map_AIZ2BombExplode:
-		include "Levels/AIZ/Misc Object Data/Map - Act 2 Bomb Explosion.asm"
-Ani_AIZ2BombExplode:
-		include "Levels/AIZ/Misc Object Data/Anim - Act 2 Bomb Explosion.asm"
-Map_AIZ2BGTree:
-		include "Levels/AIZ/Misc Object Data/Map - Act 2 Background Tree.asm"
-Map_AIZ2BossSmall:
-		include "Levels/AIZ/Misc Object Data/Map - Act 2 Boss Small.asm"
 HCZ1_BGDeformArray:
 		dc.w $40, 8, 8, 5, 5, 6, $F0, 6, 5, 5, 8, 8, $30, $80C0, $7FFF
 HCZ2_BGDeformArray:

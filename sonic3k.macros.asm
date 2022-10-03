@@ -258,3 +258,24 @@ palscriptloop	macro header
 palscriptrun	macro header
 	dc.w -$C
     endm
+; ---------------------------------------------------------------------------
+; disable interrupts
+; ---------------------------------------------------------------------------
+
+disable_ints:	macro
+		move	#$2700,sr
+		endm
+
+; ---------------------------------------------------------------------------
+; enable interrupts
+; ---------------------------------------------------------------------------
+
+enable_ints:	macro
+		move	#$2300,sr
+		endm
+; ---------------------------------------------------------------------------
+ResetDMAQueue macro
+;	clr.w	(DMA_Queue).w
+;	move.l	#DMA_Queue,(DMA_Queue_Slot).w
+	move.w	#DMA_Queue,(DMA_Queue_Slot).w
+	endm

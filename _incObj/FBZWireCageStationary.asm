@@ -15,8 +15,8 @@ loc_3A252:
 		bsr.s	sub_3A270
 		lea	(Player_2).w,a1
 		lea	$38(a0),a2
-		addq.b	#1,d6
-;		moveq	#4,d6
+;		addq.b	#1,d6
+		moveq	#4,d6
 		bsr.s	sub_3A270
 		jmp	(Delete_Sprite_If_Not_In_Range).l
 

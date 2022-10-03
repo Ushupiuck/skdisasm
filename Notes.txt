@@ -20,3 +20,7 @@ Offs_PLC = PLC request table
 To-Do:
 
 _unkEEB0 <--- Test this motherfucker
+
+loc_6B70E <-- Optimize
+
+Collected_special_ring_array
