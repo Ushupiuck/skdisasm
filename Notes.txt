@@ -19,6 +19,10 @@ To-Do:
 
 _unkEEB0 <--- Test this motherfucker
 
-loc_6B70E <-- Optimize
+Displace_PlayerOffObject <---- Check later
 
 Collected_special_ring_array
+
+SetUp_ObjAttributes <---- Child object subroutines are here
+
+ObjectMoveAndFall_LightGravity <--- Multiple variants of "ObjectMoveAndFall"; potentially "ObjectMove" too
