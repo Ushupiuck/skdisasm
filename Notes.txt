@@ -26,3 +26,7 @@ Collected_special_ring_array
 SetUp_ObjAttributes <---- Child object subroutines are here
 
 ObjectMoveAndFall_LightGravity <--- Multiple variants of "ObjectMoveAndFall"; potentially "ObjectMove" too
+
+; ------------------------------------------------------------------------
+
+AniHCZ_FixLowerBG <---- EDIT THIS
