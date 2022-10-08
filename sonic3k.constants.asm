@@ -1108,7 +1108,7 @@ mus_DPZ				ds.b 1		; $22
 mus_CGZ				ds.b 1		; $23
 mus_EMZ				ds.b 1		; $24
 mus_TitleScreen			ds.b 1		; $25
-mus_Credits3			ds.b 1		; $26
+mus_Super			ds.b 1		; $26
 mus_GameOver			ds.b 1		; $27
 mus_Continue			ds.b 1		; $28
 mus_GotThroughAct		ds.b 1		; $29

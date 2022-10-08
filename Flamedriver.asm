@@ -5356,7 +5356,7 @@ Mus_Bank2_Start:	startBank
 	Music_Master_Table
 					include "Sound/UniBank.asm"
 MusData_Title:			include	"Sound/Music/Title.asm"
-MusData_1UP:			include	"Sound/Music/1UP.asm"
+MusData_1UP:			include	"Sound/Music/1UP (Sonic 3).asm"
 MusData_Emerald:		include	"Sound/Music/Chaos Emerald.asm"
 MusData_AIZ1:			include	"Sound/Music/SLZ.asm"
 MusData_AIZ2:			include	"Sound/Music/AIZ2.asm"
@@ -5402,8 +5402,7 @@ MusData_BPZ:			include	"Sound/Music/Balloon Park.asm"
 MusData_DPZ:			include	"Sound/Music/Desert Palace.asm"
 MusData_CGZ:			include	"Sound/Music/Chrome Gadget.asm"
 MusData_EMZ:			include	"Sound/Music/Endless Mine.asm"
-MusData_S3Credits:		include	"Sound/Music/Sonic 3 Credits.asm"
+MusData_S3Credits:		include	"Sound/Music/96 - Super Sonic.asm"
 MusData_2PMenu:			include	"Sound/Music/Competition Menu.asm"
 MusData_Drown:			include	"Sound/Music/Countdown.asm"
-
 	finishBank

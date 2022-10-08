@@ -1,14 +1,12 @@
 Handle_Onscreen_Water_Height
 
-KosArt_To_VDP < ---- Checklater
-
-Load_SSSprite_Mappings < ----- Garbage data below? test later
-
 HyperAttackTouchResponse < ----- Hyper abilities
 
 HyperTouch_Special < ---- Interaction for Knuckles + Tails?
 
 SonicKnux_SuperHyper <---- to check
+
+loc_8160A <---- Super mappings in DDZ
 
 sub_24280 <---- Something to do with shields
 
