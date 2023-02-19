@@ -9,14 +9,14 @@
 		dc.l Obj_Spikes				; 8
 		dc.l Obj_AIZ1Tree			; 9
 		dc.l Obj_AIZ1ZiplinePeg			; 10
-		dc.l Obj_Ring				; 11
+		dc.l Obj_Ring				; 11	; free
 		dc.l Obj_AIZGiantRideVine		; 12
 		dc.l Obj_BreakableWall			; 13
 		dc.l Obj_TwistedRamp			; 14
 		dc.l Obj_CollapsingBridge		; 15
 		dc.l Obj_LBZTubeElevator		; 16
 		dc.l Obj_LBZMovingPlatform		; 17
-		dc.l Obj_Ring				; 18
+		dc.l Obj_Ring				; 18	; free
 		dc.l Obj_LBZExplodingTrigger		; 19
 		dc.l Obj_LBZTriggerBridge		; 20
 		dc.l Obj_LBZPlayerLauncher		; 21
@@ -24,20 +24,20 @@
 		dc.l Obj_LBZRideGrapple			; 23
 		dc.l Obj_LBZCupElevator			; 24
 		dc.l Obj_LBZCupElevatorPole		; 25
-		dc.l Obj_Ring				; 26
+		dc.l Obj_Ring				; 26	; free
 		dc.l Obj_LBZPipePlug			; 27
-		dc.l Obj_Ring				; 28
-		dc.l Obj_LBZUnusedBarPlatform		; 29
+		dc.l Obj_Ring				; 28	; free
+		dc.l Obj_LBZUnusedBarPlatform		; 29	; free
 		dc.l Obj_LBZSpinLauncher		; 30
 		dc.l Obj_LBZLoweringGrapple		; 31
 		dc.l Obj_MGZLBZSmashingPillar		; 32
 		dc.l Obj_LBZGateLaser			; 33
 		dc.l Obj_LBZAlarm			; 34
-		dc.l Obj_Ring				; 35
+		dc.l Obj_Ring				; 35	; free
 		dc.l Obj_AutomaticTunnel		; 36
-		dc.l Obj_Ring				; 37
+		dc.l Obj_Ring				; 37	; free
 		dc.l Obj_AutoSpin			; 38
-		dc.l Obj_S2LavaMarker			; 39
+		dc.l Obj_S2LavaMarker			; 39	; free
 		dc.l Obj_InvisibleBlock			; 40
 		dc.l Obj_AIZDisappearingFloor		; 41
 		dc.l Obj_CorkFloor			; 42
@@ -45,8 +45,8 @@
 		dc.l Obj_AIZCollapsingLogBridge		; 44
 		dc.l Obj_AIZFallingLog			; 45
 		dc.l Obj_AIZSpikedLog			; 46
-		dc.l Obj_StillSprite			; 47
-		dc.l Obj_AnimatedStillSprite		; 48
+		dc.l Obj_StillSprite			; 47	; look into
+		dc.l Obj_AnimatedStillSprite		; 48	; look into
 		dc.l Obj_LBZRollingDrum			; 49
 		dc.l Obj_AIZDrawBridge			; 50
 		dc.l Obj_Button				; 51
@@ -93,14 +93,14 @@
 		dc.l Obj_MGZTopLauncher			; 92
 		dc.l Obj_CGZTriangleBumpers		; 93
 		dc.l Obj_CGZBladePlatform		; 94
-		dc.l Obj_2PRetractingSpring		; 95
+		dc.l Obj_2PRetractingSpring		; 95	; free
 		dc.l Obj_BPZElephantBlock		; 96
-		dc.l Obj_BPZBalloon			; 97
+		dc.l Obj_BPZBalloon			; 97	; free
 		dc.l Obj_DPZDisolvingSandBar		; 98
-		dc.l Obj_DPZButton			; 99
-		dc.l Obj_2PItem				; 100
-		dc.l Obj_2PGoalMarker			; 101
-		dc.l Obj_EMZDripper			; 102
+		dc.l Obj_DPZButton			; 99	; free
+		dc.l Obj_2PItem				; 100	; free
+		dc.l Obj_2PGoalMarker			; 101	; free
+		dc.l Obj_EMZDripper			; 102	; free
 		dc.l Obj_HCZSnakeBlocks			; 103
 		dc.l Obj_HCZSpinningColumn		; 104
 		dc.l Obj_HCZTwistingLoop		; 105
@@ -134,10 +134,10 @@
 		dc.l Obj_SSEntryRing			; 133
 		dc.l Obj_GumballMachine			; 134
 		dc.l Obj_GumballTriangleBumper		; 135
-		dc.l Obj_CNZWaterLevelCorkFloor		; 136
-		dc.l Obj_CNZWaterLevelButton		; 137
+		dc.l Obj_CNZWaterLevelCorkFloor		; 136	; look into
+		dc.l Obj_CNZWaterLevelButton		; 137	; look into
 		dc.l Obj_FBZExitHall			; 138
-		dc.l Obj_SpriteMask			; 139
+		dc.l Obj_SpriteMask			; 139	; look into
 		dc.l Obj_Bloominator			; 140
 		dc.l Obj_Rhinobot			; 141
 		dc.l Obj_MonkeyDude			; 142
@@ -197,7 +197,7 @@
 		dc.l Obj_LBZMinibossBox			; 196
 		dc.l Obj_LBZMinibossBoxKnux		; 197
 		dc.l Obj_LBZ2RobotnikShip		; 198
-		dc.l Obj_Ring				; 199
+		dc.l Obj_Ring				; 199	; free
 		dc.l Obj_LBZKnuxPillar			; 200
 		dc.l Obj_LBZMiniboss			; 201
 		dc.l Obj_LBZFinalBoss1			; 202
@@ -207,21 +207,21 @@
 		dc.l Obj_FBZExitDoor			; 206
 		dc.l Obj_FBZEggPrison			; 207
 		dc.l Obj_FBZSpringPlunger		; 208
-		dc.l Obj_Ring				; 209
-		dc.l Obj_Ring				; 210
-		dc.l Obj_Ring				; 211
-		dc.l Obj_Ring				; 212
-		dc.l Obj_Ring				; 213
-		dc.l Obj_Ring				; 214
-		dc.l Obj_Ring				; 215
-		dc.l Obj_Ring				; 216
-		dc.l Obj_Ring				; 217
-		dc.l Obj_Ring				; 218
-		dc.l Obj_Ring				; 219
-		dc.l Obj_Ring				; 220
-		dc.l Obj_Ring				; 221
-		dc.l Obj_Ring				; 222
-		dc.l Obj_Ring				; 223
+		dc.l Obj_Ring				; 209	; free
+		dc.l Obj_Ring				; 210	; free
+		dc.l Obj_Ring				; 211	; free
+		dc.l Obj_Ring				; 212	; free
+		dc.l Obj_Ring				; 213	; free
+		dc.l Obj_Ring				; 214	; free
+		dc.l Obj_Ring				; 215	; free
+		dc.l Obj_Ring				; 216	; free
+		dc.l Obj_Ring				; 217	; free
+		dc.l Obj_Ring				; 218	; free
+		dc.l Obj_Ring				; 219	; free
+		dc.l Obj_Ring				; 220	; free
+		dc.l Obj_Ring				; 221	; free
+		dc.l Obj_Ring				; 222	; free
+		dc.l Obj_Ring				; 223	; free
 		dc.l Obj_FBZWallMissile			; 224
 		dc.l Obj_FBZMine			; 225
 		dc.l Obj_FBZElevator			; 226
@@ -231,26 +231,26 @@
 		dc.l Obj_PachinkoTriangleBumper		; 230
 		dc.l Obj_PachinkoFlipper		; 231
 		dc.l Obj_PachinkoEnergyTrap		; 232
-		dc.l Obj_PachinkoInvisibleUnknown	; 233
+		dc.l Obj_PachinkoInvisibleUnknown	; 233	; look into
 		dc.l Obj_Pachinko_Platform		; 234
 		dc.l Obj_GumballItem			; 235
 		dc.l Obj_PachinkoMagnetOrb		; 236
 		dc.l Obj_PachinkoItemOrb		; 237
-		dc.l Obj_Ring				; 238
-		dc.l Obj_Ring				; 239
-		dc.l Obj_Ring				; 240
-		dc.l Obj_Ring				; 241
-		dc.l Obj_Ring				; 242
-		dc.l Obj_Ring				; 243
-		dc.l Obj_Ring				; 244
-		dc.l Obj_Ring				; 245
-		dc.l Obj_Ring				; 246
-		dc.l Obj_Ring				; 247
-		dc.l Obj_Ring				; 248
-		dc.l Obj_Ring				; 249
-		dc.l Obj_Ring				; 250
-		dc.l Obj_Ring				; 251
-		dc.l Obj_Ring				; 252
-		dc.l Obj_Ring				; 253
-		dc.l Obj_Ring				; 254
+		dc.l Obj_Ring				; 238	; free
+		dc.l Obj_Ring				; 239	; free
+		dc.l Obj_Ring				; 240	; free
+		dc.l Obj_Ring				; 241	; free
+		dc.l Obj_Ring				; 242	; free
+		dc.l Obj_Ring				; 243	; free
+		dc.l Obj_Ring				; 244	; free
+		dc.l Obj_Ring				; 245	; free
+		dc.l Obj_Ring				; 246	; free
+		dc.l Obj_Ring				; 247	; free
+		dc.l Obj_Ring				; 248	; free
+		dc.l Obj_Ring				; 249	; free
+		dc.l Obj_Ring				; 250	; free
+		dc.l Obj_Ring				; 251	; free
+		dc.l Obj_Ring				; 252	; free
+		dc.l Obj_Ring				; 253	; free
+		dc.l Obj_Ring				; 254	; free
 		dc.l Obj_FBZMagneticPendulum		; 255
