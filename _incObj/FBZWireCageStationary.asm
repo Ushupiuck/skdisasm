@@ -111,8 +111,8 @@ loc_3A31C:
 
 loc_3A344:
 		bclr	#2,status(a1)
-		move.b	$44(a1),y_radius(a1)
-		move.b	$45(a1),x_radius(a1)
+		move.b	default_y_radius(a1),y_radius(a1)
+		move.b	default_x_radius(a1),x_radius(a1)
 		move.w	#1,anim(a1)
 		move.b	#0,object_control(a1)
 		bclr	#3,status(a1)
@@ -121,11 +121,11 @@ loc_3A344:
 ; ---------------------------------------------------------------------------
 
 loc_3A36E:
-		asr	$18(a1)
+		asr	x_vel(a1)	; was: $18(a1)
 		bset	#1,status(a1)
 		bclr	#2,status(a1)
-		move.b	$44(a1),y_radius(a1)
-		move.b	$45(a1),x_radius(a1)
+		move.b	default_y_radius(a1),y_radius(a1)
+		move.b	default_x_radius(a1),x_radius(a1)
 		move.w	#1,anim(a1)
 		move.b	#0,object_control(a1)
 		bclr	#3,status(a1)
