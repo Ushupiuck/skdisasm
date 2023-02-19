@@ -17,7 +17,7 @@ loc_1EB58:
 		move.l	#loc_1EB82,(a0)
 
 loc_1EB82:
-		move.w	$10(a0),d0
+		move.w	x_pos(a0),d0
 		andi.w	#$FF80,d0
 		sub.w	(Camera_X_pos_coarse_back).w,d0
 		cmpi.w	#$280,d0
