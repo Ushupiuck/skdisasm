@@ -102,7 +102,7 @@ UseRAMSourceSafeDMA = 1&(AssumeSourceAddressIsRAMSafe==0)
 ; disabled by default because you can simply align the art in ROM and avoid the
 ; issue altogether. It is here so that you have a high-performance routine to do
 ; the job in situations where you can't align it in ROM.
-Use128kbSafeDMA = 0
+Use128kbSafeDMA = 1
 ; ===========================================================================
 ; option UseVIntSafeDMA
 ;
