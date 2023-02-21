@@ -264,7 +264,7 @@ Reserved_object_3		ds.b object_size	; during a level, an object whose sole purpo
 Dynamic_object_RAM		ds.b object_size*90	; $1A04 bytes ; 90 objects
 Dynamic_object_RAM_end =	*
 Level_object_RAM =		Dynamic_object_RAM_end	; $4EA bytes ; various fixed in-level objects
-		ds.b object_size			; unknown
+				ds.b object_size	; unknown
 Breathing_bubbles		ds.b object_size	; for the main character
 Breathing_bubbles_P2		ds.b object_size	; for Tails in a Sonic and Tails game
 Super_stars =			*			; for Super Sonic and Super Knuckles
