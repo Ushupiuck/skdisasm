@@ -21,7 +21,7 @@ Comp_ScreenInit:
 		move.w	(a1)+,d6
 		moveq	#0,d1
 		move.w	#$8000,d7
-		jmp	(Refresh_PlaneFull_Competition).l
+		jmp	(Refresh_PlaneFull).l
 ; ---------------------------------------------------------------------------
 
 Comp_ScreenEvent:
@@ -99,7 +99,7 @@ Comp_BackgroundInit:
 		moveq	#0,d0
 		moveq	#0,d1
 		move.w	#$A000,d7
-		jmp	(Refresh_PlaneFull_Competition).l
+		jmp	(Refresh_PlaneFull).l
 ; ---------------------------------------------------------------------------
 
 ALZ_BackgroundEvent:

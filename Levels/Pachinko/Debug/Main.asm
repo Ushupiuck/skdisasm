@@ -5,6 +5,5 @@
 	dbglistobj Obj_PachinkoFlipper,			Map_PachinkoFlipper,		   0,   4, make_art_tile($32F,0,1)
 	dbglistobj Obj_PachinkoEnergyTrap,		Map_PachinkoEnergyTrap,		   0,   0, make_art_tile($352,1,0)
 	dbglistobj Obj_Pachinko_Platform,		Map_PachinkoPlatform,		   0,   0, make_art_tile($358,1,0)
-	dbglistobj Obj_PachinkoInvisibleUnknown,	Map_PachinkoInvisibleUnknown,	   0,   0, make_art_tile($364,3,1)
 	dbglistobj Obj_GumballItem,			Map_PachinkoFItem,		   0,   0, make_art_tile($378,3,0)
 	dbglistobj Obj_PachinkoItemOrb,			Map_PachinkoItemOrb,		   0,   0, make_art_tile($364,3,1)
