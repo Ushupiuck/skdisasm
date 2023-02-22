@@ -284,18 +284,12 @@ Conveyor_belt_load_array	ds.b $E			; each subtype of hcz conveyor belt uses a di
 Kos_decomp_buffer		ds.b $1000		; each module in a KosM archive is decompressed here and then DMAed to VRAM
 H_scroll_buffer			ds.b $380		; horizontal scroll table is built up here and then DMAed to VRAM
 Collision_response_list		ds.b $80		; only objects in this list are processed by the collision response routines
-Stat_table =			*			; used by Tails' AI in a Sonic and Tails game
-Pos_table_P2			ds.b $100		; used by Player 2 in competition mode
+Stat_table			ds.b $100		; used by Tails' AI in a Sonic and Tails game
 Pos_table 			ds.b $100		;
-Competition_saved_data		ds.b $54		; saved data from Competition Mode
-			ds.b $C				; unused
-Save_pointer :=			*		; S3 uses a different address
-				ds.l 1			; pointer to the active save slot in 1 player mode
-			ds.w 1				; unused
+				ds.b $A6		; unused
+Save_pointer			ds.l 1			; pointer to the active save slot in 1 player mode
 Emerald_flicker_flag		ds.w 1			; controls the emerald flicker in save screen and special stage results.
-			ds.b $44			; unused
-Saved_data :=			*		; S3 uses a different address
-				ds.b $54		; saved data from 1 player mode
+Saved_data			ds.b $54		; saved data from 1 player mode
 Ring_status_table		ds.b $400		; 1 word per ring
 Object_respawn_table		ds.b $300		; 1 byte per object, every object in the level gets an entry
 
@@ -959,7 +953,7 @@ Ref_Checksum_String := 'SM&K'
 	dephase
 
 ; extra Special Stage variables
-	phase Pos_table_P2
+	phase Stat_table
 SStage_scalar_index_0		ds.w 1			; unknown scalar table index value
 SStage_scalar_index_1		ds.w 1			; unknown scalar table index value
 SStage_scalar_index_2		ds.w 1			; unknown scalar table index value
