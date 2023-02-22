@@ -96,24 +96,24 @@
 		dc.l Obj_DEZGravityRoom			; 95
 		dc.l Obj_DEZBumperWall			; 96
 		dc.l Obj_DEZGravityPuzzle		; 97
-		dc.l Obj_Ring				; 98
-		dc.l Obj_Ring				; 99
-		dc.l Obj_Ring				; 100
-		dc.l Obj_Ring				; 101
-		dc.l Obj_Ring				; 102
-		dc.l Obj_Ring				; 103
-		dc.l Obj_Ring				; 104
-		dc.l Obj_Ring				; 105
+		dc.l Delete_Current_Sprite		; 98
+		dc.l Delete_Current_Sprite		; 99
+		dc.l Delete_Current_Sprite		; 100
+		dc.l Delete_Current_Sprite		; 101
+		dc.l Delete_Current_Sprite		; 102
+		dc.l Delete_Current_Sprite		; 103
+		dc.l Delete_Current_Sprite		; 104
+		dc.l Delete_Current_Sprite		; 105
 		dc.l Obj_InvisibleHurtBlockHorizontal	; 106
 		dc.l Obj_InvisibleHurtBlockVertical	; 107
 		dc.l Obj_TensionBridge			; 108
 		dc.l Obj_InvisibleShockBlock		; 109
 		dc.l Obj_InvisibleLavaBlock		; 110
-		dc.l Obj_Ring				; 111
-		dc.l Obj_Ring				; 112
-		dc.l Obj_Ring				; 113
-		dc.l Obj_Ring				; 114
-		dc.l Obj_Ring				; 115
+		dc.l Delete_Current_Sprite		; 111
+		dc.l Delete_Current_Sprite		; 112
+		dc.l Delete_Current_Sprite		; 113
+		dc.l Delete_Current_Sprite		; 114
+		dc.l Delete_Current_Sprite		; 115
 		dc.l Obj_SSZRetractingSpring		; 116
 		dc.l Obj_SSZSwingingCarrier		; 117
 		dc.l Obj_SSZRotatingPlatform		; 118
@@ -157,7 +157,7 @@
 		dc.l Obj_LRZRockCrusher			; 156
 		dc.l Obj_LRZMiniboss			; 157
 		dc.l Obj_LRZ3Autoscroll			; 158
-		dc.l Obj_Ring				; 159
+		dc.l Delete_Current_Sprite		; 159
 		dc.l Obj_EggRobo			; 160
 		dc.l Obj_SSZGHZBoss			; 161
 		dc.l Obj_SSZMTZBoss			; 162
