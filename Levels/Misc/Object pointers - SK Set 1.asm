@@ -9,14 +9,14 @@
 		dc.l Obj_Spikes				; 8
 		dc.l Obj_AIZ1Tree			; 9
 		dc.l Obj_AIZ1ZiplinePeg			; 10
-		dc.l Obj_Ring				; 11	; free
+		dc.l Delete_Current_Sprite		; 11	; free
 		dc.l Obj_AIZGiantRideVine		; 12
 		dc.l Obj_BreakableWall			; 13
 		dc.l Obj_TwistedRamp			; 14
 		dc.l Obj_CollapsingBridge		; 15
 		dc.l Obj_LBZTubeElevator		; 16
 		dc.l Obj_LBZMovingPlatform		; 17
-		dc.l Obj_Ring				; 18	; free
+		dc.l Delete_Current_Sprite		; 18	; free
 		dc.l Obj_LBZExplodingTrigger		; 19
 		dc.l Obj_LBZTriggerBridge		; 20
 		dc.l Obj_LBZPlayerLauncher		; 21
@@ -24,18 +24,18 @@
 		dc.l Obj_LBZRideGrapple			; 23
 		dc.l Obj_LBZCupElevator			; 24
 		dc.l Obj_LBZCupElevatorPole		; 25
-		dc.l Obj_Ring				; 26	; free
+		dc.l Delete_Current_Sprite		; 26	; free
 		dc.l Obj_LBZPipePlug			; 27
-		dc.l Obj_Ring				; 28	; free
+		dc.l Delete_Current_Sprite		; 28	; free
 		dc.l Obj_LBZUnusedBarPlatform		; 29	; free
 		dc.l Obj_LBZSpinLauncher		; 30
 		dc.l Obj_LBZLoweringGrapple		; 31
 		dc.l Obj_MGZLBZSmashingPillar		; 32
 		dc.l Obj_LBZGateLaser			; 33
 		dc.l Obj_LBZAlarm			; 34
-		dc.l Obj_Ring				; 35	; free
+		dc.l Delete_Current_Sprite		; 35	; free
 		dc.l Obj_AutomaticTunnel		; 36
-		dc.l Obj_Ring				; 37	; free
+		dc.l Delete_Current_Sprite		; 37	; free
 		dc.l Obj_AutoSpin			; 38
 		dc.l Obj_S2LavaMarker			; 39	; free
 		dc.l Obj_InvisibleBlock			; 40
@@ -93,14 +93,14 @@
 		dc.l Obj_MGZTopLauncher			; 92
 		dc.l Obj_CGZTriangleBumpers		; 93
 		dc.l Obj_CGZBladePlatform		; 94
-		dc.l Obj_2PRetractingSpring		; 95	; free
+		dc.l Delete_Current_Sprite		; 95	; free
 		dc.l Obj_BPZElephantBlock		; 96
-		dc.l Obj_BPZBalloon			; 97	; free
-		dc.l Obj_DPZDisolvingSandBar		; 98
-		dc.l Obj_DPZButton			; 99	; free
-		dc.l Obj_2PItem				; 100	; free
-		dc.l Obj_2PGoalMarker			; 101	; free
-		dc.l Obj_EMZDripper			; 102	; free
+		dc.l Delete_Current_Sprite		; 97	; free
+		dc.l Delete_Current_Sprite		; 98	; free
+		dc.l Delete_Current_Sprite		; 99	; free
+		dc.l Delete_Current_Sprite		; 100	; free
+		dc.l Delete_Current_Sprite		; 101	; free
+		dc.l Delete_Current_Sprite		; 102	; free
 		dc.l Obj_HCZSnakeBlocks			; 103
 		dc.l Obj_HCZSpinningColumn		; 104
 		dc.l Obj_HCZTwistingLoop		; 105
@@ -197,7 +197,7 @@
 		dc.l Obj_LBZMinibossBox			; 196
 		dc.l Obj_LBZMinibossBoxKnux		; 197
 		dc.l Obj_LBZ2RobotnikShip		; 198
-		dc.l Obj_Ring				; 199	; free
+		dc.l Delete_Current_Sprite		; 199	; free
 		dc.l Obj_LBZKnuxPillar			; 200
 		dc.l Obj_LBZMiniboss			; 201
 		dc.l Obj_LBZFinalBoss1			; 202
@@ -207,21 +207,21 @@
 		dc.l Obj_FBZExitDoor			; 206
 		dc.l Obj_FBZEggPrison			; 207
 		dc.l Obj_FBZSpringPlunger		; 208
-		dc.l Obj_Ring				; 209	; free
-		dc.l Obj_Ring				; 210	; free
-		dc.l Obj_Ring				; 211	; free
-		dc.l Obj_Ring				; 212	; free
-		dc.l Obj_Ring				; 213	; free
-		dc.l Obj_Ring				; 214	; free
-		dc.l Obj_Ring				; 215	; free
-		dc.l Obj_Ring				; 216	; free
-		dc.l Obj_Ring				; 217	; free
-		dc.l Obj_Ring				; 218	; free
-		dc.l Obj_Ring				; 219	; free
-		dc.l Obj_Ring				; 220	; free
-		dc.l Obj_Ring				; 221	; free
-		dc.l Obj_Ring				; 222	; free
-		dc.l Obj_Ring				; 223	; free
+		dc.l Delete_Current_Sprite		; 209	; free
+		dc.l Delete_Current_Sprite		; 210	; free
+		dc.l Delete_Current_Sprite		; 211	; free
+		dc.l Delete_Current_Sprite		; 212	; free
+		dc.l Delete_Current_Sprite		; 213	; free
+		dc.l Delete_Current_Sprite		; 214	; free
+		dc.l Delete_Current_Sprite		; 215	; free
+		dc.l Delete_Current_Sprite		; 216	; free
+		dc.l Delete_Current_Sprite		; 217	; free
+		dc.l Delete_Current_Sprite		; 218	; free
+		dc.l Delete_Current_Sprite		; 219	; free
+		dc.l Delete_Current_Sprite		; 220	; free
+		dc.l Delete_Current_Sprite		; 221	; free
+		dc.l Delete_Current_Sprite		; 222	; free
+		dc.l Delete_Current_Sprite		; 223	; free
 		dc.l Obj_FBZWallMissile			; 224
 		dc.l Obj_FBZMine			; 225
 		dc.l Obj_FBZElevator			; 226
@@ -231,26 +231,26 @@
 		dc.l Obj_PachinkoTriangleBumper		; 230
 		dc.l Obj_PachinkoFlipper		; 231
 		dc.l Obj_PachinkoEnergyTrap		; 232
-		dc.l Obj_PachinkoInvisibleUnknown	; 233	; look into
+		dc.l Delete_Current_Sprite		; 233	; free
 		dc.l Obj_Pachinko_Platform		; 234
 		dc.l Obj_GumballItem			; 235
 		dc.l Obj_PachinkoMagnetOrb		; 236
 		dc.l Obj_PachinkoItemOrb		; 237
-		dc.l Obj_Ring				; 238	; free
-		dc.l Obj_Ring				; 239	; free
-		dc.l Obj_Ring				; 240	; free
-		dc.l Obj_Ring				; 241	; free
-		dc.l Obj_Ring				; 242	; free
-		dc.l Obj_Ring				; 243	; free
-		dc.l Obj_Ring				; 244	; free
-		dc.l Obj_Ring				; 245	; free
-		dc.l Obj_Ring				; 246	; free
-		dc.l Obj_Ring				; 247	; free
-		dc.l Obj_Ring				; 248	; free
-		dc.l Obj_Ring				; 249	; free
-		dc.l Obj_Ring				; 250	; free
-		dc.l Obj_Ring				; 251	; free
-		dc.l Obj_Ring				; 252	; free
-		dc.l Obj_Ring				; 253	; free
-		dc.l Obj_Ring				; 254	; free
+		dc.l Delete_Current_Sprite		; 238	; free
+		dc.l Delete_Current_Sprite		; 239	; free
+		dc.l Delete_Current_Sprite		; 240	; free
+		dc.l Delete_Current_Sprite		; 241	; free
+		dc.l Delete_Current_Sprite		; 242	; free
+		dc.l Delete_Current_Sprite		; 243	; free
+		dc.l Delete_Current_Sprite		; 244	; free
+		dc.l Delete_Current_Sprite		; 245	; free
+		dc.l Delete_Current_Sprite		; 246	; free
+		dc.l Delete_Current_Sprite		; 247	; free
+		dc.l Delete_Current_Sprite		; 248	; free
+		dc.l Delete_Current_Sprite		; 249	; free
+		dc.l Delete_Current_Sprite		; 250	; free
+		dc.l Delete_Current_Sprite		; 251	; free
+		dc.l Delete_Current_Sprite		; 252	; free
+		dc.l Delete_Current_Sprite		; 253	; free
+		dc.l Delete_Current_Sprite		; 254	; free
 		dc.l Obj_FBZMagneticPendulum		; 255
