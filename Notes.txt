@@ -15,7 +15,14 @@ sub_86180 <---- ObjectMove Variant?
 SpecialVInt_Array <--------- Dummied out for some reason
 
 Offs_PLC = PLC request table
+
+	tst.w	(Competition_mode).w
+	bne.w	== TO multiplayer code
+	beq.w	== TO singleplayer code
+
 To-Do:
+
+sub_4B6AA <--- S1 SPECIAL STAGE MODE?
 
 _unkEEB0 <--- Test this motherfucker
 
