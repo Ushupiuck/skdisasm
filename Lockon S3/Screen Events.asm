@@ -1,44 +1,7 @@
-Comp_ScreenInit:
-		jsr	(Update_CameraPositionP2).l
-		move.w	(Camera_X_pos_copy).w,d0
-		move.w	d0,(Events_fg_0).w
-		move.w	d0,(Events_fg_1).w
-		move.w	(Camera_X_pos_P2_copy).w,d0
-		move.w	d0,(Events_fg_2).w
-		move.w	d0,(_unkEEBA).w
-		moveq	#0,d0
-		move.b	(Current_zone_and_act).w,d0
-		lsl.w	#4,d0
-		lea	Comp_ScreenInitArray-$E0(pc),a1
-		adda.w	d0,a1
-		move.w	(a1)+,(Screen_X_wrap_value).w
-		move.w	(a1)+,(Screen_Y_wrap_value).w
-		move.w	(a1)+,(Camera_Y_pos_mask).w
-		move.w	(a1)+,(Layout_row_index_mask).w
-		move.w	(a1)+,(_unkEEB0).w
-		move.w	(a1)+,d0
-		move.w	(a1)+,d2
-		move.w	(a1)+,d6
-		moveq	#0,d1
-		move.w	#$8000,d7
-		jmp	(Refresh_PlaneFull).l
-; ---------------------------------------------------------------------------
-
-Comp_ScreenEvent:
-		jsr	(Update_CameraPositionP2).l
-		move.w	(Screen_X_wrap_value).w,d2
-		addq.w	#1,d2
-		move.w	d2,d3
-		lsr.w	#1,d2
-		lea	(Events_fg_0).w,a1
-		move.w	(Camera_X_pos_copy).w,d0
-		jsr	(Adjust_BGDuringLoop).l
-		move.w	(Camera_X_pos_P2_copy).w,d0
-		jmp	(Adjust_BGDuringLoop).l
 ; ---------------------------------------------------------------------------
 
 CGZ_ScreenEvent:
-		bsr.s	Comp_ScreenEvent
+		jsr	(ICZ2_ScreenEvent).l
 		move.w	(Screen_Y_wrap_value).w,d2
 		addq.w	#1,d2
 		move.w	d2,d3

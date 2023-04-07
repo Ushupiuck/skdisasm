@@ -4,4 +4,4 @@
 #define zSFXNumber0 0x1C95
 #define zSFXNumber1 0x1C96
 /* Ende Includefile fÅr C-Programm */
-#define comp_z80_size 0x1172
+#define comp_z80_size 0x1174

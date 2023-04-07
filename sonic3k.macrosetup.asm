@@ -92,3 +92,39 @@ bit function nBits,1<<(nBits-1)
 signmask function val,nBits,-((-(val&bit(nBits)))&bit(nBits))
 signextend function val,nBits,(val+signmask(val,nBits))!signmask(val,nBits)
 signextendB function val,signextend(val,8)
+
+_move	macro
+		!move.ATTRIBUTE ALLARGS
+	endm
+_add	macro
+		!add.ATTRIBUTE ALLARGS
+	endm
+_addq	macro
+		!addq.ATTRIBUTE ALLARGS
+	endm
+_cmp	macro
+		!cmp.ATTRIBUTE ALLARGS
+	endm
+_cmpi	macro
+		!cmpi.ATTRIBUTE ALLARGS
+	endm
+_clr	macro
+		!clr.ATTRIBUTE ALLARGS
+	endm
+_tst	macro
+		!tst.ATTRIBUTE ALLARGS
+	endm
+addi_	macro
+		!addq.ATTRIBUTE ALLARGS
+	endm
+subi_	macro
+		!subq.ATTRIBUTE ALLARGS
+	endm
+adda_	macro
+		!addq.ATTRIBUTE ALLARGS
+	endm
+
+; depending on if relativeLea is set or not, this will create a pc-relative lea or an absolute long lea.
+lea_ macro address,reg
+		!lea address(pc),reg
+    endm

@@ -4,6 +4,12 @@ HyperAttackTouchResponse < ----- Hyper abilities
 
 HyperTouch_Special < ---- Interaction for Knuckles + Tails?
 
+LevelMusic_Playlist
+
+LS_Level_Order
+
+SpawnLevelMainSprites
+
 SonicKnux_SuperHyper <---- to check
 
 loc_8160A <---- Super mappings in DDZ
@@ -37,3 +43,5 @@ ObjectMoveAndFall_LightGravity <--- Multiple variants of "ObjectMoveAndFall"; po
 ; ------------------------------------------------------------------------
 
 AniHCZ_FixLowerBG <---- EDIT THIS
+
+Obj_S2Shield <---- This exists?

@@ -110,13 +110,6 @@ rom_ptr_z80 macro addr
 	dc.w z80_ptr(addr)
     endm
 
-; macros to convert from tile index to art tiles, block mapping or VRAM address.
-make_art_tile function addr,pal,pri,((pri&1)<<15)|((pal&3)<<13)|(addr&tile_mask)
-tiles_to_bytes function addr,((addr&$7FF)<<5)
-
-; function to calculate the location of a tile in plane mappings with a width of 40 cells
-planeLocH28 function col,line,(($50 * line) + (2 * col))
-
 ; macro for generating water palette transition tables
 watertransheader macro {INTLABEL}
 __LABEL__ label *
@@ -167,6 +160,13 @@ start:
 	dc.b numentries, numvramtiles
 zoneanimcount := zoneanimcount + 1
     endm
+
+; macros to convert from tile index to art tiles, block mapping or VRAM address.
+make_art_tile function addr,pal,pri,((pri&1)<<15)|((pal&3)<<13)|(addr&tile_mask)
+tiles_to_bytes function addr,((addr&$7FF)<<5)
+
+; function to calculate the location of a tile in plane mappings with a width of 40 cells
+planeLocH28 function col,line,(($50 * line) + (2 * col))
 
 ; macro for declaring a "main level load block" (MLLB)
 levartptrs macro plc1,plc2,palette,art1,art2,map16x161,map16x162,map128x1281,map128x1282
