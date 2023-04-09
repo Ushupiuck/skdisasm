@@ -1,4 +1,5 @@
-Map_61B28:		dc.w word_61B30-Map_61B28
+Map_61B28:
+		dc.w word_61B30-Map_61B28
 		dc.w word_61B56-Map_61B28
 		dc.w word_61B7C-Map_61B28
 		dc.w word_61BAE-Map_61B28

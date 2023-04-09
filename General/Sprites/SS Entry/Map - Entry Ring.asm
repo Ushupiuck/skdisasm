@@ -1,4 +1,5 @@
-Map_619E0:		dc.w word_619F8-Map_619E0
+Map_619E0:
+		dc.w word_619F8-Map_619E0
 		dc.w word_61A00-Map_619E0
 		dc.w word_61A08-Map_619E0
 		dc.w word_61A10-Map_619E0

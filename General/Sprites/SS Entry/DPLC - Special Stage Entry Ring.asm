@@ -1,4 +1,5 @@
-DPLC_61ABE:		dc.w word_61AD6-DPLC_61ABE
+DPLC_61ABE:
+		dc.w word_61AD6-DPLC_61ABE
 		dc.w word_61ADA-DPLC_61ABE
 		dc.w word_61ADE-DPLC_61ABE
 		dc.w word_61AE2-DPLC_61ABE

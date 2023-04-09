@@ -1,4 +1,5 @@
-DPLC_61BFA:		dc.w word_61C02-DPLC_61BFA
+DPLC_61BFA:
+		dc.w word_61C02-DPLC_61BFA
 		dc.w word_61C0A-DPLC_61BFA
 		dc.w word_61C12-DPLC_61BFA
 		dc.w word_61C1C-DPLC_61BFA

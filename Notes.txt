@@ -10,6 +10,12 @@ LS_Level_Order
 
 SpawnLevelMainSprites
 
+LoadEnemyArt
+
+Obj_TitleCardInit
+
+SSEntryRing_Display
+
 SonicKnux_SuperHyper <---- to check
 
 loc_8160A <---- Super mappings in DDZ
