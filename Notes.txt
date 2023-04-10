@@ -1,22 +1,68 @@
 Handle_Onscreen_Water_Height
 
-HyperAttackTouchResponse < ----- Hyper abilities
-
-HyperTouch_Special < ---- Interaction for Knuckles + Tails?
-
 LevelMusic_Playlist
 
 LS_Level_Order
 
 SpawnLevelMainSprites
 
-LoadEnemyArt
+LoadEnemyArt <KosM Modules; like Nemesis PLC's but for KosM>
 
 Obj_TitleCardInit
 
-SSEntryRing_Display
+; ---------------------------------------------------------------------------
+; Notes
+; ---------------------------------------------------------------------------
+Offs_PLC = PLC request table
+
+	tst.w	(Competition_mode).w
+	bne.w	== TO multiplayer code
+	beq.w	== TO singleplayer code
+
+; =============== S U B R O U T I N E =======================================
+
+; Sprite_OnScreen_Test:
+Delete_Sprite_If_Not_In_Range:
+		move.w	x_pos(a0),d0
+		andi.w	#$FF80,d0
+		sub.w	(Camera_X_pos_coarse_back).w,d0
+		cmpi.w	#$280,d0
+		bhi.w	+
+		rts	; changes to	bra.w	Draw_Sprite in Sprite_OnScreen_Test
+
++
+		move.w	respawn_addr(a0),d0
+		beq.s	+
+		movea.w	d0,a2
+		bclr	#7,(a2)
++
+		bra.w	Delete_Current_Sprite
+; End of function Delete_Sprite_If_Not_In_Range
+
+===================================
+TABLE CONVERSION FROM S1/S2 TO S3K
+===================================
+|   | S 2 | S3K |
+|---|-----|-----|
+| ~ | #   | #$  |
+| P | 0   | 0   |
+| R | 1   | 80  |
+| I | 2   | 100 |
+| O | 3   | 180 |
+| R | 4   | 200 |
+| I | 5   | 280 |
+| T | 6   | 300 |
+| Y | 7   | 380 |
+===============================
+
+
+HyperTouch_Special < ---- Interaction for Knuckles + Tails?
 
 SonicKnux_SuperHyper <---- to check
+
+HyperAttackTouchResponse < ----- Hyper abilities
+
+SSEntryRing_Display
 
 loc_8160A <---- Super mappings in DDZ
 
@@ -24,15 +70,10 @@ sub_24280 <---- Something to do with shields
 
 sub_86180 <---- ObjectMove Variant?
 
-SpecialVInt_Array <--------- Dummied out for some reason
+SpecialVInt_Array <Turns out entries in a table CAN be a RTS>
 
-Offs_PLC = PLC request table
-
-	tst.w	(Competition_mode).w
-	bne.w	== TO multiplayer code
-	beq.w	== TO singleplayer code
-
-To-Do:
+AniHCZ_FixLowerBG <EDIT THIS WHEN CHANGING THE TILESET>
+; ---------------------------------------------------------------------------
 
 sub_4B6AA <--- S1 SPECIAL STAGE MODE?
 
@@ -46,8 +87,9 @@ SetUp_ObjAttributes <---- Child object subroutines are here
 
 ObjectMoveAndFall_LightGravity <--- Multiple variants of "ObjectMoveAndFall"; potentially "ObjectMove" too
 
-; ------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
+To-Do:
 
-AniHCZ_FixLowerBG <---- EDIT THIS
+Obj_S2Shield <---- Optional: Restore it
 
-Obj_S2Shield <---- This exists?
+ObjAnimal < ---- Optional: Edit Ending animals to load as normal objects (aka reload when you approach them); this has to do with ObjAnimal_ChkDel
