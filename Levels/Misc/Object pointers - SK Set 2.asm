@@ -96,7 +96,7 @@
 		dc.l Obj_DEZGravityRoom			; 95
 		dc.l Obj_DEZBumperWall			; 96
 		dc.l Obj_DEZGravityPuzzle		; 97
-		dc.l Delete_Current_Sprite		; 98
+		dc.l ObjAnimal				; 98
 		dc.l Delete_Current_Sprite		; 99
 		dc.l Delete_Current_Sprite		; 100
 		dc.l Delete_Current_Sprite		; 101
@@ -183,3 +183,74 @@
 		dc.l Obj_DDZEndBoss			; 182
 		dc.l Obj_DDZAsteroid			; 183
 		dc.l Obj_DDZMissile			; 184
+		dc.l Obj_ICZSnowPile			; 185
+		dc.l Obj_ICZTensionPlatform		; 186
+		dc.l Obj_ICZIceBlock			; 187
+		dc.l Obj_ICZMiniboss			; 188
+		dc.l Obj_ICZEndBoss			; 189
+		dc.l Obj_SnaleBlaster			; 190
+		dc.l Obj_Ribot				; 191
+		dc.l Obj_Orbinaut			; 192
+		dc.l Obj_Corkey				; 193
+		dc.l Obj_Flybot767			; 194
+		dc.l Obj_LBZ1Robotnik			; 195
+		dc.l Obj_LBZMinibossBox			; 196
+		dc.l Obj_LBZMinibossBoxKnux		; 197
+		dc.l Obj_LBZ2RobotnikShip		; 198
+		dc.l Delete_Current_Sprite		; 199	; free
+		dc.l Obj_LBZKnuxPillar			; 200
+		dc.l Obj_LBZMiniboss			; 201
+		dc.l Obj_LBZFinalBoss1			; 202
+		dc.l Obj_LBZEndBoss			; 203
+		dc.l Obj_LBZFinalBoss2			; 204
+		dc.l Obj_LBZFinalBossKnux		; 205
+		dc.l Obj_FBZExitDoor			; 206
+		dc.l Obj_FBZEggPrison			; 207
+		dc.l Obj_FBZSpringPlunger		; 208
+		dc.l Delete_Current_Sprite		; 209	; free
+		dc.l Delete_Current_Sprite		; 210	; free
+		dc.l Delete_Current_Sprite		; 211	; free
+		dc.l Delete_Current_Sprite		; 212	; free
+		dc.l Delete_Current_Sprite		; 213	; free
+		dc.l Delete_Current_Sprite		; 214	; free
+		dc.l Delete_Current_Sprite		; 215	; free
+		dc.l Delete_Current_Sprite		; 216	; free
+		dc.l Delete_Current_Sprite		; 217	; free
+		dc.l Delete_Current_Sprite		; 218	; free
+		dc.l Delete_Current_Sprite		; 219	; free
+		dc.l Delete_Current_Sprite		; 220	; free
+		dc.l Delete_Current_Sprite		; 221	; free
+		dc.l Delete_Current_Sprite		; 222	; free
+		dc.l Delete_Current_Sprite		; 223	; free
+		dc.l Obj_FBZWallMissile			; 224
+		dc.l Obj_FBZMine			; 225
+		dc.l Obj_FBZElevator			; 226
+		dc.l Obj_FBZTrapSpring			; 227
+		dc.l Obj_FBZFlamethrower		; 228
+		dc.l Obj_FBZSpiderCrane			; 229
+		dc.l Obj_PachinkoTriangleBumper		; 230
+		dc.l Obj_PachinkoFlipper		; 231
+		dc.l Obj_PachinkoEnergyTrap		; 232
+		dc.l Delete_Current_Sprite		; 233	; free
+		dc.l Obj_Pachinko_Platform		; 234
+		dc.l Obj_GumballItem			; 235
+		dc.l Obj_PachinkoMagnetOrb		; 236
+		dc.l Obj_PachinkoItemOrb		; 237
+		dc.l Delete_Current_Sprite		; 238	; free
+		dc.l Delete_Current_Sprite		; 239	; free
+		dc.l Delete_Current_Sprite		; 240	; free
+		dc.l Delete_Current_Sprite		; 241	; free
+		dc.l Delete_Current_Sprite		; 242	; free
+		dc.l Delete_Current_Sprite		; 243	; free
+		dc.l Delete_Current_Sprite		; 244	; free
+		dc.l Delete_Current_Sprite		; 245	; free
+		dc.l Delete_Current_Sprite		; 246	; free
+		dc.l Delete_Current_Sprite		; 247	; free
+		dc.l Delete_Current_Sprite		; 248	; free
+		dc.l Delete_Current_Sprite		; 249	; free
+		dc.l Delete_Current_Sprite		; 250	; free
+		dc.l Delete_Current_Sprite		; 251	; free
+		dc.l Delete_Current_Sprite		; 252	; free
+		dc.l Delete_Current_Sprite		; 253	; free
+		dc.l Delete_Current_Sprite		; 254	; free
+		dc.l Obj_FBZMagneticPendulum		; 255

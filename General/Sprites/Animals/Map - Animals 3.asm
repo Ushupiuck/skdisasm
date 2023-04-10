@@ -1,4 +1,5 @@
-Map_2CEF6:		dc.w word_2CF04-Map_2CEF6
+Map_2CEF6:
+		dc.w word_2CF04-Map_2CEF6
 		dc.w word_2CF0C-Map_2CEF6
 		dc.w word_2CEFC-Map_2CEF6
 word_2CEFC:	dc.w 1			

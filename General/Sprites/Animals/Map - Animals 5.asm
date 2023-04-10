@@ -1,4 +1,5 @@
-Map_2CF32:		dc.w word_2CF40-Map_2CF32
+Map_2CF32:
+		dc.w word_2CF40-Map_2CF32
 		dc.w word_2CF48-Map_2CF32
 		dc.w word_2CF38-Map_2CF32
 word_2CF38:	dc.w 1			

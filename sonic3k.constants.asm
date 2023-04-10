@@ -117,6 +117,7 @@ objoff_16 =		2+y_pos
 objoff_1C =		$1C
 objoff_1D =		$1D
 objoff_27 =		$27
+objoff_2D =		$2D
 objoff_2E =		$2E
 objoff_2F =		$2F
 objoff_30 =		$30
@@ -1017,12 +1018,6 @@ VRAM_Plane_B_Name_Table               = $E000	; Extends until $EFFF
 ; Menu background.
 ArtTile_ArtKos_S3MenuBG               = $0001
 
-; Competition mode.
-ArtTile_ArtKos_Competition_LevSel     = $029F
-ArtTile_ArtKos_Competition_ModeSel    = $034A
-ArtTile_ArtKos_Competition_Results    = $034A
-ArtTile_ArtKos_Competition_CharSel    = $05C9
-
 ; Save screen.
 ArtTile_ArtKos_Save_Misc              = $029F
 ArtTile_ArtKos_Save_Extra             = $0454
@@ -1043,6 +1038,15 @@ ArtTile_Shield                        = $079C
 ArtTile_Shield_Sparks                 = $07BB
 ArtTile_DashDust                      = $07E0
 ArtTile_DashDust_P2                   = $07F0
+
+; S1 Ending (leftover) (Original offsets temporarily overriden)
+ArtTile_ArtNem_S1EndFlicky            = 0580;$05A5
+ArtTile_ArtNem_S1EndRabbit            = 0592;$0553
+ArtTile_ArtNem_S1EndPenguin           = 0580;$0573
+ArtTile_ArtNem_S1EndSeal              = 0592;$0585
+ArtTile_ArtNem_S1EndPig               = 0580;$0593
+ArtTile_ArtNem_S1EndChicken           = 0592;$0565
+ArtTile_ArtNem_S1EndSquirrel          = 0580;$05B3
 
 ; ---------------------------------------------------------------------------
 ; Sound commands list.

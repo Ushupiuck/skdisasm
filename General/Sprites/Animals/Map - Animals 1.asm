@@ -1,4 +1,5 @@
-Map_2CEBA:		dc.w word_2CEC8-Map_2CEBA
+Map_2CEBA:
+		dc.w word_2CEC8-Map_2CEBA
 		dc.w word_2CED0-Map_2CEBA
 		dc.w word_2CEC0-Map_2CEBA
 word_2CEC0:	dc.w 1	

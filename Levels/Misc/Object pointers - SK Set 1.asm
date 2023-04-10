@@ -94,9 +94,9 @@
 		dc.l Obj_CGZTriangleBumpers		; 93
 		dc.l Obj_CGZBladePlatform		; 94
 		dc.l Delete_Current_Sprite		; 95	; free
-		dc.l Obj_BPZElephantBlock		; 96
+		dc.l Delete_Current_Sprite		; 96	; free
 		dc.l Delete_Current_Sprite		; 97	; free
-		dc.l Delete_Current_Sprite		; 98	; free
+		dc.l ObjAnimal				; 98	; TODO, low priority project
 		dc.l Delete_Current_Sprite		; 99	; free
 		dc.l Delete_Current_Sprite		; 100	; free
 		dc.l Delete_Current_Sprite		; 101	; free

@@ -1,4 +1,5 @@
-Map_2CED8:		dc.w word_2CEE6-Map_2CED8
+Map_2CED8:
+		dc.w word_2CEE6-Map_2CED8
 		dc.w word_2CEEE-Map_2CED8
 		dc.w word_2CEDE-Map_2CED8
 word_2CEDE:	dc.w 1			
