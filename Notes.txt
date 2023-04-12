@@ -56,6 +56,8 @@ TABLE CONVERSION FROM S1/S2 TO S3K
 ===============================
 
 
+ObjAnimal & PLCLoad_AnimalsAndExplosion <Always edit these whenever you want to change animals per level>
+
 HyperTouch_Special < ---- Interaction for Knuckles + Tails?
 
 SonicKnux_SuperHyper <---- to check
