@@ -66,7 +66,7 @@ namespace S3KObjectDefinitions.Common
 		{
 			var indexer = new MultiFileIndexer<byte>();
 			indexer.AddFile(new List<byte>(LevelData.ReadFile(
-				"../General/Sprites/Monitors/Monitors.bin", CompressionType.Nemesis)), 0);
+				"../General/Sprites/Monitors/Monitors.nem", CompressionType.Nemesis)), 0);
 			indexer.AddFile(new List<byte>(LevelData.ReadFile(
 				"../General/Sprites/HUD Icon/Sonic Life Icon.bin", CompressionType.Nemesis)), 25088);
 
