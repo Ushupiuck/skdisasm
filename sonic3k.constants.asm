@@ -125,8 +125,7 @@ objoff_30 =		$30
  enum 	objoff_38=$38,objoff_39=$39,objoff_3A=$3A,objoff_3B=$3B,objoff_3C=$3C,objoff_3D=$3D,objoff_3E=$3E
  enum 	objoff_3F=$3F,objoff_40=$40,objoff_41=$41,objoff_42=$42,objoff_43=$43,objoff_44=$44,objoff_45=$45
  enum 	objoff_46=$46,objoff_47=$47,objoff_48=$48,objoff_49=$49
-
- ; ---------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
 ; Bits 3-6 of an object's status after a SolidObject call is a
 ; bitfield with the following meaning:
 p1_standing_bit   = 3
@@ -167,7 +166,6 @@ button_B_mask:			EQU	1<<button_B	; $10
 button_C_mask:			EQU	1<<button_C	; $20
 button_A_mask:			EQU	1<<button_A	; $40
 button_start_mask:		EQU	1<<button_start	; $80
-
 ; ---------------------------------------------------------------------------
 ; Player Status Variables
 Status_Facing       = 0
@@ -177,7 +175,6 @@ Status_OnObj        = 3
 Status_RollJump     = 4
 Status_Push         = 5
 Status_Underwater   = 6
-
 ; ---------------------------------------------------------------------------
 ; Player status_secondary variables
 Status_Shield       = 0
@@ -187,13 +184,19 @@ Status_SpeedShoes   = 2
 Status_FireShield   = 4
 Status_LtngShield   = 5
 Status_BublShield   = 6
-
 ; ---------------------------------------------------------------------------
 ; Elemental Shield DPLC variables
 shield_prev_frame   = $34
 shield_art          = $38
 shield_plc          = $3C
-
+; ---------------------------------------------------------------------------
+; Animation flags
+afEnd:		equ $FF	; return to beginning of animation
+afBack:		equ $FE	; go back (specified number) bytes
+afChange:	equ $FD	; run specified animation
+afRoutine:	equ $FC	; increment routine counter
+afReset:	equ $FB	; reset animation and 2nd object routine counter
+af2ndRoutine:	equ $FA	; increment 2nd routine counter
 ; ---------------------------------------------------------------------------
 ; Address equates
 ; ---------------------------------------------------------------------------
