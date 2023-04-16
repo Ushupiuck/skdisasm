@@ -66,6 +66,8 @@ HyperAttackTouchResponse < ----- Hyper abilities
 
 SSEntryRing_Display
 
+Slots_RenderLayout <----> SS_ShowLayout from Sonic 1
+
 loc_8160A <---- Super mappings in DDZ
 
 sub_24280 <---- Something to do with shields
