@@ -68,6 +68,10 @@ SSEntryRing_Display
 
 Slots_RenderLayout <----> SS_ShowLayout from Sonic 1
 
+sub_4B57C <----> FindFreeObj from Sonic 1. Copypaste much?
+
+loc_1AF76 <---- Apparently it's "BuildSpr_Normal" from Sonic 1? It looks similar, at least
+
 loc_8160A <---- Super mappings in DDZ
 
 sub_24280 <---- Something to do with shields
