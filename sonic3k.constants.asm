@@ -238,9 +238,9 @@ PSG_input =			$C00011
 
 ; RAM addresses
 
-Sprite_table_buffer_2 =		ramaddr(   $FF7880 ) ; $280 bytes ; alternate sprite table for player 1 in competition mode
-Sprite_table_buffer_P2 =	ramaddr(   $FF7B00 ) ; $280 bytes ; sprite table for player 2 in competition mode
-Sprite_table_buffer_P2_2 =	ramaddr(   $FF7D80 ) ; $280 bytes ; alternate sprite table for player 2 in competition mode
+;Sprite_table_buffer_2 =	ramaddr(   $FF7880 ) ; $280 bytes ; alternate sprite table for player 1 in competition mode
+;Sprite_table_buffer_P2 =	ramaddr(   $FF7B00 ) ; $280 bytes ; sprite table for player 2 in competition mode
+;Sprite_table_buffer_P2_2 =	ramaddr(   $FF7D80 ) ; $280 bytes ; alternate sprite table for player 2 in competition mode
 
 	phase $FFFF0000
 RAM_start =			*
@@ -249,7 +249,7 @@ Chunk_table			ds.b $8000		; chunk (128x128) definitions, $80 bytes per definitio
 Level_layout_header		ds.b 8			; first word = chunks per FG row, second word = chunks per BG row, third word = FG rows, fourth word = BG rows
 Level_layout_main		ds.b $FF8		; $40 word-sized line pointers followed by actual layout data
 Object_respawn_table_2 :=	Level_layout_header+$400; $200 bytes ; respawn table used by glowing spheres bonus stage, because... Reasons?
-Ring_status_table_2 :=		Level_layout_header+$600; $400 bytes ; ring status table used by glowing spheres bonus stage, because... Reasons?
+;Ring_status_table_2 :=		Level_layout_header+$600; $400 bytes ; ring status table used by glowing spheres bonus stage, because... Reasons?
 Block_table			ds.b $1800		; block (16x16) definitions, 8 bytes per definition, space for $300 blocks
 SStage_collision_response_list := Block_table+$1400	; $100 bytes ; sprite collision list during a special stage
 SStage_unkA500 :=		Block_table+$1500	; unknown special stage array
@@ -271,8 +271,7 @@ Level_object_RAM =		Dynamic_object_RAM_end	; $4EA bytes ; various fixed in-level
 				ds.b object_size	; unknown
 Breathing_bubbles		ds.b object_size	; for the main character
 Breathing_bubbles_P2		ds.b object_size	; for Tails in a Sonic and Tails game
-Super_stars =			*			; for Super Sonic and Super Knuckles
-Tails_tails_2P			ds.b object_size	; Tails' tails in Competition mode
+Super_stars			ds.b object_size	; for Super Sonic and Super Knuckles
 Tails_tails			ds.b object_size	; Tails' tails
 Dust				ds.b object_size
 Dust_P2				ds.b object_size
@@ -281,10 +280,10 @@ Shield_P2			ds.b object_size	; left over from Sonic 2 I'm guessing
 Invincibility_stars		ds.b object_size*4
 Invincibility_stars_P2		ds.b object_size*3
 Wave_Splash			ds.b object_size	; Obj_HCZWaveSplash is loaded here
-Object_RAM_end =		*
-			ds.b $14			; unused
+Object_RAM_end:
 Conveyor_belt_load_array	ds.b $E			; each subtype of hcz conveyor belt uses a different byte to check if it's already loaded. Since they're so wide, the object loader may try loading them multiple times
-			ds.b $12			; unused
+				ds.b $26			; unused
+;			ds.b $12			; unused
 Kos_decomp_buffer		ds.b $1000		; each module in a KosM archive is decompressed here and then DMAed to VRAM
 H_scroll_buffer			ds.b $380		; horizontal scroll table is built up here and then DMAed to VRAM
 Collision_response_list		ds.b $80		; only objects in this list are processed by the collision response routines
@@ -1129,7 +1128,7 @@ Mus__End =			*		; next ID after last music
 ; ---------------------------------------------------------------------------
 ; Sound effect ID's list. These do not affect the sound driver, be careful.
 
-	phase $34
+	phase $33
 sfx_First =			*		; ID of the first sound effect
 sfx_RingRight			ds.b 1		; $33
 sfx_RingLeft			ds.b 1		; $34
