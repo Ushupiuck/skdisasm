@@ -98,6 +98,8 @@ ObjectMoveAndFall_LightGravity <--- Multiple variants of "ObjectMoveAndFall"; po
 ; ---------------------------------------------------------------------------
 To-Do:
 
-Obj_S2Shield <---- Optional: Restore it
+Reimplement 4 act system
+
+Obj_S2Shield <---- Optional: Restore it <PARTLY COMPLETE>
 
 ObjAnimal < ---- Optional: Edit Ending animals to load as normal objects (aka reload when you approach them); this has to do with ObjAnimal_ChkDel
