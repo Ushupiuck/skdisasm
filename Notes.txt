@@ -10,6 +10,11 @@ LoadEnemyArt <KosM Modules; like Nemesis PLC's but for KosM>
 
 Obj_TitleCardInit
 
+Animate_Tiles
+
+HCZ1BGE_Normal
+Obj_HCZMiniboss
+
 ; ---------------------------------------------------------------------------
 ; Notes
 ; ---------------------------------------------------------------------------
