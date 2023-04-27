@@ -1,4 +1,5 @@
-Map_146620:		dc.w word_146A0C-Map_146620; 0
+Map_146620:
+		dc.w word_146A0C-Map_146620; 0
 		dc.w word_146A0E-Map_146620; 1
 		dc.w word_146A22-Map_146620; 2
 		dc.w word_146A36-Map_146620; 3
@@ -657,7 +658,7 @@ word_146CF8:	dc.w 2
 word_146D06:	dc.w 2			
 		dc.b  $EC,   8,	  0,   0, $FF, $F8
 		dc.b  $F4,  $F,	  0,   3, $FF, $F0
-word_146D14:	dc.w 4			
+word_146D14:	dc.w 4
 		dc.b  $EF,  $E,	  0,   0, $FF, $ED
 		dc.b  $FF,   0,	  0,  $C,   0,	$D
 		dc.b	7,  $C,	  0,  $D, $FF, $F5
@@ -717,7 +718,7 @@ word_146E0E:	dc.w 4
 		dc.b	0,  $C,	  0,   5, $FF, $F1
 		dc.b	8,   4,	  0,   9, $FF, $F9
 word_146E28:	dc.w 4			
-					
+
 		dc.b  $EF,   8,	  0,   0, $FF, $F9
 		dc.b  $F7,  $C,	  0,   3, $FF, $F1
 		dc.b  $FF,   8,	  0,   7, $FF, $F1
@@ -747,7 +748,7 @@ word_146E8C:	dc.w 3
 		dc.b  $F6,  $D,	  0,   2, $FF, $F0
 		dc.b	6,   8,	  0,  $A, $FF, $F0
 word_146EA0:	dc.w 4			
-					
+
 		dc.b  $F0,   8,	  0,   0, $FF, $F5
 		dc.b  $F8,  $C,	  0,   3, $FF, $ED
 		dc.b	0,   8,	  0,   7, $FF, $F5
@@ -837,7 +838,7 @@ word_146FEA:	dc.w 3
 		dc.b  $F9,  $D,	  0,   3, $FF, $F3
 		dc.b	9,   8,	  0,  $B, $FF, $F3
 word_146FFE:	dc.w 3			
-					
+
 		dc.b  $EE,   4,	  0,   0, $FF, $FB
 		dc.b  $F6,  $D,	  0,   2, $FF, $F3
 		dc.b	6,   4,	  0,  $A, $FF, $FB
@@ -957,7 +958,7 @@ word_1471B8:	dc.w 1
 					
 		dc.b  $F0,  $B,	  0,   0, $FF, $F2
 word_1471C0:	dc.w 2			
-					
+
 		dc.b  $E8,   0,	  0,   0, $FF, $FA
 		dc.b  $F0,  $B,	  0,   1, $FF, $F2
 word_1471CE:	dc.w 2			
@@ -1077,7 +1078,7 @@ word_14738C:	dc.w 4
 		dc.b	4,   4,	$18,   3, $FF, $F3
 		dc.b  $EC,   1,	$18,   5,   0, $13
 		dc.b  $E4,  $F,	$18,   7, $FF, $F3
-word_1473A6:	dc.w 4			
+word_1473A6:	dc.w 4
 					
 		dc.b  $E8,  $E,	  0,   0, $FF, $EF
 		dc.b  $E8,   0,	  0,  $C,   0,	$F
@@ -1437,7 +1438,7 @@ word_1479A4:	dc.w 2
 		dc.b  $F4,   9,	  0,   0, $FF, $F7
 		dc.b	4,  $C,	  0,   6, $FF, $EF
 word_1479B2:	dc.w 3			
-					
+
 		dc.b  $F4,   9,	  8,   0, $FF, $F3
 		dc.b	4,  $C,	  8,   6, $FF, $F3
 		dc.b	4,   0,	  8,  $A, $FF, $EB
@@ -1497,7 +1498,7 @@ word_147A8A:	dc.w 2
 		dc.b  $EC,  $B,	  0,   0, $FF, $F4
 		dc.b   $C,   8,	  0,  $C, $FF, $F4
 word_147A98:	dc.w 4			
-					
+
 		dc.b  $EC,   9,	  0,   0, $FF, $F0
 		dc.b  $FC,  $C,	  0,   6, $FF, $F0
 		dc.b	4,   8,	  0,  $A, $FF, $F8
@@ -1587,7 +1588,7 @@ word_147BF8:	dc.w 2
 					
 		dc.b  $EC,  $B,	  0,   0, $FF, $F4
 		dc.b   $C,   8,	  0,  $C, $FF, $F4
-word_147C06:	dc.w 4			
+word_147C06:	dc.w 4
 					
 		dc.b  $EC,  $D,	  0,   0, $FF, $F0
 		dc.b  $FC,   8,	  0,   8, $FF, $F0
@@ -1677,7 +1678,7 @@ word_147D8E:	dc.w 4
 		dc.b  $E3,  $A,	  0,  $C, $FF, $E3
 		dc.b  $EB,   9,	  0, $15, $FF, $FB
 		dc.b  $FB,   6,	  0, $1B, $FF, $EB
-word_147DA8:	dc.w 4			
+word_147DA8:	dc.w 4
 		dc.b  $FB,  $F,	  0,   0, $FF, $FB
 		dc.b  $EB,  $D,	  0, $10, $FF, $E3
 		dc.b  $F3,   8,	  0, $18,   0,	 3
@@ -1827,7 +1828,7 @@ word_148098:	dc.w 3
 		dc.b  $E4,   8,	  0,   0, $FF, $ED
 		dc.b  $EC,  $F,	  0,   3, $FF, $ED
 		dc.b   $C,  $C,	  0, $13, $FF, $ED
-word_1480AC:	dc.w 3			
+word_1480AC:	dc.w 3
 		dc.b  $E5,   8,	  0,   0, $FF, $ED
 		dc.b  $ED,  $F,	  0,   3, $FF, $ED
 		dc.b   $D,   8,	  0, $13, $FF, $ED
@@ -1857,7 +1858,7 @@ word_148130:	dc.w 1
 					
 		dc.b  $F0,  $B,	  0,   0, $FF, $F4
 word_148138:	dc.w 3			
-					
+
 		dc.b  $E8,   9,	  0,   0, $FF, $F3
 		dc.b  $F8,  $D,	  0,   6, $FF, $F3
 		dc.b	8,   9,	  0,  $E, $FF, $F3

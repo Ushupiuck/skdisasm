@@ -1,5 +1,5 @@
-PLC_148182:	dc.w word_14856E-PLC_148182
-
+PLC_148182:
+		dc.w word_14856E-PLC_148182
 		dc.w word_148570-PLC_148182
 		dc.w word_148578-PLC_148182
 		dc.w word_148580-PLC_148182
@@ -251,8 +251,8 @@ PLC_148182:	dc.w word_14856E-PLC_148182
 		dc.w word_148CB4-PLC_148182
 		dc.w word_148CBA-PLC_148182
 PLC_SuperSonic:
-PLC_148378:	dc.w word_148CC0-PLC_148378	
-					
+PLC_148378:
+		dc.w word_148CC0-PLC_148378
 		dc.w word_148CC2-PLC_148378
 		dc.w word_148CCA-PLC_148378
 		dc.w word_148CD2-PLC_148378
@@ -508,7 +508,7 @@ word_148570:	dc.w 3
 		dc.w $7000
 		dc.w $5008
 		dc.w $800E
-word_148578:	dc.w 3			
+word_148578:	dc.w 3
 		dc.w $B017
 		dc.w $1023
 		dc.w $7000
@@ -598,7 +598,7 @@ word_148622:	dc.w 4
 		dc.w $B250
 		dc.w $525C
 		dc.w $262
-word_14862C:	dc.w 3			
+word_14862C:	dc.w 3
 		dc.w $8263
 		dc.w $5225
 		dc.w $22B
@@ -928,7 +928,7 @@ word_148854:	dc.w 3
 word_14885C:	dc.w 1			
 					
 		dc.w $B8AE
-word_148860:	dc.w 2			
+word_148860:	dc.w 2
 					
 		dc.w $8BA
 		dc.w $B8BB
@@ -1048,7 +1048,7 @@ word_148914:	dc.w 3
 		dc.w $2A25
 		dc.w $BA28
 		dc.w $7A34
-word_14891C:	dc.w 4			
+word_14891C:	dc.w 4
 					
 		dc.w $2A3C
 		dc.w $1A3F
@@ -1078,7 +1078,7 @@ word_148942:	dc.w 4
 		dc.w $1A41
 		dc.w $FA43
 word_14894C:	dc.w 4			
-					
+
 		dc.w $BA53
 		dc.w $A5F
 		dc.w $1A60
@@ -1198,7 +1198,7 @@ word_148A04:	dc.w 1
 word_148A08:	dc.w 1			
 					
 		dc.w $FBC2
-word_148A0C:	dc.w 1			
+word_148A0C:	dc.w 1
 					
 		dc.w $FBD2
 word_148A10:	dc.w 1
@@ -1228,7 +1228,7 @@ word_148A34:	dc.w 4
 		dc.w $7C2A
 		dc.w $2C32
 		dc.w $1C35
-word_148A3E:	dc.w 3			
+word_148A3E:	dc.w 3
 					
 		dc.w $2C37
 		dc.w $BC3A
@@ -1318,7 +1318,7 @@ word_148AD2:	dc.w 3
 		dc.w $2D87
 		dc.w $7D8A
 		dc.w $5D92
-word_148ADA:	dc.w 3			
+word_148ADA:	dc.w 3
 					
 		dc.w $2D87
 		dc.w $7D98
@@ -1378,7 +1378,7 @@ word_148B40:	dc.w 4
 		dc.w $7E30
 		dc.w $2E2A
 		dc.w $2E38
-word_148B4A:	dc.w 4			
+word_148B4A:	dc.w 4
 		dc.w $2D87
 		dc.w $7E3B
 		dc.w $2E2A
@@ -1408,7 +1408,7 @@ word_148B78:	dc.w 4
 		dc.w $3E75
 		dc.w $3E79
 		dc.w $5E7D
-word_148B82:	dc.w 3			
+word_148B82:	dc.w 3
 		dc.w $BE83
 		dc.w $2E8F
 		dc.w $2E6F
@@ -1588,7 +1588,7 @@ word_148CA0:	dc.w 2
 					
 		dc.w $F196
 		dc.w $21A6
-word_148CA6:	dc.w 2			
+word_148CA6:	dc.w 2
 					
 		dc.w $B1A9
 		dc.w $11B5
@@ -1618,7 +1618,7 @@ word_148CD2:	dc.w 3
 		dc.w $708D
 		dc.w $8025
 		dc.w $2095
-word_148CDA:	dc.w 3			
+word_148CDA:	dc.w 3
 		dc.w $B035
 		dc.w $5098
 		dc.w $309E
@@ -1836,7 +1836,7 @@ word_148E84:	dc.w 4
 		dc.w $7FE0
 		dc.w $2FE8
 		dc.w $FEB
-word_148E8E:	dc.w 3			; unused PLCs for Super Sonic's third idle frame
+word_148E8E:	dc.w 3
 		dc.w $8E01
 		dc.w $BFEC
 		dc.w $FF8
@@ -1858,7 +1858,7 @@ word_148EA8:	dc.w 3
 		dc.w $3F5B
 		dc.w $5F5F
 word_148EB0:	dc.w 3			
-					
+
 		dc.w $8F65
 		dc.w $3F5B
 		dc.w $5F5F
