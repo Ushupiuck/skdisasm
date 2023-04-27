@@ -1,5 +1,5 @@
 PLC_148182:	dc.w word_14856E-PLC_148182
-					
+
 		dc.w word_148570-PLC_148182
 		dc.w word_148578-PLC_148182
 		dc.w word_148580-PLC_148182
@@ -440,18 +440,18 @@ PLC_148378:	dc.w word_148CC0-PLC_148378
 		dc.w word_148E72-PLC_148378
 		dc.w word_148E7A-PLC_148378
 		dc.w word_148E84-PLC_148378
-		dc.w word_148E7A-PLC_148378		; word_148E8E is the proper pointer here
+		dc.w word_148E8E-PLC_148378		; word_148E8E is the proper pointer here
 		dc.w word_148E84-PLC_148378
 		dc.w word_148E7A-PLC_148378
-		dc.w word_148E84-PLC_148378		; word_148E8E is the proper pointer here
+		dc.w word_148E8E-PLC_148378		; word_148E8E is the proper pointer here
 		dc.w word_148E7A-PLC_148378
 		dc.w word_148E84-PLC_148378
-		dc.w word_148E7A-PLC_148378		; word_148E8E is the proper pointer here
+		dc.w word_148E8E-PLC_148378		; word_148E8E is the proper pointer here
 		dc.w word_148B6E-PLC_148378
 		dc.w word_148B78-PLC_148378
 		dc.w word_148E84-PLC_148378
 		dc.w word_148E7A-PLC_148378
-		dc.w word_148E84-PLC_148378		; word_148E8E is the proper pointer here
+		dc.w word_148E8E-PLC_148378		; word_148E8E is the proper pointer here
 		dc.w word_148B9E-PLC_148378
 		dc.w word_148BA6-PLC_148378
 		dc.w word_148BAE-PLC_148378
@@ -841,7 +841,7 @@ word_1487D0:	dc.w 3
 		dc.w $1777
 		dc.w $7779
 		dc.w $1781
-word_1487D8:	dc.w 1			
+word_1487D8:	dc.w 1
 					
 		dc.w $F783
 word_1487DC:	dc.w 4			
@@ -871,7 +871,7 @@ word_1487FE:	dc.w 3
 		dc.w $87D2
 		dc.w $17DB
 word_148806:	dc.w 2			
-					
+
 		dc.w $F7DD
 		dc.w $7ED
 word_14880C:	dc.w 4			
@@ -961,7 +961,7 @@ word_14888A:	dc.w 2
 		dc.w $91E
 		dc.w $B91F
 word_148890:	dc.w 2			
-					
+
 		dc.w $B92B
 		dc.w $2937
 word_148896:	dc.w 4			
@@ -1171,7 +1171,7 @@ word_1489D8:	dc.w 4
 		dc.w $BB6D
 		dc.w $B79
 		dc.w $1B7A
-word_1489E2:	dc.w 2			
+word_1489E2:	dc.w 2
 					
 		dc.w $2B6A
 		dc.w $BB7C
@@ -1201,7 +1201,7 @@ word_148A08:	dc.w 1
 word_148A0C:	dc.w 1			
 					
 		dc.w $FBD2
-word_148A10:	dc.w 1			
+word_148A10:	dc.w 1
 					
 		dc.w $FBE2
 word_148A14:	dc.w 2			
@@ -1261,7 +1261,7 @@ word_148A72:	dc.w 4
 		dc.w $1CB7
 		dc.w $2CB9
 word_148A7C:	dc.w 3			
-					
+
 		dc.w $2CBC
 		dc.w $FCBF
 		dc.w $CCF
@@ -1291,7 +1291,7 @@ word_148AA4:	dc.w 4
 		dc.w $D2B
 		dc.w $1D2C
 		dc.w $1D2E
-word_148AAE:	dc.w 4			
+word_148AAE:	dc.w 4
 					
 		dc.w $2D30
 		dc.w $7D33
@@ -1441,7 +1441,7 @@ word_148BB4:	dc.w 2
 		dc.w $BED3
 		dc.w $EDF
 word_148BBA:	dc.w 2			
-					
+
 		dc.w $5EE0
 		dc.w $3EE6
 word_148BC0:	dc.w 3			
@@ -1471,7 +1471,7 @@ word_148BE0:	dc.w 4
 		dc.w $3D64
 		dc.w $2D68
 word_148BEA:	dc.w 3			
-					
+
 		dc.w $5000
 		dc.w $7006
 		dc.w $100E
@@ -1501,7 +1501,7 @@ word_148C10:	dc.w 4
 		dc.w $105D
 		dc.w $205F
 word_148C1A:	dc.w 4			
-					
+
 		dc.w $5062
 		dc.w $3068
 		dc.w $206C
@@ -1531,7 +1531,7 @@ word_148C44:	dc.w 2
 		dc.w $B0BE
 		dc.w $50CA
 word_148C4A:	dc.w 4			
-					
+
 		dc.w $50D0
 		dc.w $30D6
 		dc.w $20DA
@@ -1561,7 +1561,7 @@ word_148C74:	dc.w 3
 		dc.w $B136
 		dc.w $2142
 		dc.w $1145
-word_148C7C:	dc.w 2			
+word_148C7C:	dc.w 2
 					
 		dc.w $B147
 		dc.w $2153
@@ -1831,7 +1831,7 @@ word_148E7A:	dc.w 4
 		dc.w $7FD4
 		dc.w $2FDC
 		dc.w $FDF
-word_148E84:	dc.w 4			
+word_148E84:	dc.w 4
 		dc.w $8E01
 		dc.w $7FE0
 		dc.w $2FE8
