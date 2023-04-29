@@ -1,36 +1,85 @@
 {
     "Flex": 2,
     "name": "",
-    "node": "968e73ab-2db1-486d-b5b6-a32ab53e867e",
+    "node": "37925183-214f-4606-9a49-43a499a62346",
     "objects": [
         {
-            "uuid": "968e73ab-2db1-486d-b5b6-a32ab53e867e",
-            "format": "Sonic 3&K Object.js",
-            "name": "Spring",
+            "format": "Sonic 1.js",
+            "name": "Sonic 1",
             "palettes": [
                 {
-                    "path": "General\\Sprites\\Sonic\\Palettes\\SonicAndTails.bin",
+                    "path": "..\\s1disasm\\palette\\Sonic.bin",
                     "length": 1
-                },
-                {
-                    "path": "Levels\\AIZ\\Palettes\\Main.bin",
-                    "length": 2
                 }
             ],
             "art": {
-                "path": "General\\Sprites\\Level Misc\\Horizontal Spring.unc.bin",
+                "path": "..\\s1disasm\\artunc\\Sonic.bin",
                 "compression": "Uncompressed",
                 "offset": 0
             },
             "mappings": {
-                "path": "",
+                "path": "..\\s1disasm\\_maps\\Sonic.asm",
                 "label": ""
             },
             "dplcs": {
-                "enabled": false,
-                "path": "",
+                "enabled": true,
+                "path": "..\\s1disasm\\_maps\\Sonic - Dynamic Gfx Script.asm",
                 "label": ""
-            }
+            },
+            "isAbsolute": true,
+            "uuid": "37925183-214f-4606-9a49-43a499a62346"
+        },
+        {
+            "format": "Sonic CD.js",
+            "name": "Classic Sonic",
+            "palettes": [
+                {
+                    "path": "D:\\Sonic Disassemblies\\skdisasm\\temp\\Sonic temp\\Classic Sonic\\Palette.bin",
+                    "length": 1
+                }
+            ],
+            "art": {
+                "path": "D:\\Sonic Disassemblies\\skdisasm\\temp\\Sonic temp\\Classic Sonic\\Classic Sonic.bin",
+                "compression": "Uncompressed",
+                "offset": 0
+            },
+            "mappings": {
+                "path": "D:\\Sonic Disassemblies\\skdisasm\\temp\\Sonic temp\\Classic Sonic\\Classic mappings.bin",
+                "label": ""
+            },
+            "dplcs": {
+                "enabled": true,
+                "path": "D:\\Sonic Disassemblies\\skdisasm\\temp\\Sonic temp\\Classic Sonic\\Classic DPLC's.bin",
+                "label": ""
+            },
+            "isAbsolute": true,
+            "uuid": "b80834ea-4fb4-4220-bd1f-f55569c840d3"
+        },
+        {
+            "format": "Sonic 2.js",
+            "name": "Sonic 2",
+            "palettes": [
+                {
+                    "path": "..\\s2disasm\\art\\palettes\\SonicAndTails.bin",
+                    "length": 1
+                }
+            ],
+            "art": {
+                "path": "..\\s2disasm\\art\\uncompressed\\Sonic's art.bin",
+                "compression": "Uncompressed",
+                "offset": 0
+            },
+            "mappings": {
+                "path": "..\\s2disasm\\mappings\\sprite\\Sonic.bin",
+                "label": ""
+            },
+            "dplcs": {
+                "enabled": true,
+                "path": "..\\s2disasm\\mappings\\spriteDPLC\\Sonic.bin",
+                "label": ""
+            },
+            "isAbsolute": true,
+            "uuid": "e8379251-8321-4f76-861a-4943a499a623"
         }
     ]
 }
