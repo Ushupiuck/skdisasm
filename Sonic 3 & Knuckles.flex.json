@@ -1,8 +1,33 @@
 {
     "Flex": 2,
     "name": "",
-    "node": "b80834ea-4fb4-4220-bd1f-f55569c840d3",
+    "node": "b89888ce-05d8-4141-9d35-08361e335835",
     "objects": [
+        {
+            "format": "Sonic 2.js",
+            "name": "Classic 2.0",
+            "palettes": [
+                {
+                    "path": "..\\s2disasm\\art\\palettes\\SonicAndTails.bin",
+                    "length": 1
+                }
+            ],
+            "art": {
+                "path": "temp\\Sonic temp\\Classic Sonic\\Classic 2.0.bin",
+                "compression": "Uncompressed",
+                "offset": 0
+            },
+            "mappings": {
+                "path": "temp\\Sonic temp\\Classic Sonic\\Classic 2.0 mappings.bin",
+                "label": ""
+            },
+            "dplcs": {
+                "enabled": true,
+                "path": "temp\\Sonic temp\\Classic Sonic\\Classic 2.0 DPLC's.bin",
+                "label": ""
+            },
+            "uuid": "b89888ce-05d8-4141-9d35-08361e335835"
+        },
         {
             "format": "Sonic 1.js",
             "name": "Sonic 1",
@@ -82,7 +107,7 @@
             "uuid": "4d4a63d4-9ea5-438d-b2df-d6a1662904d7"
         },
         {
-            "format": "Sonic CD.js",
+            "format": "Sonic 2.js",
             "name": "Classic Sonic",
             "palettes": [
                 {
