@@ -21,6 +21,7 @@ Yad_Main:	; Routine 0
 		move.b	#4,render_flags(a0)
 		move.w	#$200,priority(a0)
 		move.b	#$14,width_pixels(a0)
+		move.b	#$20,height_pixels(a0)	; rough estimate, could be wrong
 		move.b	#$11,y_radius(a0)
 		move.b	#8,x_radius(a0)
 		move.b	#$CC,collision_flags(a0)
