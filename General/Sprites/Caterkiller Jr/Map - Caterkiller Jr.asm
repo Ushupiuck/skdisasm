@@ -1,4 +1,5 @@
-Map_361A18:	dc.w Frame_361A24-Map_361A18
+Map_361A18:
+		dc.w Frame_361A24-Map_361A18
 		dc.w Frame_361A2C-Map_361A18
 		dc.w Frame_361A34-Map_361A18
 		dc.w Frame_361A3C-Map_361A18

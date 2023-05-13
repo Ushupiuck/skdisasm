@@ -1,8 +1,37 @@
 {
     "Flex": 2,
     "name": "",
-    "node": "b89888ce-05d8-4141-9d35-08361e335835",
+    "node": "54d49251-a09d-40bd-8adb-50c52dccebd9",
     "objects": [
+        {
+            "format": "Sonic 3&K Object.js",
+            "name": "Monitor",
+            "palettes": [
+                {
+                    "path": "General\\Sprites\\Sonic\\Palettes\\SonicAndTails.bin",
+                    "length": 1
+                },
+                {
+                    "path": "Levels\\AIZ\\Palettes\\Main.bin",
+                    "length": 2
+                }
+            ],
+            "art": {
+                "path": "General\\Sprites\\Monitors\\Monitors.nem",
+                "compression": "Nemesis",
+                "offset": 0
+            },
+            "mappings": {
+                "path": "General\\Sprites\\Monitors\\Map - Monitor.asm",
+                "label": ""
+            },
+            "dplcs": {
+                "enabled": false,
+                "path": "",
+                "label": ""
+            },
+            "uuid": "54d49251-a09d-40bd-8adb-50c52dccebd9"
+        },
         {
             "format": "Sonic 2.js",
             "name": "Classic 2.0",

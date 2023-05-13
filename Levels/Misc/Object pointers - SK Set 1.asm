@@ -9,7 +9,7 @@
 		dc.l Obj_Spikes				; 8
 		dc.l Obj_AIZ1Tree			; 9
 		dc.l Obj_AIZ1ZiplinePeg			; 10
-		dc.l Delete_Current_Sprite		; 11	; free
+		dc.l Caterkiller			; 11	; free
 		dc.l Obj_AIZGiantRideVine		; 12
 		dc.l Obj_BreakableWall			; 13
 		dc.l Obj_TwistedRamp			; 14

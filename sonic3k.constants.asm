@@ -67,8 +67,9 @@ scroll_delay_counter =	$39 ; byte ; incremented each frame the character is look
 next_tilt =		$3A ; byte ; angle on ground in front of character
 tilt =			$3B ; byte ; angle on ground
 stick_to_convex =	$3C ; byte ; used to make character stick to convex surfaces such as the rotating discs in CNZ
-spin_dash_flag =	$3D ; byte ; bit 1 indicates spin dash, bit 7 indicates forced roll
-spin_dash_counter =	$3E ; word
+spindash_flag =		$3D ; byte ; bit 1 indicates spin dash, bit 7 indicates forced roll
+spindash_counter =	$3E ; word
+restart_countdown =	spindash_counter; and 1+spindash_counter
 jumping =		$40 ; byte
 interact =		$42 ; word ; RAM address of the last object the character stood on
 default_y_radius =	$44 ; byte ; default value of y_radius
@@ -117,6 +118,7 @@ objoff_16 =		2+y_pos
 objoff_1C =		$1C
 objoff_1D =		$1D
 objoff_27 =		$27
+objoff_2C =		$2C
 objoff_2D =		$2D
 objoff_2E =		$2E
 objoff_2F =		$2F
@@ -304,7 +306,7 @@ V_scroll_amount_P2		ds.w 1
 _unkEE08			ds.b 1			; this is actually unused
 			ds.b 1				; unused
 Scroll_lock			ds.b 1			; if this is set scrolling routines aren't called
-Scroll_lock_P2			ds.b 1
+				ds.b 1
 Camera_target_min_X_pos		ds.w 1
 Camera_target_max_X_pos		ds.w 1
 Camera_target_min_Y_pos		ds.w 1
@@ -808,32 +810,12 @@ Ring_spill_anim_counter		ds.b 1
 Ring_spill_anim_frame		ds.b 1
 Ring_spill_anim_accum		ds.w 1
 AIZ_vine_angle			ds.w 1			; controls the angle of AIZ giant vines
-			ds.w 1				; unused
-_unkFEBE			ds.b 1			; unused
-Extra_life_flags_P2		ds.b 1
 Max_speed_P2			ds.w 1
 Acceleration_P2			ds.w 1
 Deceleration_P2			ds.w 1
-Life_count_P2			ds.b 1			; left over from Sonic 2
-Update_HUD_timer_P2		ds.b 1			; used in competition mode
 Total_ring_count		ds.w 1			; left over from Sonic 2
-Total_ring_count_P2		ds.w 1			; left over from Sonic 2
-Monitors_broken			ds.w 1			; left over from Sonic 2. Apparently Sonic 3 developers liked copypasting, since gaining a life from rings also increments this counter
-Monitors_broken_P2		ds.w 1			; left over from Sonic 2
-Ring_count_P2			ds.w 1			; left over from Sonic 2
-Timer_P2			ds.l 1			; used in competition mode
-Timer_minute_P2 =		Timer_P2+1
-Timer_second_P2 =		Timer_P2+2
-Timer_frame_P2 =		Timer_P2+3		; the second gets incremented when this reaches 60
-Score_P2			ds.l 1			; left over from Sonic 2
-Competition_total_laps			ds.b 1		; total number of laps in competition mode (typically 5)
-			ds.b 1				; unused
-Competition_current_lap			ds.b 1		; current lap number for player 1 in competition mode
-Competition_current_lap_2P		ds.b 1		; current lap number for player 2 in competition mode
-Loser_time_left			ds.b 1			; left over from Sonic 2
-			ds.b $23			; unused
-Results_screen_2P		ds.w 1			; left over from Sonic 2
 Perfect_rings_left		ds.w 1			; left over from Sonic 2
+				ds.b $3E		; Free space
 _unkFF06			ds.w 1			; unknown
 Player_mode			ds.w 1			; 0 = Sonic and Tails, 1 = Sonic alone, 2 = Tails alone, 3 = Knuckles alone
 Player_option			ds.w 1			; option selected on level select, data select screen or Sonic & Knuckles title screen
@@ -862,12 +844,7 @@ Level_select_option		ds.w 1			; the current selected option in the level select
 Sound_test_sound		ds.w 1
 Title_screen_option		ds.b 1
 			ds.b 1				; unused
-_tempFF88		ds.w 1				; this is used in Sonic 3 Alone, but unused in Sonic & Knuckles and Sonic 3 Complete
-Competition_settings =		*			; both items and game type
-Competition_items		ds.b 1			; 0 = Enabled, FF = Disabled.
-Competition_type		ds.b 1			; 0 = grand prix, 3 = match race, -1 = time attack
-_tempFF8C		ds.b 1				; this is used in Sonic 3 Alone, but unused in Sonic & Knuckles and Sonic 3 Complete
-			ds.b 1				; unused
+			ds.b 6				; this is used in Sonic 3 Alone, but unused in Sonic & Knuckles and Sonic 3 Complete
 Total_bonus_countup		ds.w 1			; the total points to be added due to various bonuses this frame in the end of level results screen
 Current_music			ds.w 1
 Collected_special_ring_array	ds.l 1			; each bit indicates a special stage entry ring in the current zone
@@ -952,6 +929,11 @@ Ref_Checksum_String := 'SM&K'
 	if (.check>0)&(.check<$FF0000)
 		fatal "Sonic & Knuckles RAM definitions are too large by $\{*} bytes!"
 	endif
+	dephase
+	phase	Object_Respawn_Table
+v_regbuffer:			ds.b	$40	; stores registers d0-a7 during an error event ($40 bytes)
+v_spbuffer:			ds.b	4	; stores most recent sp address (4 bytes)
+v_errortype:			ds.b	1	; error type
 	dephase
 
 ; extra Special Stage variables

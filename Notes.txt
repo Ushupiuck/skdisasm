@@ -26,7 +26,7 @@ Offs_PLC = PLC request table
 
 ; =============== S U B R O U T I N E =======================================
 
-; Sprite_OnScreen_Test:
+; Sprite_OnScreen_Test: Also known as RememberState in Sonic 1
 Delete_Sprite_If_Not_In_Range:
 		move.w	x_pos(a0),d0
 		andi.w	#$FF80,d0
@@ -44,9 +44,9 @@ Delete_Sprite_If_Not_In_Range:
 		bra.w	Delete_Current_Sprite
 ; End of function Delete_Sprite_If_Not_In_Range
 
-===================================
-TABLE CONVERSION FROM S1/S2 TO S3K
-===================================
+; ===================================
+; TABLE CONVERSION FROM S1/S2 TO S3K
+; ===================================
 |   | S 2 | S3K |
 |---|-----|-----|
 | ~ | #   | #$  |
@@ -69,11 +69,15 @@ SonicKnux_SuperHyper <---- to check
 
 HyperAttackTouchResponse < ----- Hyper abilities
 
+
+; ---------------------------------------------------------------------------
 SSEntryRing_Display
 
 Slots_RenderLayout <----> SS_ShowLayout from Sonic 1
 
-sub_4B57C <----> FindFreeObj from Sonic 1. Copypaste much?
+sub_4B57C <----> Duplicate from FindFreeObj from Sonic 1, specifically for special stages
+Create_New_Sprite = FindFreeObj from Sonic 1
+Create_New_Sprite3 = FindNextFreeObj from Sonic 1.
 
 loc_1AF76 <---- Apparently it's "BuildSpr_Normal" from Sonic 1? It looks similar, at least
 
@@ -86,6 +90,8 @@ sub_86180 <---- ObjectMove Variant?
 SpecialVInt_Array <Turns out entries in a table CAN be a RTS>
 
 AniHCZ_FixLowerBG <EDIT THIS WHEN CHANGING THE TILESET>
+
+sub_F846 <---- Background collision routine?
 ; ---------------------------------------------------------------------------
 
 sub_4B6AA <--- S1 SPECIAL STAGE MODE?
