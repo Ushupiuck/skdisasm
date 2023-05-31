@@ -16,10 +16,10 @@ Cat_Index:	dc.w Cat_Main-Cat_Index
 		dc.w Cat_Delete-Cat_Index
 		dc.w loc_16CC0-Cat_Index
 
-cat_parent = parent		; address of parent object ; was $3C in Sonic 1
-; $2A replaced by objoff_2D
-; $2B replaced by objoff_47
-; $2C stays as-is :P
+; $2A replaced by anim_frame_timer
+; $2B replaced by objoff_2D
+; $2C replaced by Caterkiller_floormap
+cat_parent = parent		; segment position - starts as 0/4/8/$A, increments as it moves ; was $3C in Sonic 1
 ; ===========================================================================
 
 locret_16950:
@@ -89,7 +89,7 @@ Cat_Loop:
 .fail:
 		dbf	d1,Cat_Loop	; repeat sequence 2 more times
 
-		move.b	#7,objoff_2D(a0)
+		move.b	#7,anim_frame_timer(a0)
 		clr.b	cat_parent(a0)
 
 Cat_Head:	; Routine 2
@@ -99,7 +99,7 @@ Cat_Head:	; Routine 2
 		move.b	routine_secondary(a0),d0
 		move.w	Cat_Index2(pc,d0.w),d1
 		jsr	Cat_Index2(pc,d1.w)
-		move.b	objoff_47(a0),d1
+		move.b	objoff_2D(a0),d1
 		bpl.s	.display
 		lea	(Ani_Cat).l,a1
 		move.b	angle(a0),d0
@@ -107,7 +107,7 @@ Cat_Head:	; Routine 2
 		addq.b	#4,angle(a0)
 		move.b	(a1,d0.w),d0
 		bpl.s	.animate
-		bclr	#7,objoff_47(a0)
+		bclr	#7,objoff_2D(a0)
 		bra.s	.display
 
 .animate:
@@ -141,26 +141,26 @@ Cat_Index2:	dc.w .wait-Cat_Index2
 ; ===========================================================================
 
 .wait:
-		subq.b	#1,objoff_2D(a0)
+		subq.b	#1,anim_frame_timer(a0)
 		bmi.s	.move
 		rts	
 ; ===========================================================================
 
 .move:
 		addq.b	#2,routine_secondary(a0)
-		move.b	#$10,objoff_2D(a0)
+		move.b	#$10,anim_frame_timer(a0)
 		move.w	#-$C0,x_vel(a0)
 		move.w	#$40,ground_vel(a0)
-		bchg	#4,objoff_47(a0)
+		bchg	#4,objoff_2D(a0)
 		bne.s	loc_16AFC
 		clr.w	x_vel(a0)
 		neg.w	ground_vel(a0)
 
 loc_16AFC:
-		bset	#7,objoff_47(a0)
+		bset	#7,objoff_2D(a0)
 
 loc_16B02:
-		subq.b	#1,objoff_2D(a0)
+		subq.b	#1,anim_frame_timer(a0)
 		bmi.s	.loc_16B5E
 		tst.w	x_vel(a0)
 		beq.s	.notmoving
@@ -189,7 +189,8 @@ loc_16B02:
 		move.b	cat_parent(a0),d0
 		addq.b	#1,cat_parent(a0)
 		andi.b	#$F,cat_parent(a0)
-		move.b	d1,objoff_2C(a0,d0.w)
+		move.b	d1,(Caterkiller_floormap).w
+;		(a0,d0.w)
 
 .notmoving:
 		rts	
@@ -197,7 +198,7 @@ loc_16B02:
 
 .loc_16B5E:
 		subq.b	#2,routine_secondary(a0)
-		move.b	#7,objoff_2D(a0)
+		move.b	#7,anim_frame_timer(a0)
 		clr.w	x_vel(a0)
 		clr.w	ground_vel(a0)
 		rts
@@ -206,16 +207,16 @@ loc_16B02:
 .loc_16B70:
 		moveq	#0,d0
 		move.b	cat_parent(a0),d0
-		move.b	#$80,objoff_2C(a0,d0.w)
+		move.b	#$80,(Caterkiller_floormap).w
 		neg.w	x_pos+2(a0)
 		beq.s	.loc_1730A
 		btst	#0,status(a0)
 		beq.s	.loc_1730A
 		subq.w	#1,x_pos(a0)
 		addq.b	#1,cat_parent(a0)
-		moveq	#0,d0
-		move.b	cat_parent(a0),d0
-		clr.b	objoff_2C(a0,d0.w)
+;		moveq	#0,(Caterkiller_floormap).w
+		move.b	cat_parent(a0),(Caterkiller_floormap).w
+		clr.b	(Caterkiller_floormap).w
 .loc_1730A:
 		bchg	#0,status(a0)
 		move.b	status(a0),render_flags(a0)
@@ -226,7 +227,7 @@ loc_16B02:
 
 Cat_BodySeg2:	; Routine 6
 		movea.l	cat_parent(a0),a1
-		move.b	objoff_47(a1),objoff_47(a0)
+		move.b	objoff_2D(a1),objoff_2D(a0)
 		bpl.s	Cat_BodySeg1
 		lea	(Ani_Cat).l,a1
 		move.b	angle(a0),d0
@@ -245,7 +246,7 @@ Cat_BodySeg1:	; Routine 4, 8
 		movea.l	cat_parent(a0),a1
 		tst.b	status(a0)
 		bmi.w	loc_16C90
-		move.b	objoff_47(a1),objoff_47(a0)
+		move.b	objoff_2D(a1),objoff_2D(a0)
 		move.b	routine_secondary(a1),routine_secondary(a0)
 		beq.w	loc_16C64
 		move.w	ground_vel(a1),ground_vel(a0)
@@ -269,10 +270,10 @@ loc_16C0C:
 		beq.s	loc_16C64
 		moveq	#0,d0
 		move.b	cat_parent(a0),d0
-		move.b	objoff_2C(a1,d0.w),d1
+		move.b	(Caterkiller_floormap).w,d1
 		cmpi.b	#$80,d1
 		bne.s	loc_16C50
-		move.b	d1,objoff_2C(a0,d0.w)
+		move.b	d1,(Caterkiller_floormap).w
 		neg.w	x_pos+2(a0)
 		beq.s	locj_173E4
 		btst	#0,status(a0)
@@ -283,7 +284,7 @@ loc_16C0C:
 		addq.b	#1,cat_parent(a0)
 		moveq	#0,d0
 		move.b	cat_parent(a0),d0
-		clr.b	objoff_2C(a0,d0.w)
+		clr.b	(Caterkiller_floormap).w
 locj_173E4:
 		bchg	#0,status(a0)
 		move.b	status(a0),render_flags(a0)
@@ -297,7 +298,7 @@ loc_16C50:
 		add.w	d1,y_pos(a0)
 		addq.b	#1,cat_parent(a0)
 		andi.b	#$F,cat_parent(a0)
-		move.b	d1,objoff_2C(a0,d0.w)
+		move.b	d1,(Caterkiller_floormap).w
 
 loc_16C64:
 		cmpi.b	#$C,routine(a1)
