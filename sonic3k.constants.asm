@@ -291,7 +291,8 @@ H_scroll_buffer			ds.b $380		; horizontal scroll table is built up here and then
 Collision_response_list		ds.b $80		; only objects in this list are processed by the collision response routines
 Stat_table			ds.b $100		; used by Tails' AI in a Sonic and Tails game
 Pos_table 			ds.b $100		;
-				ds.b $A6		; unused
+Caterkiller_floormap		ds.b $10		; height map of floor beneath caterkiller (16 bytes)
+				ds.b $86		; unused
 Save_pointer			ds.l 1			; pointer to the active save slot in 1 player mode
 Emerald_flicker_flag		ds.w 1			; controls the emerald flicker in save screen and special stage results.
 Saved_data			ds.b $54		; saved data from 1 player mode
