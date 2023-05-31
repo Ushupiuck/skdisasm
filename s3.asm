@@ -4496,7 +4496,19 @@ loc_4066:
 locret_406C:
 		rts
 ; ---------------------------------------------------------------------------
-OldDebugCodeDat:dc.b  $20, $30, $70, $10, $50, $70, $40, $60, $70, $71, $72,    0
+OldDebugCodeDat:
+		dc.b button_C_mask
+		dc.b button_C_mask|button_B_mask
+		dc.b button_C_mask|button_B_mask|button_A_mask
+		dc.b button_B_mask
+		dc.b button_B_mask|button_A_mask
+		dc.b button_B_mask|button_A_mask|button_C_mask
+		dc.b button_A_mask
+		dc.b button_A_mask|button_C_mask
+		dc.b button_A_mask|button_C_mask|button_B_mask
+		dc.b button_A_mask|button_C_mask|button_B_mask|button_up_mask
+		dc.b button_A_mask|button_C_mask|button_B_mask|button_down_mask
+		dc.b 0
 		even
 ; ---------------------------------------------------------------------------
 
@@ -4670,7 +4682,15 @@ locret_42C8:
 ; End of function S3_Level_Select_Code
 
 ; ---------------------------------------------------------------------------
-LSelect3CodeDat:dc.b    1,   1,   2,   2,   1,   1,   1,   1,   0
+LSelect3CodeDat:dc.b button_up_mask
+		dc.b button_up_mask
+		dc.b button_down_mask
+		dc.b button_down_mask
+		dc.b button_up_mask
+		dc.b button_up_mask
+		dc.b button_up_mask
+		dc.b button_up_mask
+		dc.b 0
 		even
 Map_TitleScreenText:
 		include "General/Title/Map - S3 Screen Text.asm"
@@ -7943,18 +7963,18 @@ LevelSelectText:levselstr "ANGEL ISLAND"
 		levselstr "SOUND TEST  *"
 		even
 Pal_S2LevelIcons:
-		binclude "General/Sprites/S2Menu/Palettes/Level Select Icons.bin"
+		binclude "General/S2Menu/Palettes/Level Select Icons.bin"
 		even
 MapEni_S2LevSel2P:
-		binclude "General/Sprites/S2Menu/Enigma Map/Level Select 2P.bin"
+		binclude "General/S2Menu/Enigma Map/Level Select 2P.bin"
 		even
 MapEni_S2Options:
-		binclude "General/Sprites/S2Menu/Enigma Map/Options Screen.bin"
+		binclude "General/S2Menu/Enigma Map/Options Screen.bin"
 		even
-MapEni_S2LevSel:binclude "General/Sprites/S2Menu/Enigma Map/Level Select.bin"
+MapEni_S2LevSel:binclude "General/S2Menu/Enigma Map/Level Select.bin"
 		even
 MapEni_S2LevSelIcon:
-		binclude "General/Sprites/S2Menu/Enigma Map/Level Select Icons.bin"
+		binclude "General/S2Menu/Enigma Map/Level Select Icons.bin"
 		even
 AniPLC_SONICMILES:
 		dc.w 0
@@ -76390,13 +76410,13 @@ byte_433F4:	dc.b 4
 		dc.b $10
 		dc.b $FF
 		dc.w $FC10
-		binclude "General/Sprites/S2Menu/Palettes/Sega Screen 2.bin"
+		binclude "General/S2Menu/Palettes/Sega Screen 2.bin"
 byte_4346A:	dc.b 4
 		dc.b 7
 		dc.b $10
 		dc.b $FF
 		dc.w $FC00
-		binclude "General/Sprites/S2Menu/Palettes/Sega Screen 3.bin"
+		binclude "General/S2Menu/Palettes/Sega Screen 3.bin"
 ObjDat3_434E0:	dc.l Map_SonicOnSegaScr
 		dc.w $C088
 		dc.w $80
@@ -76408,9 +76428,9 @@ ObjDat3_434EA:	dc.l Map_SonicOnSegaScr
 		dc.b 8
 		dc.b 0
 Ani_SonicOnSegaScr:
-		include "General/Sprites/S2Menu/Anim - Sonic On Sega Screen.asm"
+		include "General/S2Menu/Anim - Sonic On Sega Screen.asm"
 Map_SonicOnSegaScr:
-		include "General/Sprites/S2Menu/Map - Sonic On Sega Screen.asm"
+		include "General/S2Menu/Map - Sonic On Sega Screen.asm"
 
 ; =============== S U B R O U T I N E =======================================
 
@@ -115958,15 +115978,15 @@ Layout_Slot_Special:
 		even
 PalPoint:	include "Levels/Misc/Palette pointers S3.asm"
 
-Pal_S2Sega:	binclude "General/Sprites/S2Menu/Palettes/Sega Screen.bin"
+Pal_S2Sega:	binclude "General/S2Menu/Palettes/Sega Screen.bin"
 		even
-Pal_S2Title:	binclude "General/Sprites/S2Menu/Palettes/Title Screen.bin"
+Pal_S2Title:	binclude "General/S2Menu/Palettes/Title Screen.bin"
 		even
-Pal_S2LevSel:	binclude "General/Sprites/S2Menu/Palettes/Proto Level Select.bin"
+Pal_S2LevSel:	binclude "General/S2Menu/Palettes/Proto Level Select.bin"
 		even
 Pal_SonicTails:	binclude "General/Sprites/Sonic/Palettes/SonicAndTails.bin"
 		even
-Pal_S2Menu:	binclude "General/Sprites/S2Menu/Palettes/Main.bin"
+Pal_S2Menu:	binclude "General/S2Menu/Palettes/Main.bin"
 		even
 Pal_Knuckles:	binclude "General/Sprites/Knuckles/Palettes/Main.bin"
 		even
@@ -116037,7 +116057,7 @@ ArtUnc_AirCountdown:
 		binclude "General/Sprites/Dash Dust/Air Countdown.bin"
 		even
 ArtUnc_SONICMILES:
-		binclude "General/Sprites/S2Menu/SONICMILES.bin"
+		binclude "General/S2Menu/Uncompressed Art/SONICMILES.bin"
 		even
 ArtUnc_SStageSonic:
 		binclude "General/Sprites/Sonic/Art/SStage Sonic.bin"
@@ -116301,18 +116321,18 @@ ArtUnc_SplashDrown:
 		binclude "General/Sprites/Dash Dust/Splash Drown.bin"
 		even
 ArtNem_S22POptions:
-		binclude "General/Sprites/S2Menu/2P Options.bin"
+		binclude "General/S2Menu/Nemesis Art/2P Options.bin"
 		even
-ArtNem_1P2PWins:binclude "General/Sprites/S2Menu/1P 2P Wins.bin"
+ArtNem_1P2PWins:binclude "General/S2Menu/Nemesis Art/1P 2P Wins.bin"
 		even
 MapEni_S22POptions:
-		binclude "General/Sprites/S2Menu/Enigma Map/2P Options.bin"
+		binclude "General/S2Menu/Enigma Map/2P Options.bin"
 		even
 ArtNem_S2MenuBox:
-		binclude "General/Sprites/S2Menu/Menu Box.bin"
+		binclude "General/S2Menu/Nemesis Art/Menu Box.bin"
 		even
 ArtNem_S2LevelSelectPics:
-		binclude "General/Sprites/S2Menu/Level Select Icons.bin"
+		binclude "General/S2Menu/Nemesis Art/Level Select Icons.bin"
 		even
 ArtNem_Title_SonicSprites:
 		binclude "General/Title/Nemesis Art/S3 Sonic Sprites.bin"
@@ -116368,10 +116388,10 @@ ArtNem_AIZIntroSprites:
 		binclude "Levels/AIZ/Nemesis Art/Intro Waves.bin"
 		even
 ArtNem_SurfboardSplash:
-		binclude "Levels/AIZ/Nemesis Art/Surfboard Splash.bin"
+		binclude "General/Sprites/Surfboard/Surfboard Splash.bin"
 		even
 ArtNem_Surfboard:
-		binclude "Levels/AIZ/Nemesis Art/Surfboard.bin"
+		binclude "General/Sprites/Surfboard/Surfboard.bin"
 		even
 ArtUnc_Invincibility:
 		binclude "General/Sprites/Shields/Invincibility.bin"
@@ -116507,7 +116527,7 @@ ArtNem_EnemyPoints:
 ArtNem_StarPost:binclude "General/Sprites/Starpost/Starpost.bin"
 		even
 ArtNem_S2Signpost:
-		binclude "General/Sprites/S2Menu/Signpost.bin"
+		binclude "General/S2Menu/Nemesis Art/Signpost.bin"
 		even
 ArtNem_Bubbles:	binclude "General/Sprites/Bubbles/Bubbles.bin"
 		even
@@ -116517,13 +116537,13 @@ ArtNem_Explosion:
 		binclude "General/Sprites/Enemy Misc/Explosion.bin"
 		even
 ArtNem_ContinueTails:
-		binclude "General/Sprites/S2Menu/Tails Continue Sprites.bin"
+		binclude "General/S2Menu/Nemesis Art/Tails Continue Sprites.bin"
 		even
 ArtNem_MiniSonic:
-		binclude "General/Sprites/S2Menu/Sonic Continue Icon.bin"
+		binclude "General/S2Menu/Nemesis Art/Sonic Continue Icon.bin"
 		even
 ArtNem_MiniTails:
-		binclude "General/Sprites/S2Menu/Tails Continue Icon.bin"
+		binclude "General/S2Menu/Nemesis Art/Tails Continue Icon.bin"
 		even
 ArtNem_SpikesSprings:
 		binclude "General/Sprites/Level Misc/SpikesSprings.bin"
@@ -116552,9 +116572,9 @@ ArtNem_Rabbit:	binclude "General/Sprites/Animals/Rabbit.bin"
 Map_RobotnikShip:
 		include "General/Sprites/Robotnik/Map - Robotnik Ship.asm"
 Map_FBZRobotnikRun:
-		include "Levels/FBZ/Misc Object Data/Map - Robotnik Run.asm"
+		include "General/Sprites/Robotnik/Map - FBZ Robotnik Run.asm"
 Map_FBZRobotnikHead:
-		include "Levels/FBZ/Misc Object Data/Map - Robotnik Head.asm"
+		include "General/Sprites/Robotnik/Map - FBZ Robotnik Head.asm"
 Map_LBZMiniboss:
 		include "Levels/LBZ/Misc Object Data/Map - Miniboss.asm"
 Map_LBZMinibossBox:
@@ -116807,7 +116827,7 @@ Map_MGZEndBossDebris:
 		include "Levels/MGZ/Misc Object Data/Map - End Boss Debris.asm"
 Map_FBZ2Subboss:include "Levels/FBZ/Misc Object Data/Map - Act 2 Subboss S3.asm"
 Map_FBZRobotnikStand:
-		include "Levels/FBZ/Misc Object Data/Map - Robotnik Stand.asm"
+		include "General/Sprites/Robotnik/Map - FBZ Robotnik Stand.asm"
 Map_ICZWallAndColumn:
 		include "Levels/ICZ/Misc Object Data/Map - Wall and Column.asm"
 Map_ICZPlatforms:
@@ -116816,8 +116836,8 @@ DPLC_EndSigns:	include "General/Sprites/Signpost/DPLC - End Signs.asm"
 Map_EndSigns:	include "General/Sprites/Signpost/Map - End Signs.asm"
 Map_SignpostStub:
 		include "General/Sprites/Signpost/Map - Signpost Stub.asm"
-Map_EggCapsule:	include "General/Sprites/Robotnik/Map - Egg Capsule S3.asm"
-Map_LBZKnuxBomb:include "Levels/LBZ/Misc Object Data/Map - Knuckles Bomb.asm"
+Map_EggCapsule:	include "General/Sprites/Egg Capsule/Map - Egg Capsule S3.asm"
+Map_LBZKnuxBomb:include "General/Sprites/Knuckles/Cutscene/Map - Knuckles Bomb.asm"
 Map_CutsceneKnux:
 		include "General/Sprites/Knuckles/Cutscene/Map - Cutscene Knuckles.asm"
 DPLC_CutsceneKnux:
@@ -116862,7 +116882,7 @@ ArtNem_HCZEndBoss:
 		binclude "Levels/HCZ/Nemesis Art/End Boss.bin"
 		even
 ArtNem_HCZDragonfly:
-		binclude "Levels/HCZ/Nemesis Art/Dragonfly.bin"
+		binclude "General/Sprites/Buggernaut/Buggernaut.bin"
 		even
 ArtKosM_Jawz:	binclude "General/Sprites/Jawz/Jawz.bin"
 		even
@@ -116982,7 +117002,7 @@ ArtUnc_Flybot767:
 		binclude "General/Sprites/Flybot767/Flybot767.bin"
 		even
 ArtNem_LBZKnuxBomb:
-		binclude "Levels/LBZ/Nemesis Art/Knuckles Bomb.bin"
+		binclude "General/Sprites/Knuckles/Cutscene/Knuckles Bomb.bin"
 		even
 ArtKosM_LBZ2DeathEggSmall:
 		binclude "Levels/LBZ/KosinskiM Art/Act 2 Death Egg Small.bin"
@@ -117020,7 +117040,7 @@ ArtNem_SignpostStub:
 		binclude "General/Sprites/Signpost/Stub.bin"
 		even
 ArtNem_EggCapsule:
-		binclude "General/Sprites/Robotnik/Egg Capsule.bin"
+		binclude "General/Sprites/Egg Capsule/Egg Capsule.bin"
 		even
 ArtKosM_AIZIntroPlane:
 		binclude "Levels/AIZ/KosinskiM Art/Intro Plane.kosm"
@@ -117041,7 +117061,7 @@ ArtKosM_BadnikExplosion:
 		binclude "General/Sprites/SS Entry/Badnik Explosion.bin"
 		even
 ArtNem_BonusStage:
-		binclude "General/Sprites/Bonus/Bonus Stage.bin"
+		binclude "Levels/Gumball/Nemesis Art/Gumball Bonus.bin"
 		even
 ArtKosM_SonicEndPose:
 		binclude "General/Ending/KosinskiM Art/Sonic 3 Sonic Ending Pose.bin"
