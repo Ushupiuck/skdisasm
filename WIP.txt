@@ -1,0 +1,3 @@
+Obj_HCZMiniboss
+Obj_StarPost_MakeSpecialStars
+loc_6268
