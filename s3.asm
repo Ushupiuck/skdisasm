@@ -100473,7 +100473,7 @@ loc_51E62:
 		addq.b	#1,d0
 		bmi.s	locret_51E7E
 		move.b	d0,$40(a0)
-		bsr.w	Perform_Art_Scaling
+		bra.w	Perform_Art_Scaling
 
 locret_51E7E:
 		rts
@@ -115796,8 +115796,7 @@ loc_5A990:
 		move.w	#-$200,$18(a0)
 		move.w	#-$200,$1A(a0)
 		moveq	#signextendB(sfx_Thump),d0
-		jsr	(Play_SFX).l
-		rts
+		jmp	(Play_SFX).l
 ; ---------------------------------------------------------------------------
 
 loc_5A9AC:
