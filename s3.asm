@@ -35,7 +35,7 @@ Vectors:	dc.l	Vectors,	EntryPoint,	ErrorTrap,	ErrorTrap	; 0
 		dc.l	ErrorTrap,	ErrorTrap,	ErrorTrap,	ErrorTrap	; 16
 		dc.l	ErrorTrap,	ErrorTrap,	ErrorTrap,	ErrorTrap	; 20
 		dc.l	ErrorTrap,	ErrorTrap,	ErrorTrap,	ErrorTrap	; 24
-		dc.l	JmpTo_HInt,	ErrorTrap,	VInt,		ErrorTrap	; 28
+		dc.l	H_int_jump,	ErrorTrap,	VInt,		ErrorTrap	; 28
 		dc.l	ErrorTrap,	ErrorTrap,	ErrorTrap,	ErrorTrap	; 32
 		dc.l	ErrorTrap,	ErrorTrap,	ErrorTrap,	ErrorTrap	; 36
 		dc.l	ErrorTrap,	ErrorTrap,	ErrorTrap,	ErrorTrap	; 40
@@ -611,9 +611,6 @@ VInt_0_Main:
 		beq.s	VInt_0_Level
 		cmpi.b	#$C,(Game_mode).w
 		beq.s	VInt_0_Level
-		stopZ80
-		bsr.w	sndDriverInput
-		startZ80
 		bra.s	VInt_Done	; otherwise, return from V-int
 ; ---------------------------------------------------------------------------
 
@@ -640,7 +637,6 @@ VInt_0_FullyUnderwater:
 
 VInt_0_Water_Cont:
 		move.w	(H_int_counter_command).w,(a5)
-		bsr.w	sndDriverInput
 		startZ80
 		bra.w	VInt_Done
 ; ---------------------------------------------------------------------------
@@ -669,7 +665,7 @@ VInt_0_NoWater:
 
 		; Unlike in Sonic 2, the sprite tables are page-flipped in two-player mode.
 		; This fixes a race-condition where incomplete sprite tables can be uploaded
-		; to the VDP on lag frames.
+		; to the VDP on lag frames, causing corrupted sprites to appear.
 
 		; Upload the front buffer.
 		tst.w	(Current_sprite_table_page).w
@@ -680,48 +676,33 @@ VInt_0_NoWater:
 		dma68kToVDP Sprite_table_alternate,$F800,$280,VRAM
 
 VInt_0_Done:
-		bsr.w	sndDriverInput
 		startZ80
 		bra.w	VInt_Done
 ; ---------------------------------------------------------------------------
 
-VInt_2:
+VInt_2:		; leftover from Sonic 2
 		bsr.w	Do_ControllerPal
-		lea	(VDP_control_port).l,a5
-		move.l	#-$6BFE6C40,(a5)
-		move.l	#-$690F6B00,(a5)
-		move.w	#-$6881,(a5)
-		move.w	#$7000,(a5)
-		move.w	#$83,(DMA_trigger_word).w
-		move.w	(DMA_trigger_word).w,(a5)
-		jsr	(SegaScr_VInt).l
 		tst.w	(Demo_timer).w
-		beq.w	locret_A4C
+		beq.w	+
 		subq.w	#1,(Demo_timer).w
-
-locret_A4C:
++
 		rts
 ; ---------------------------------------------------------------------------
 
 VInt_14:
 		move.b	(V_int_run_count+3).w,d0
 		andi.w	#$F,d0
-		bne.s	loc_A76
-		move.w	#$100,(Z80_bus_request).l
+		bne.s	+	; run the following code once every 16 frames
 
-loc_A60:
-		btst	#0,(Z80_bus_request).l
-		bne.s	loc_A60
+		stopZ80
 		bsr.w	Poll_Controllers
-		move.w	#0,(Z80_bus_request).l
-
-loc_A76:
+		startZ80
++
 		tst.w	(Demo_timer).w
-		beq.w	locret_A82
+		beq.w	+
 		subq.w	#1,(Demo_timer).w
-
-locret_A82:
-		rts
++
+		jmp	(Set_Kos_Bookmark).l
 ; ---------------------------------------------------------------------------
 
 VInt_4:
@@ -730,16 +711,14 @@ VInt_4:
 		move.w	(Ctrl_1).w,(Ctrl_1_title).w
 		bsr.w	Process_Nem_Queue
 		tst.w	(Demo_timer).w
-		beq.w	locret_AA2
+		beq.w	+
 		subq.w	#1,(Demo_timer).w
-
-locret_AA2:
++
 		rts
 ; ---------------------------------------------------------------------------
 
 VInt_6:
-		bsr.w	Do_ControllerPal
-		rts
+		bra.w	Do_ControllerPal
 ; ---------------------------------------------------------------------------
 
 VInt_10:
@@ -749,7 +728,6 @@ VInt_10:
 VInt_8:
 		stopZ80
 		bsr.w	Poll_Controllers
-
 		tst.b	(Water_full_screen_flag).w
 		bne.s	+
 		dma68kToVDP Normal_palette,$0000,$80,CRAM
@@ -785,7 +763,6 @@ VInt_8:
 		move.l	(V_scroll_value_P2).w,(V_scroll_value_P2_copy).w
 		jsr	(SpecialVInt_Function).l
 		jsr	(VInt_DrawLevel).l
-		bsr.w	sndDriverInput
 		startZ80
 		move	#$2300,sr
 		tst.b	(Water_flag).w
@@ -806,10 +783,9 @@ Do_Updates:
 		move.w	#0,(Lag_frame_count).w
 		bsr.w	Process_Nem_Queue_2
 		tst.w	(Demo_timer).w
-		beq.w	locret_C0C
+		beq.w	+
 		subq.w	#1,(Demo_timer).w
-
-locret_C0C:
++
 		rts
 ; End of function Do_Updates
 
@@ -832,7 +808,7 @@ VInt_A_C:
 		beq.s	++
 		; Unlike in Sonic 2, the sprite tables are page-flipped in two-player mode.
 		; This fixes a race-condition where incomplete sprite tables can be uploaded
-		; to the VDP on lag frames.
+		; to the VDP on lag frames, causing corrupted sprites to appear.
 
 		; Perform page-flipping.
 		tst.w	(Sprite_table_page_flip_pending).w
@@ -850,7 +826,6 @@ VInt_A_C:
 +
 		bsr.w	Process_DMA_Queue
 		move.l	(V_scroll_value_P2).w,(V_scroll_value_P2_copy).w
-		jsr	(sndDriverInput).l
 		startZ80
 		bsr.w	Process_Nem_Queue
 		jmp	(Set_Kos_Bookmark).l
@@ -869,93 +844,48 @@ VInt_12:
 ; ---------------------------------------------------------------------------
 
 VInt_18:
-		move.w	#$100,(Z80_bus_request).l
-
-loc_D44:
-		btst	#0,(Z80_bus_request).l
-		bne.s	loc_D44
+		stopZ80
 		bsr.w	Poll_Controllers
-		lea	(VDP_control_port).l,a5
-		move.l	#-$6BFF6CC0,(a5)
-		move.l	#-$69016B00,(a5)
-		move.w	#-$6881,(a5)
-		move.w	#-$4000,(a5)
-		move.w	#$80,(DMA_trigger_word).w
-		move.w	(DMA_trigger_word).w,(a5)
-		lea	(VDP_control_port).l,a5
-		move.l	#-$6BFE6CC0,(a5)
-		move.l	#-$69036B00,(a5)
-		move.w	#-$6881,(a5)
-		move.w	#$7800,(a5)
-		move.w	#$83,(DMA_trigger_word).w
-		move.w	(DMA_trigger_word).w,(a5)
-		lea	(VDP_control_port).l,a5
-		move.l	#-$6BFE6C40,(a5)
-		move.l	#-$690F6B00,(a5)
-		move.w	#-$6881,(a5)
-		move.w	#$7000,(a5)
-		move.w	#$83,(DMA_trigger_word).w
-		move.w	(DMA_trigger_word).w,(a5)
-		bclr	#0,(_unkFA88).w
-		beq.s	loc_DEA
-		lea	(VDP_control_port).l,a5
-		move.l	#-$6BEF6D00,(a5)
-		move.l	#-$696F6B00,(a5)
-		move.w	#-$6881,(a5)
-		move.w	#$4000,(a5)
-		move.w	#$83,(DMA_trigger_word).w
-		move.w	(DMA_trigger_word).w,(a5)
 
-loc_DEA:
+		dma68kToVDP Normal_palette,$0000,$80,CRAM
+		dma68kToVDP Sprite_table,$F800,$280,VRAM
+		dma68kToVDP H_scroll_buffer,$F000,$380,VRAM
+
+		bclr	#0,(_unkFA88).w
+		beq.s	+
+		dma68kToVDP $FF2000,$C000,$2000,VRAM
++
 		bsr.w	Process_DMA_Queue
-		bsr.w	sndDriverInput
-		move.w	#0,(Z80_bus_request).l
+		startZ80
 		rts
 ; ---------------------------------------------------------------------------
 
 VInt_16:
-		move.w	#$100,(Z80_bus_request).l
-
-loc_E04:
-		btst	#0,(Z80_bus_request).l
-		bne.s	loc_E04
+		stopZ80
 		bsr.w	Poll_Controllers
-		lea	(VDP_control_port).l,a5
-		move.l	#-$6BFF6CC0,(a5)
-		move.l	#-$69016B00,(a5)
-		move.w	#-$6881,(a5)
-		move.w	#-$4000,(a5)
-		move.w	#$80,(DMA_trigger_word).w
-		move.w	(DMA_trigger_word).w,(a5)
-		lea	(VDP_control_port).l,a5
-		move.l	#-$6BFE6CC0,(a5)
-		move.l	#-$69036B00,(a5)
-		move.w	#-$6881,(a5)
-		move.w	#$7800,(a5)
-		move.w	#$83,(DMA_trigger_word).w
-		move.w	(DMA_trigger_word).w,(a5)
-		lea	(VDP_control_port).l,a5
-		move.l	#-$6BFE6C40,(a5)
-		move.l	#-$690F6B00,(a5)
-		move.w	#-$6881,(a5)
-		move.w	#$7000,(a5)
-		move.w	#$83,(DMA_trigger_word).w
-		move.w	(DMA_trigger_word).w,(a5)
+
+		dma68kToVDP Normal_palette,$0000,$80,CRAM
+		dma68kToVDP Sprite_table,$F800,$280,VRAM
+		dma68kToVDP H_scroll_buffer,$F000,$380,VRAM
+
 		bsr.w	Process_DMA_Queue
-		bsr.w	sndDriverInput
-		move.w	#0,(Z80_bus_request).l
+		startZ80
 		bsr.w	Process_Nem_Queue
 		tst.w	(Demo_timer).w
-		beq.w	locret_E9E
+		beq.w	+
 		subq.w	#1,(Demo_timer).w
-
-locret_E9E:
-		rts
++
+		jmp	(Set_Kos_Bookmark).l
 ; ---------------------------------------------------------------------------
 
 VInt_1A:
 		bsr.w	Do_ControllerPal
+		move.w	(Ctrl_1).w,(Ctrl_1_title).w
 		bsr.w	Process_Nem_Queue
+		tst.w	(Demo_timer).w
+		beq.w	+
+		subq.w	#1,(Demo_timer).w
++
 		jmp	(Set_Kos_Bookmark).l
 ; ---------------------------------------------------------------------------
 
@@ -964,10 +894,9 @@ VInt_1C:
 		bsr.w	Do_ControllerPal
 		bsr.w	Update_SSMap
 		tst.w	(Demo_timer).w
-		beq.w	loc_EC6
+		beq.w	+
 		subq.w	#1,(Demo_timer).w
-
-loc_EC6:
++
 		jmp	(Set_Kos_Bookmark).l
 ; ---------------------------------------------------------------------------
 
@@ -982,58 +911,24 @@ VInt_1E:
 
 
 Do_ControllerPal:
-		move.w	#$100,(Z80_bus_request).l
-
-loc_EE6:
-		btst	#0,(Z80_bus_request).l
-		bne.s	loc_EE6
+		stopZ80
 		bsr.w	Poll_Controllers
 		tst.b	(Water_full_screen_flag).w
-		bne.s	loc_F20
-		lea	(VDP_control_port).l,a5
-		move.l	#-$6BFF6CC0,(a5)
-		move.l	#-$69016B00,(a5)
-		move.w	#-$6881,(a5)
-		move.w	#-$4000,(a5)
-		move.w	#$80,(DMA_trigger_word).w
-		move.w	(DMA_trigger_word).w,(a5)
-		bra.s	loc_F44
-; ---------------------------------------------------------------------------
-
-loc_F20:
-		lea	(VDP_control_port).l,a5
-		move.l	#-$6BFF6CC0,(a5)
-		move.l	#-$69076AC0,(a5)
-		move.w	#-$6881,(a5)
-		move.w	#-$4000,(a5)
-		move.w	#$80,(DMA_trigger_word).w
-		move.w	(DMA_trigger_word).w,(a5)
-
-loc_F44:
-		lea	(VDP_control_port).l,a5
-		move.l	#-$6BFE6CC0,(a5)
-		move.l	#-$69036B00,(a5)
-		move.w	#-$6881,(a5)
-		move.w	#$7800,(a5)
-		move.w	#$83,(DMA_trigger_word).w
-		move.w	(DMA_trigger_word).w,(a5)
-		lea	(VDP_control_port).l,a5
-		move.l	#-$6BFE6C40,(a5)
-		move.l	#-$690F6B00,(a5)
-		move.w	#-$6881,(a5)
-		move.w	#$7000,(a5)
-		move.w	#$83,(DMA_trigger_word).w
-		move.w	(DMA_trigger_word).w,(a5)
+		bne.s	+
+		dma68kToVDP Normal_palette,$0000,$80,CRAM
+		bra.s	++
++
+		dma68kToVDP Water_palette,$0000,$80,CRAM
++
+		dma68kToVDP Sprite_table,$F800,$280,VRAM
+		dma68kToVDP H_scroll_buffer,$F000,$380,VRAM
 		bsr.w	Process_DMA_Queue
-		bsr.w	sndDriverInput
-		move.w	#0,(Z80_bus_request).l
+		startZ80
 		rts
 ; End of function Do_ControllerPal
 
 ; ---------------------------------------------------------------------------
-
-JmpTo_HInt:
-		jmp	(H_int_jump).w
+; Horizontal interrupt handler for Competition Mode
 ; ---------------------------------------------------------------------------
 
 HInt:
@@ -1377,26 +1272,13 @@ HInt2_Do_Updates:
 ; =============== S U B R O U T I N E =======================================
 
 
-sndDriverInput:
-		; Dummy leftover from Sonic 2.
-		rts
-; End of function sndDriverInput
-
-
-; =============== S U B R O U T I N E =======================================
-
-
 Init_Controllers:
-		move.w	#$100,(Z80_bus_request).l
-
-loc_134A:
-		btst	#0,(Z80_bus_request).l
-		bne.s	loc_134A
+		stopZ80
 		moveq	#$40,d0
 		move.b	d0,(HW_Port_1_Control).l
 		move.b	d0,(HW_Port_2_Control).l
 		move.b	d0,(HW_Expansion_Control).l
-		move.w	#0,(Z80_bus_request).l
+		startZ80
 		rts
 ; End of function Init_Controllers
 
