@@ -111488,8 +111488,7 @@ loc_5840C:
 		bclr	#0,$38(a0)
 		move.w	#$10,(Screen_shake_flag).w
 		moveq	#signextendB(sfx_MechaLand),d0
-		jsr	(Play_SFX).l
-		rts
+		jmp	(Play_SFX).l
 
 ; =============== S U B R O U T I N E =======================================
 
@@ -111997,7 +111996,7 @@ sub_58838:
 		bsr.w	sub_58868
 		lea	(Player_2).w,a1
 		moveq	#4,d2
-		bsr.w	sub_58868
+		bra.s	sub_58868
 
 locret_58866:
 		rts
@@ -112374,7 +112373,7 @@ loc_58B8A:
 		jsr	CreateChild1_Normal(pc)
 		moveq	#signextendB(sfx_BossHit),d0
 		jsr	(Play_SFX).l
-		jsr	(Go_Delete_Sprite).l
+		jmp	(Go_Delete_Sprite).l
 
 locret_58BD0:
 		rts
