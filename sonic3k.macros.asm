@@ -10,14 +10,14 @@ ramaddr function x,(-(x&$80000000)<<1)|x
 vdpComm function addr,type,rwd,(((type&rwd)&3)<<30)|((addr&$3FFF)<<16)|(((type&rwd)&$FC)<<2)|((addr&$C000)>>14)
 
 ; values for the type argument
-VRAM = %100001
-CRAM = %101011
-VSRAM = %100101
+VRAM = $21
+CRAM = $2B
+VSRAM = $25
 
 ; values for the rwd argument
-READ = %001100
-WRITE = %000111
-DMA = %100111
+READ = $C
+WRITE = $7
+DMA = $27
 
 ; tells the VDP to copy a region of 68k memory to VRAM or CRAM or VSRAM
 dma68kToVDP macro source,dest,length,type
