@@ -1327,39 +1327,28 @@ Init_VDP:
 		lea	(VDP_control_port).l,a0
 		lea	(VDP_data_port).l,a1
 		lea	(VDP_register_values).l,a2
-		moveq	#$12,d7
+		moveq	#18,d7
 
-loc_13C2:
+$$setRegisters:
 		move.w	(a2)+,(a0)
-		dbf	d7,loc_13C2
-		move.w	(VDP_register_values+2).l,d0
-		move.w	d0,(VDP_reg_1_command).w
-		move.w	#-$7521,(H_int_counter_command).w
+		dbf	d7,$$setRegisters
+		move.w	(VDP_register_values+2).l,d0	; get command for register #1
+		move.w	d0,(VDP_reg_1_command).w	; and store it in RAM (for easy display blanking/enabling)
+		move.w	#$8ADF,(H_int_counter_command).w
 		moveq	#0,d0
-		move.l	#$40000010,(VDP_control_port).l
+		move.l	#vdpComm($0000,VSRAM,WRITE),(VDP_control_port).l
 		move.w	d0,(a1)
 		move.w	d0,(a1)
-		move.l	#$C0000000,(VDP_control_port).l
+		move.l	#vdpComm($0000,CRAM,WRITE),(VDP_control_port).l
 		move.w	#$3F,d7
 
-loc_13F6:
+$$clearCRAM:
 		move.w	d0,(a1)
-		dbf	d7,loc_13F6
+		dbf	d7,$$clearCRAM
 		clr.l	(V_scroll_value).w
 		clr.l	(_unkF61A).w
 		move.l	d1,-(sp)
-		lea	(VDP_control_port).l,a5
-		move.w	#-$70FF,(a5)
-		move.l	#-$6B006C01,(a5)
-		move.w	#-$6880,(a5)
-		move.l	#$40000080,(a5)
-		move.w	#0,(VDP_data_port).l
-
-loc_1428:
-		move.w	(a5),d1
-		btst	#1,d1
-		bne.s	loc_1428
-		move.w	#-$70FE,(a5)
+		dmaFillVRAM 0,$0000,$10000	; clear entire VRAM
 		move.l	(sp)+,d1
 		rts
 ; End of function Init_VDP
