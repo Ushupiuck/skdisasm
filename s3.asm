@@ -113042,7 +113042,7 @@ sub_591B4:
 		move.b	d1,$3A(a0)
 		eor.b	d1,d2
 		andi.b	#$18,d2
-		beq.s	locret_59214
+		beq.w	locret_591B2
 		bsr.w	sub_59236
 		bset	#2,$38(a0)
 		clr.b	$39(a0)
@@ -113050,23 +113050,15 @@ sub_591B4:
 		btst	d4,d2
 		beq.s	loc_59204
 		lea	(Player_1).w,a1
-		bsr.w	sub_59216
+		bsr.s	sub_59216
 
 loc_59204:
 		moveq	#4,d4
 		btst	d4,d2
-		beq.s	locret_59214
+		beq.w	locret_591B2
 		swap	d0
 		lea	(Player_2).w,a1
-		bsr.w	sub_59216
-
-locret_59214:
-		rts
-; End of function sub_591B4
-
-
-; =============== S U B R O U T I N E =======================================
-
+; Continue straight to sub_59216
 
 sub_59216:
 		move.w	$1A(a0),d5
@@ -113588,7 +113580,7 @@ sub_59718:
 		tst.b	$28(a0)
 		bne.s	locret_59724
 		movea.l	$34(a0),a1
-		jsr	(a1)
+		jmp	(a1)
 
 locret_59724:
 		rts
@@ -118626,7 +118618,7 @@ Sound_DB:	include "Sound/SFX/DB.asm"
 
 	finishBank
 
-		align $8000
+		align $20
 ArtUnc_Sonic:	binclude "General/Sprites/Sonic/Art/Sonic.bin"
 		even
 ArtUnc_Tails:	binclude "General/Sprites/Tails/Art/Tails.bin"
@@ -119828,6 +119820,6 @@ Pachinko_128x128_Kos:
 Slots_16x16_Kos:
 ArtKosM_Slots:
 Slots_128x128_Kos:
-		org $200000
+;		org $200000
 EndOfROM:
 		END
