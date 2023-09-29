@@ -64,7 +64,7 @@ Cat_Main:	; Routine 0
 		moveq	#2,d1
 
 Cat_Loop:
-		jsr	(Create_New_Sprite3).l
+		jsr	(AllocateObjectAfterCurrent).l
 		bne.w	Cat_ChkGone
 		_move.l	#Caterkiller,0(a1) ; load body segment object
 		move.b	d6,routine(a1) ; goto Cat_BodySeg1 or Cat_BodySeg2 next

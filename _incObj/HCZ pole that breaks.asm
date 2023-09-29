@@ -412,7 +412,7 @@ sub_1F188:
 ; ---------------------------------------------------------------------------
 
 loc_1F198:
-		jsr	(Create_New_Sprite3).l
+		jsr	(AllocateObjectAfterCurrent).l
 		bne.s	loc_1F1FA
 
 loc_1F1A0:

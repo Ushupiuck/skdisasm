@@ -89,7 +89,7 @@ sub_1F7CE:
 		move.b	#0,anim(a1)
 		cmpa.w	#Player_1,a1
 		bne.s	locret_1F85A
-		jsr	(Create_New_Sprite3).l
+		jsr	(AllocateObjectAfterCurrent).l
 		bne.w	loc_1F848
 		move.l	#Obj_AIZ1TreeRevealControl,(a1)
 
