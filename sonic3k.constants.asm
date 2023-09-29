@@ -425,8 +425,13 @@ _unkEEFA			ds.w 1			; used exclusively in SSZ background events code
 Camera_RAM_End:
 
 Spritemask_flag			ds.w 1			; when set, indicates that special sprites are used for sprite masking
-Use_normal_sprite_table		ds.w 1			; if this is set Sprite_table_buffer and Sprite_table_buffer_P2 will be DMAed instead of Sprite_table_buffer_2 and Sprite_table_buffer_P2_2
-Switch_sprite_table		ds.w 1			; if set, switches the state of Use_normal_sprite_table
+
+; These two variables implement page-flipping of the game's sprite tables in
+; Competition Mode, to avoid incomplete sprite table data being uploaded to
+; the VDP, which was a problem that Sonic 2 suffered from.
+Current_sprite_table_page	ds.w 1
+Sprite_table_page_flip_pending	ds.w 1
+
 Event_LBZ2_DeathEgg =		*			; if set, Launch Base 2 Death Egg is currently rising
 _unkEF40_1			ds.l 1			; used as a part of calculating decimal scores
 _unkEF44_1 =			*			; used as a jump pointer in vint 1E, unknown why this is used
@@ -651,7 +656,7 @@ Player_prev_frame_P2_tail	ds.b 1			; used by DPLC routines to detect whether a D
 Level_trigger_array		ds.b $10		; used by buttons, etc.
 Anim_Counters			ds.b $10		; each word stores data on animated level art, including duration and current frame
 
-Sprite_table_buffer		ds.b $280
+Sprite_table			ds.b $280
 _unkFA80			ds.w 1			; unused
 _unkFA82			ds.b 1
 _unkFA83			ds.b 1
