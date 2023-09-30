@@ -837,14 +837,13 @@ Kos_decomp_source =		Kos_decomp_queue	; long ; the compressed data location for 
 Kos_decomp_destination =	Kos_decomp_queue+4	; long ; the decompression location for the first entry in the queue
 Kos_decomp_queue_end
 Kos_modules_left		ds.b 1			; the number of modules left to decompresses. Sign bit set indicates a module is being decompressed/has been decompressed
-			ds.b 1				; unused
+				ds.b 1			; unused
 Kos_last_module_size		ds.w 1			; the uncompressed size of the last module in words. All other modules are $800 words
 Kos_module_queue		ds.w 3*4		; 6 bytes per entry, first longword is source location and next word is VRAM destination
 Kos_module_source =		Kos_module_queue	; long ; the compressed data location for the first module in the queue
 Kos_module_destination =	Kos_module_queue+4	; word ; the VRAM destination for the first module in the queue
 Kos_module_queue_end
-_unkFF7C			ds.w 1
-_unkFF7E			ds.w 1
+				ds.w 2
 Level_select_repeat		ds.w 1			; delay counter for repeating the button press. Allows the menu move even when up/down is held down
 Level_select_option		ds.w 1			; the current selected option in the level select
 Sound_test_sound		ds.w 1
