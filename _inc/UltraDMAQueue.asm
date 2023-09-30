@@ -218,10 +218,6 @@ QueueStaticDMA macro src,length,dest
 	endif ;UseVIntSafeDMA==1
 	endm
 	endif
-; ---------------------------------------------------------------------------
-;ResetDMAQueue macro
-;	move.w	#DMA_Queue,(DMA_Queue_Slot).w
-;	endm
 ; ===========================================================================
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||

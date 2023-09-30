@@ -720,7 +720,6 @@ zWriteFMIorII:
 ;sub_C2
 zWriteFMI:
 		ld	(zYM2612_A0), a					; Select YM2612 register
-		nop									; Wait
 		ld	a, c							; a = data to send
 		ld	(zYM2612_D0), a					; Send data to register
 		ret
@@ -742,7 +741,6 @@ zWriteFMII_reduced:
 ;sub_CD
 zWriteFMII:
 		ld	(zYM2612_A1), a					; Select YM2612 register
-		nop									; Wait
 		ld	a, c							; a = data to send
 		ld	(zYM2612_D1), a					; Send data to register
 		ret
@@ -1069,7 +1067,7 @@ zAltFreqMode:
 		; Each byte on the track is either a coordination flag (0E0h to 0FFh) or
 		; the high byte of a frequency. For the latter case, the following byte
 		; is then the low byte of this same frequency.
-		; If the frequency is nonzero, the (sign extended) transposition is
+		; If the frequency is nonzero, the (sign extended) key displacement is
 		; simply *added* to this frequency.
 		; After the frequency, there is then a byte that is unused.
 		; Finally, there is a raw duration byte following.

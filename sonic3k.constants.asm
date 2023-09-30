@@ -717,8 +717,8 @@ SSZ_MTZ_boss_Y_vel		ds.w 1			; vertical velocity of the Metropolis Zone boss in 
 SSZ_MTZ_boss_laser_timer	ds.w 1			; counts down until a laser is fired in Sky Sanctuary's Metropolis boss fight
 			ds.b $C				; unused
 
-DMA_queue			ds.w $12*7		; stores all the VDP commands necessary to initiate a DMA transfer
-DMA_queue_slot			ds.w 1			; points to the next free slot on the queue
+DMA_Queue			ds.w $12*7		; stores all the VDP commands necessary to initiate a DMA transfer
+DMA_Queue_Slot			ds.w 1			; points to the next free slot on the queue
 ;			ds.w 1				; unused
 Normal_palette			ds.b $80
 Normal_palette_line_2 =		Normal_palette+$20	; $20 bytes
@@ -729,7 +729,7 @@ Target_palette_line_2 =		Target_palette+$20	; $20 bytes
 Target_palette_line_3 =		Target_palette+$40	; $20 bytes
 Target_palette_line_4 =		Target_palette+$60	; $20 bytes
 Stack_contents			ds.b $100		; stack contents
-System_stack =			*			; this is the top of the stack, it grows downwards
+System_Stack =			*			; this is the top of the stack, it grows downwards
 
 			ds.w 1				; unused
 Restart_level_flag		ds.w 1
@@ -936,7 +936,7 @@ Ref_Checksum_String := 'SM&K'
 		fatal "Sonic & Knuckles RAM definitions are too large by $\{*} bytes!"
 	endif
 	dephase
-	phase	Object_Respawn_Table
+	phase	Object_respawn_table
 v_regbuffer:			ds.b	$40	; stores registers d0-a7 during an error event ($40 bytes)
 v_spbuffer:			ds.b	4	; stores most recent sp address (4 bytes)
 v_errortype:			ds.b	1	; error type

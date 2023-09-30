@@ -341,7 +341,7 @@ palscriptrun	macro header
 
 locVRAM:	macro loc,controlport
 		if ("controlport"=="")
-		move.l	#($40000000+((loc&$3FFF)<<16)+((loc&$C000)>>14)),(vdp_control_port).l
+		move.l	#($40000000+((loc&$3FFF)<<16)+((loc&$C000)>>14)),(VDP_control_port).l
 		else
 		move.l	#($40000000+((loc&$3FFF)<<16)+((loc&$C000)>>14)),controlport
 		endif
@@ -362,7 +362,5 @@ enable_ints:	macro
 		endm
 ; ---------------------------------------------------------------------------
 ResetDMAQueue macro
-;	clr.w	(DMA_Queue).w
-;	move.l	#DMA_Queue,(DMA_Queue_Slot).w
 	move.w	#DMA_Queue,(DMA_Queue_Slot).w
 	endm
