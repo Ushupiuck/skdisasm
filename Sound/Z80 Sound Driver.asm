@@ -13,7 +13,7 @@
 ; ===========================================================================
 
 ; Set this to 1 to fix some bugs in the driver.
-fix_sndbugs				=  0
+fix_sndbugs				=  1
 
 z80_SoundDriverStart:
 
