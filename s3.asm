@@ -148,7 +148,7 @@ Init_InputPSG:
 		move	#$2700,sr
 
 Init_SkipPowerOn:
-		bra.s	Test_CountryCode
+		bra.s	Test_Checksum
 ; ---------------------------------------------------------------------------
 SetupValues:	dc.w $8000, $3FFF, $100
 		dc.l Z80_RAM
@@ -222,192 +222,6 @@ Z80StartupCodeEnd:
 		dc.l $C0000000		; value for CRAM write mode
 		dc.l $40000010		; value for VSRAM write mode
 PSGInitValues:	dc.b $9F, $BF, $DF, $FF	; values for PSG channel volumes
-; ---------------------------------------------------------------------------
-
-Test_CountryCode:
-		tst.w	(VDP_control_port).l
-		clr.l	d0
-		move.b	(HW_Version).l,d0
-		lsr.b	#6,d0
-		andi.b	#3,d0
-		lea	asc_440(pc),a0
-		move.b	(a0,d0.w),d0
-		tst.b	d0
-		beq.w	loc_408
-		lea	(Country_Code).l,a0
-		move.w	#$F,d1
-
-loc_330:
-		cmp.b	(a0),d0
-		beq.w	Test_Checksum
-		addq.l	#1,a0
-		dbf	d1,loc_330
-		lea	(VDP_data_port).l,a4
-		lea	(VDP_control_port).l,a5
-		move.w	#-$7E9C,(a5)
-		move.w	#-$7DD0,(a5)
-		move.w	#-$737F,(a5)
-		move.w	#-$70FE,(a5)
-		move.w	#-$6FFF,(a5)
-		move.l	#-$3FFE0000,(a5)
-		move.w	#$EEE,(a4)
-		move.l	#$40000000,(a5)
-		lea	byte_4C2(pc),a0
-		move.w	#$3A,d0
-		move.l	#$10000000,d2
-
-loc_37A:
-		move.w	#7,d6
-
-loc_37E:
-		move.b	(a0)+,d1
-		move.l	#0,d4
-		move.w	#7,d5
-
-loc_38A:
-		rol.l	#4,d2
-		ror.b	#1,d1
-		bcc.s	loc_392
-		or.l	d2,d4
-
-loc_392:
-		dbf	d5,loc_38A
-		move.l	d4,(a4)
-		dbf	d6,loc_37E
-		dbf	d0,loc_37A
-		move.b	#8,d1
-		lea	byte_458(pc),a0
-		move.b	(a0)+,d0
-		bsr.w	sub_40A
-		lea	(Country_Code).l,a1
-
-loc_3B4:
-		cmpi.b	#$20,(a1)
-		beq.s	loc_3FC
-		lea	word_444(pc),a2
-
-loc_3BE:
-		move.w	(a2)+,d4
-		tst.b	d4
-		beq.s	loc_3F8
-		cmp.b	(a1),d4
-		bne.s	loc_3F4
-		cmpi.b	#$20,1(a1)
-		bne.s	loc_3E4
-		cmpa.l	#$1F0,a1
-		beq.s	loc_3E4
-		lea	byte_475(pc),a0
-		move.b	(a0)+,d0
-		addq.w	#1,d1
-		bsr.w	sub_40A
-
-loc_3E4:
-		lea	asc_440(pc),a0
-		adda.l	(a2)+,a0
-		move.b	(a0)+,d0
-		addq.w	#1,d1
-		bsr.w	sub_40A
-		bra.s	loc_3F8
-; ---------------------------------------------------------------------------
-
-loc_3F4:
-		addq.l	#4,a2
-		bra.s	loc_3BE
-; ---------------------------------------------------------------------------
-
-loc_3F8:
-		addq.l	#1,a1
-		bra.s	loc_3B4
-; ---------------------------------------------------------------------------
-
-loc_3FC:
-		lea	byte_478(pc),a0
-		move.b	(a0)+,d0
-		addq.w	#1,d1
-		bsr.w	sub_40A
-
-loc_408:
-		bra.s	loc_408
-
-; =============== S U B R O U T I N E =======================================
-
-
-sub_40A:
-		move.b	d1,d2
-		andi.l	#$FF,d2
-		swap	d2
-		lsl.l	#7,d2
-		move.b	d0,d3
-		andi.l	#$FF,d3
-		swap	d3
-		asl.l	#1,d3
-		add.l	d3,d2
-		addi.l	#$40000003,d2
-		move.l	d2,(a5)
-
-loc_42C:
-		tst.b	(a0)
-		beq.s	locret_43E
-		move.b	(a0)+,d2
-		subi.b	#$20,d2
-		andi.w	#$FF,d2
-		move.w	d2,(a4)
-		bra.s	loc_42C
-; ---------------------------------------------------------------------------
-
-locret_43E:
-		rts
-; End of function sub_40A
-
-; ---------------------------------------------------------------------------
-asc_440:	dc.b "J",0
-		dc.b "UE"
-word_444:	dc.w $4A, 0
-		dc.w $42, $55, 0
-		dc.w $53, $45, 0
-		dc.w $61, 0
-byte_458:	dc.b 6
-		dc.b "DEVELOPED FOR USE ONLY WITH",0
-byte_475:	dc.b $12
-		dc.b "&",0
-byte_478:	dc.b $F
-		dc.b "SYSTEMS.",0
-		dc.b $C
-		dc.b "NTSC MEGA DRIVE",0
-		dc.b $D
-		dc.b "NTSC GENESIS",0
-		dc.b 4
-		dc.b "PAL AND FRENCH SECAM MEGA DRIVE",0
-byte_4C2:	dc.b    0,   0,   0,   0,   0,   0,   0,   0, $18, $18, $18, $18,   0, $18, $18,   0
-		dc.b  $36, $36, $48,   0,   0,   0,   0,   0, $12, $12, $7F, $12, $7F, $24, $24,   0
-		dc.b    8, $3F, $48, $3E,   9, $7E,   8,   0, $71, $52, $74,   8, $17, $25, $47,   0
-		dc.b  $18, $24, $18, $29, $45, $46, $39,   0, $30, $30, $40,   0,   0,   0,   0,   0
-		dc.b   $C, $10, $20, $20, $20, $10,  $C,   0, $30,   8,   4,   4,   4,   8, $30,   0
-		dc.b    0,   8, $2A, $1C, $2A,   8,   0,   0,   8,   8,   8, $7F,   8,   8,   8,   0
-		dc.b    0,   0,   0,   0,   0, $30, $30, $40,   0,   0,   0, $7F,   0,   0,   0,   0
-		dc.b    0,   0,   0,   0,   0, $30, $30,   0,   1,   2,   4,   8, $10, $20, $40,   0
-		dc.b  $1E, $33, $33, $33, $33, $33, $1E,   0, $18, $38, $18, $18, $18, $18, $3C,   0
-		dc.b  $3E, $63, $63,  $E, $38, $60, $7F,   0, $3E, $63,   3, $1E,   3, $63, $3E,   0
-		dc.b    6,  $E, $1E, $36, $66, $7F,   6,   0, $7E, $60, $7E, $63,   3, $63, $3E,   0
-		dc.b  $3E, $63, $60, $7E, $63, $63, $3E,   0, $3F, $63,   6,   6,  $C,  $C, $18,   0
-		dc.b  $3E, $63, $63, $3E, $63, $63, $3E,   0, $3E, $63, $63, $3F,   3, $63, $3E,   0
-		dc.b    0, $18, $18,   0,   0, $18, $18,   0,   0, $18, $18,   0,   0, $18, $18, $20
-		dc.b    3,  $C, $30, $40, $30,  $C,   3,   0,   0,   0, $7F,   0, $7F,   0,   0,   0
-		dc.b  $60, $18,   6,   1,   6, $18, $60,   0, $3E, $63,   3, $1E, $18,   0, $18,   0
-		dc.b  $3C, $42, $39, $49, $49, $49, $36,   0, $1C, $1C, $36, $36, $7F, $63, $63,   0
-		dc.b  $7E, $63, $63, $7E, $63, $63, $7E,   0, $3E, $73, $60, $60, $60, $73, $3E,   0
-		dc.b  $7E, $63, $63, $63, $63, $63, $7E,   0, $3F, $30, $30, $3E, $30, $30, $3F,   0
-		dc.b  $3F, $30, $30, $3E, $30, $30, $30,   0, $3E, $73, $60, $67, $63, $73, $3E,   0
-		dc.b  $66, $66, $66, $7E, $66, $66, $66,   0, $18, $18, $18, $18, $18, $18, $18,   0
-		dc.b   $C,  $C,  $C,  $C, $CC, $CC, $78,   0, $63, $66, $6C, $78, $6C, $66, $63,   0
-		dc.b  $60, $60, $60, $60, $60, $60, $7F,   0, $63, $77, $7F, $6B, $6B, $63, $63,   0
-		dc.b  $63, $73, $7B, $7F, $6F, $67, $63,   0, $3E, $63, $63, $63, $63, $63, $3E,   0
-		dc.b  $7E, $63, $63, $7E, $60, $60, $60,   0, $3E, $63, $63, $63, $6F, $63, $3F,   0
-		dc.b  $7E, $63, $63, $7E, $68, $66, $67,   0, $3E, $63, $70, $3E,   7, $63, $3E,   0
-		dc.b  $7E, $18, $18, $18, $18, $18, $18,   0, $66, $66, $66, $66, $66, $66, $3C,   0
-		dc.b  $63, $63, $63, $36, $36, $1C, $1C,   0, $6B, $6B, $6B, $6B, $6B, $7F, $36,   0
-		dc.b  $63, $63, $36, $1C, $36, $63, $63,   0, $66, $66, $66, $3C, $18, $18, $18,   0
-		dc.b  $7F,   7,  $E, $1C, $38, $70, $7F,   0
 ; ---------------------------------------------------------------------------
 
 Test_Checksum:
@@ -5268,6 +5082,7 @@ loc_47A4:
 loc_47B4:
 		move.l	d0,(a1)+
 		dbf	d1,loc_47B4
+
 		lea	(Lag_frame_count).w,a1
 		moveq	#0,d0
 		move.w	#$15,d1
@@ -5275,6 +5090,7 @@ loc_47B4:
 loc_47C4:
 		move.l	d0,(a1)+
 		dbf	d1,loc_47C4
+
 		lea	(Tails_CPU_interact).w,a1
 		moveq	#0,d0
 		move.w	#$3F,d1
