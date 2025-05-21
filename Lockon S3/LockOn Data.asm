@@ -34,7 +34,7 @@ Pal_CompetitionResults:
 		binclude "General/Competition Menu/Palettes/Results.bin"
 		even
 MapEni_CompetitionResultsLED:
-		binclude "General/Competition Menu/Enigma Map/Menu.bin"
+		binclude "General/Competition Menu/Enigma Map/Menu.eni"
 		even
 MapUnc_CompetitionResultsLetters:
 		binclude "General/Competition Menu/Uncompressed Map/Results Letters.bin"
@@ -256,21 +256,29 @@ SStageLayoutPtrs:
 		dc.l SStage6_Layout
 		dc.l SStage7_Layout
 		dc.l SStage8_Layout
-SStage1_Layout:	binclude "General/Special Stage/Layout/S3 1.bin"
+SStage1_Layout:
+		binclude "General/Special Stage/Layout/S3 1.bin"
 		even
-SStage2_Layout:	binclude "General/Special Stage/Layout/S3 2.bin"
+SStage2_Layout:
+		binclude "General/Special Stage/Layout/S3 2.bin"
 		even
-SStage3_Layout:	binclude "General/Special Stage/Layout/S3 3.bin"
+SStage3_Layout:
+		binclude "General/Special Stage/Layout/S3 3.bin"
 		even
-SStage4_Layout:	binclude "General/Special Stage/Layout/S3 4.bin"
+SStage4_Layout:
+		binclude "General/Special Stage/Layout/S3 4.bin"
 		even
-SStage5_Layout:	binclude "General/Special Stage/Layout/S3 5.bin"
+SStage5_Layout:
+		binclude "General/Special Stage/Layout/S3 5.bin"
 		even
-SStage6_Layout:	binclude "General/Special Stage/Layout/S3 6.bin"
+SStage6_Layout:
+		binclude "General/Special Stage/Layout/S3 6.bin"
 		even
-SStage7_Layout:	binclude "General/Special Stage/Layout/S3 7.bin"
+SStage7_Layout:
+		binclude "General/Special Stage/Layout/S3 7.bin"
 		even
-SStage8_Layout:	binclude "General/Special Stage/Layout/S3 8.bin"
+SStage8_Layout:
+		binclude "General/Special Stage/Layout/S3 8.bin"
 		even
 HCZ_WaterlineScroll_Data:
 		binclude "Levels/HCZ/Misc/HCZ Waterline Scroll Data.bin"
@@ -278,74 +286,107 @@ HCZ_WaterlineScroll_Data:
 LBZ_WaterlineScroll_Data:
 		binclude "Levels/LBZ/Misc/LBZ Waterline Scroll Data.bin"
 		even
-Solid_AIZ1:	binclude "Levels/AIZ/Collision/1.bin"
+Solid_AIZ1:
+		binclude "Levels/AIZ/Collision/1.bin"
 		even
-Solid_AIZ2:	binclude "Levels/AIZ/Collision/2.bin"
+Solid_AIZ2:
+		binclude "Levels/AIZ/Collision/2.bin"
 		even
-Solid_HCZ1:	binclude "Levels/HCZ/Collision/1.bin"
+Solid_HCZ1:
+		binclude "Levels/HCZ/Collision/1.bin"
 		even
-Solid_HCZ2:	binclude "Levels/HCZ/Collision/2.bin"
+Solid_HCZ2:
+		binclude "Levels/HCZ/Collision/2.bin"
 		even
-Solid_MGZ1:	binclude "Levels/MGZ/Collision/1.bin"
+Solid_MGZ1:
+		binclude "Levels/MGZ/Collision/1.bin"
 		even
-Solid_MGZ2:	binclude "Levels/MGZ/Collision/2.bin"
+Solid_MGZ2:
+		binclude "Levels/MGZ/Collision/2.bin"
 		even
-Solid_CNZ:	binclude "Levels/CNZ/Collision/1.bin"
+Solid_CNZ:
+		binclude "Levels/CNZ/Collision/1.bin"
 		even
-Solid_ICZ1:	binclude "Levels/ICZ/Collision/1.bin"
+Solid_ICZ1:
+		binclude "Levels/ICZ/Collision/1.bin"
 		even
-Solid_ICZ2:	binclude "Levels/ICZ/Collision/2.bin"
+Solid_ICZ2:
+		binclude "Levels/ICZ/Collision/2.bin"
 		even
-Solid_LBZ1:	binclude "Levels/LBZ/Collision/1.bin"
+Solid_LBZ1:
+		binclude "Levels/LBZ/Collision/1.bin"
 		even
-Solid_LBZ2:	binclude "Levels/LBZ/Collision/2.bin"
+Solid_LBZ2:
+		binclude "Levels/LBZ/Collision/2.bin"
 		even
-Solid_ALZ:	binclude "Levels/ALZ/Collision/1.bin"
+Solid_ALZ:
+		binclude "Levels/ALZ/Collision/1.bin"
 		even
-Solid_BPZ:	binclude "Levels/BPZ/Collision/1.bin"
+Solid_BPZ:
+		binclude "Levels/BPZ/Collision/1.bin"
 		even
-Solid_DPZ:	binclude "Levels/DPZ/Collision/1.bin"
+Solid_DPZ:
+		binclude "Levels/DPZ/Collision/1.bin"
 		even
-Solid_CGZ:	binclude "Levels/CGZ/Collision/1.bin"
+Solid_CGZ:
+		binclude "Levels/CGZ/Collision/1.bin"
 		even
-Solid_EMZ:	binclude "Levels/EMZ/Collision/1.bin"
+Solid_EMZ:
+		binclude "Levels/EMZ/Collision/1.bin"
 		even
 Solid_Gumball_Special:
 		binclude "Levels/Gumball/Collision/1.bin"
 		even
-Layout_AIZ1:	binclude "Levels/AIZ/Layout/1.bin"
+Layout_AIZ1:
+		binclude "Levels/AIZ/Layout/1.bin"
 		even
-Layout_AIZ2:	binclude "Levels/AIZ/Layout/2.bin"
+Layout_AIZ2:
+		binclude "Levels/AIZ/Layout/2.bin"
 		even
-Layout_HCZ1:	binclude "Levels/HCZ/Layout/1.bin"
+Layout_HCZ1:
+		binclude "Levels/HCZ/Layout/1.bin"
 		even
-Layout_HCZ2:	binclude "Levels/HCZ/Layout/2.bin"
+Layout_HCZ2:
+		binclude "Levels/HCZ/Layout/2.bin"
 		even
-Layout_MGZ1:	binclude "Levels/MGZ/Layout/1.bin"
+Layout_MGZ1:
+		binclude "Levels/MGZ/Layout/1.bin"
 		even
-Layout_MGZ2:	binclude "Levels/MGZ/Layout/2.bin"
+Layout_MGZ2:
+		binclude "Levels/MGZ/Layout/2.bin"
 		even
-Layout_CNZ1:	binclude "Levels/CNZ/Layout/1.bin"
+Layout_CNZ1:
+		binclude "Levels/CNZ/Layout/1.bin"
 		even
-Layout_CNZ2:	binclude "Levels/CNZ/Layout/2.bin"
+Layout_CNZ2:
+		binclude "Levels/CNZ/Layout/2.bin"
 		even
-Layout_ICZ1:	binclude "Levels/ICZ/Layout/1.bin"
+Layout_ICZ1:
+		binclude "Levels/ICZ/Layout/1.bin"
 		even
-Layout_ICZ2:	binclude "Levels/ICZ/Layout/2.bin"
+Layout_ICZ2:
+		binclude "Levels/ICZ/Layout/2.bin"
 		even
-Layout_LBZ1:	binclude "Levels/LBZ/Layout/1.bin"
+Layout_LBZ1:
+		binclude "Levels/LBZ/Layout/1.bin"
 		even
-Layout_LBZ2:	binclude "Levels/LBZ/Layout/2.bin"
+Layout_LBZ2:
+		binclude "Levels/LBZ/Layout/2.bin"
 		even
-Layout_ALZ:	binclude "Levels/ALZ/Layout/1.bin"
+Layout_ALZ:
+		binclude "Levels/ALZ/Layout/1.bin"
 		even
-Layout_BPZ:	binclude "Levels/BPZ/Layout/1.bin"
+Layout_BPZ:
+		binclude "Levels/BPZ/Layout/1.bin"
 		even
-Layout_DPZ:	binclude "Levels/DPZ/Layout/1.bin"
+Layout_DPZ:
+		binclude "Levels/DPZ/Layout/1.bin"
 		even
-Layout_CGZ:	binclude "Levels/CGZ/Layout/1.bin"
+Layout_CGZ:
+		binclude "Levels/CGZ/Layout/1.bin"
 		even
-Layout_EMZ:	binclude "Levels/EMZ/Layout/1.bin"
+Layout_EMZ:
+		binclude "Levels/EMZ/Layout/1.bin"
 		even
 Layout_Gumball_Special:
 		binclude "Levels/Gumball/Layout/1.bin"
@@ -558,11 +599,14 @@ ArtUnc_SplashDrown:
 ArtNem_Title_SonicSprites:
 		binclude "General/Title/Nemesis Art/S3 Sonic Sprites.bin"
 		even
-DemoDat_AIZ:	binclude "Levels/AIZ/Demodata/1.bin"
+DemoDat_AIZ:
+		binclude "Levels/AIZ/Demodata/1.bin"
 		even
-DemoDat_HCZ:	binclude "Levels/HCZ/Demodata/1.bin"
+DemoDat_HCZ:
+		binclude "Levels/HCZ/Demodata/1.bin"
 		even
-DemoDat_MGZ:	binclude "Levels/MGZ/Demodata/1.bin"
+DemoDat_MGZ:
+		binclude "Levels/MGZ/Demodata/1.bin"
 		even
 ArtUnc_Tails:
 		binclude "General/Sprites/Tails/Art/Tails.bin"
@@ -615,46 +659,46 @@ ArtNem_2PDashdust:
 		binclude "General/2P Zone/Nemesis Art/Spindash Dust.bin"
 		even
 MapEni_S3TitleSonic1:
-		binclude "General/Title/Enigma Map/S3 Sonic 1.bin"
+		binclude "General/Title/Enigma Map/S3 Sonic 1.eni"
 		even
 MapEni_S3TitleSonic2:
-		binclude "General/Title/Enigma Map/S3 Sonic 2.bin"
+		binclude "General/Title/Enigma Map/S3 Sonic 2.eni"
 		even
 MapEni_S3TitleSonic3:
-		binclude "General/Title/Enigma Map/S3 Sonic 3.bin"
+		binclude "General/Title/Enigma Map/S3 Sonic 3.eni"
 		even
 MapEni_S3TitleSonic4:
-		binclude "General/Title/Enigma Map/S3 Sonic 4.bin"
+		binclude "General/Title/Enigma Map/S3 Sonic 4.eni"
 		even
 MapEni_S3TitleSonic5:
-		binclude "General/Title/Enigma Map/S3 Sonic 5.bin"
+		binclude "General/Title/Enigma Map/S3 Sonic 5.eni"
 		even
 MapEni_S3TitleSonic6:
-		binclude "General/Title/Enigma Map/S3 Sonic 6.bin"
+		binclude "General/Title/Enigma Map/S3 Sonic 6.eni"
 		even
 MapEni_S3TitleSonic7:
-		binclude "General/Title/Enigma Map/S3 Sonic 7.bin"
+		binclude "General/Title/Enigma Map/S3 Sonic 7.eni"
 		even
 MapEni_S3TitleSonic8:
-		binclude "General/Title/Enigma Map/S3 Sonic 8.bin"
+		binclude "General/Title/Enigma Map/S3 Sonic 8.eni"
 		even
 MapEni_S3TitleSonic9:
-		binclude "General/Title/Enigma Map/S3 Sonic 9.bin"
+		binclude "General/Title/Enigma Map/S3 Sonic 9.eni"
 		even
 MapEni_S3TitleSonicA:
-		binclude "General/Title/Enigma Map/S3 Sonic A.bin"
+		binclude "General/Title/Enigma Map/S3 Sonic A.eni"
 		even
 MapEni_S3TitleSonicB:
-		binclude "General/Title/Enigma Map/S3 Sonic B.bin"
+		binclude "General/Title/Enigma Map/S3 Sonic B.eni"
 		even
 MapEni_S3TitleSonicC:
-		binclude "General/Title/Enigma Map/S3 Sonic C.bin"
+		binclude "General/Title/Enigma Map/S3 Sonic C.eni"
 		even
 MapEni_S3TitleSonicD:
-		binclude "General/Title/Enigma Map/S3 Sonic D.bin"
+		binclude "General/Title/Enigma Map/S3 Sonic D.eni"
 		even
 MapEni_S3TitleBg:
-		binclude "General/Title/Enigma Map/S3 BG.bin"
+		binclude "General/Title/Enigma Map/S3 BG.eni"
 		even
 Map_S3TitleBanner:
 		include "General/Title/Map - S3 Banner.asm"
@@ -716,6 +760,7 @@ LBZFinalBoss2_CircleLookup:
 		dc.b   $F, $10, $11, $12, $13, $14, $15, $15, $16, $17, $18, $19, $19, $1A, $1B, $1C
 		dc.b  $1C, $1D, $1E, $1E, $1F, $20, $20, $21, $21, $22, $22, $23, $23, $24, $24, $25
 		dc.b  $25, $25, $26, $26, $26, $27, $27, $27, $27, $27, $28, $28, $28, $28, $28, $28
+		even
 Map_Blastoid:
 		include "General/Sprites/Blastoid/Map - Blastoid.asm"
 Map_Poindexter:
@@ -779,15 +824,16 @@ HCZMiniboss_RocketTwistLookup:
 		dc.b  $16, $16, $16, $15, $15, $15, $15, $14, $14, $14, $13, $13, $13, $12, $12, $11
 		dc.b  $11, $11, $10, $10,  $F,  $F,  $E,  $E,  $D,  $D,  $C,  $C,  $B,  $B,  $A,  $A
 		dc.b    9,   9,   8,   8,   7,   6,   6,   5,   5,   4,   4,   3,   2,   2,   1,   1
-		dc.b    0, $FF, $FF, $FE, $FE, $FD, $FC, $FC, $FB, $FB, $FA, $FA, $F9, $F8, $F8, $F7
-		dc.b  $F7, $F6, $F6, $F5, $F5, $F4, $F4, $F3, $F3, $F2, $F2, $F1, $F1, $F0, $F0, $EF
-		dc.b  $EF, $EF, $EE, $EE, $ED, $ED, $ED, $EC, $EC, $EC, $EB, $EB, $EB, $EB, $EA, $EA
-		dc.b  $EA, $EA, $E9, $E9, $E9, $E9, $E9, $E9, $E8, $E8, $E8, $E8, $E8, $E8, $E8, $E8
+		dc.b    0,  -1,  -1,  -2,  -2,  -3,  -4,  -4,  -5,  -5,  -6,  -6,  -7,  -8,  -8,  -9
+		dc.b   -9, -$A, -$A, -$B, -$B, -$C, -$C, -$D, -$D, -$E, -$E, -$F, -$F,-$10,-$10,-$11
+		dc.b -$11,-$11,-$12,-$12,-$13,-$13,-$13,-$14,-$14,-$14,-$15,-$15,-$15,-$15,-$16,-$16
+		dc.b -$16,-$16,-$17,-$17,-$17,-$17,-$17,-$17,-$18,-$18,-$18,-$18,-$18,-$18,-$18,-$18
 LBZ2FinalBoss2_CircleLookup2:
 		dc.b    0,   0,   1,   1,   2,   2,   3,   3,   4,   4,   5,   5,   6,   6,   7,   7
 		dc.b    8,   8,   9,   9,   9,  $A,  $A,  $B,  $B,  $C,  $C,  $C,  $D,  $D,  $D,  $E
 		dc.b   $E,  $E,  $F,  $F,  $F, $10, $10, $10, $11, $11, $11, $11, $12, $12, $12, $12
 		dc.b  $12, $13, $13, $13, $13, $13, $13, $14, $14, $14, $14, $14, $14, $14, $14, $14
+		even
 Map_HCZMiniboss:
 		include "Levels/HCZ/Misc Object Data/Map - Miniboss.asm"
 Map_HCZMinibossSplash:
@@ -803,6 +849,7 @@ ICZMiniboss_OrbAngleLookup:
 		dc.b  $12, $13, $15, $16, $17, $18, $19, $1A, $1B, $1C, $1D, $1E, $1E, $1F, $20, $21
 		dc.b  $22, $23, $24, $24, $25, $26, $27, $27, $28, $29, $29, $2A, $2A, $2B, $2B, $2C
 		dc.b  $2C, $2D, $2D, $2E, $2E, $2E, $2F, $2F, $2F, $2F, $2F, $30, $30, $30, $30, $30
+		even
 Map_ICZMiniboss:
 		include "Levels/ICZ/Misc Object Data/Map - Miniboss.asm"
 Map_HCZEndBoss:
@@ -1173,13 +1220,13 @@ Pal_CompetitionMenuBG:
 		binclude "General/Competition Menu/Palettes/BG.bin"
 		even
 MapEni_S3MenuBG:
-		binclude "General/Save Menu/Enigma Map/Menu BG.bin"
+		binclude "General/Save Menu/Enigma Map/Menu BG.eni"
 		even
 ArtKos_S3MenuBG:
 		binclude "General/Save Menu/Kosinski Art/Menu BG.bin"
 		even
 MapEni_CompetitionLevBorder:
-		binclude "General/Competition Menu/Enigma Map/Level Border.bin"
+		binclude "General/Competition Menu/Enigma Map/Level Border.eni"
 		even
 MapUnc_CompetitionTimeBorder:
 		binclude "General/Competition Menu/Uncompressed Map/Time Border.bin"
@@ -1188,10 +1235,10 @@ MapUnc_CompetitionBESTTIME:
 		binclude "General/Competition Menu/Uncompressed Map/Time Text.bin"
 		even
 MapEni_CompetitionLevImage:
-		binclude "General/Competition Menu/Enigma Map/Level Images.bin"
+		binclude "General/Competition Menu/Enigma Map/Level Images.eni"
 		even
 MapEni_CompetitionLevName:
-		binclude "General/Competition Menu/Enigma Map/Level Names.bin"
+		binclude "General/Competition Menu/Enigma Map/Level Names.eni"
 		even
 ArtKos_CompetitionMode:
 		binclude "General/Competition Menu/Kosinski Art/Mode Select.bin"
@@ -1209,7 +1256,7 @@ ArtKos_CompetitionPlayer:
 		binclude "General/Competition Menu/Kosinski Art/Player Sprites.bin"
 		even
 MapEni_SaveScreen_Layout:
-		binclude "General/Save Menu/Enigma Map/Save Screen Layout.bin"
+		binclude "General/Save Menu/Enigma Map/Save Screen Layout.eni"
 		even
 MapUnc_SaveScreenNEW:
 		binclude "General/Save Menu/Uncompressed Map/NEW.bin"
@@ -1360,73 +1407,73 @@ DacBank2:	startBank
 		offsetBankTableEntry.w	DAC_C3_Setup2
 		offsetBankTableEntry.w	DAC_C4_Setup2
 
-DAC_81_Setup2:			DAC_Null_Setup $04
-DAC_82_Setup2:			DAC_Null_Setup $0E
-DAC_83_Setup2:			DAC_Null_Chain $14,DAC_82_Setup2
-DAC_84_Setup2:			DAC_Null_Chain $1A,DAC_83_Setup2
-DAC_85_Setup2:			DAC_Null_Chain $20,DAC_84_Setup2
-DAC_86_Setup2:			DAC_Null_Setup $04
-DAC_87_Setup2:			DAC_Null_Setup $04
-DAC_88_Setup2:			DAC_Null_Setup $06
-DAC_89_Setup2:			DAC_Null_Setup $0A
-DAC_8A_Setup2:			DAC_Null_Setup $14
-DAC_8B_Setup2:			DAC_Null_Chain $1B,DAC_8A_Setup2
-DAC_8C_Setup2:			DAC_Null_Setup $08
-DAC_8D_Setup2:			DAC_Null_Setup $0B
-DAC_8E_Setup2:			DAC_Null_Chain $11,DAC_8D_Setup2
-DAC_8F_Setup2:			DAC_Null_Setup $08
-DAC_90_Setup2:			DAC_Null_Setup $03
-DAC_91_Setup2:			DAC_Null_Chain $07,DAC_90_Setup2
-DAC_92_Setup2:			DAC_Null_Chain $0A,DAC_91_Setup2
-DAC_93_Setup2:			DAC_Null_Chain $0E,DAC_92_Setup2
-DAC_94_Setup2:			DAC_Null_Setup $06
-DAC_95_Setup2:			DAC_Null_Chain $0A,DAC_94_Setup2
-DAC_96_Setup2:			DAC_Null_Chain $0D,DAC_95_Setup2
-DAC_97_Setup2:			DAC_Null_Chain $12,DAC_96_Setup2
-DAC_98_Setup2:			DAC_Null_Setup $0B
-DAC_99_Setup2:			DAC_Null_Chain $13,DAC_98_Setup2
-DAC_9A_Setup2:			DAC_Null_Chain $16,DAC_99_Setup2
-DAC_9B_Setup2:			DAC_Setup $0C,DAC_9B_Data
-DAC_A2_Setup2:			DAC_Setup $0A,DAC_A2_Data
-DAC_A3_Setup2:			DAC_Setup $18,DAC_A3_Data
-DAC_A4_Setup2:			DAC_Setup $18,DAC_A4_Data
-DAC_A5_Setup2:			DAC_Setup $0C,DAC_A5_Data
-DAC_A6_Setup2:			DAC_Setup $09,DAC_A6_Data
-DAC_A7_Setup2:			DAC_Setup $18,DAC_A7_Data
-DAC_A8_Setup2:			DAC_Setup $18,DAC_A8_Data
-DAC_A9_Setup2:			DAC_Setup $0C,DAC_A9_Data
-DAC_AA_Setup2:			DAC_Setup $0A,DAC_AA_Data
-DAC_AB_Setup2:			DAC_Null_Setup $0D
-DAC_AC_Setup2:			DAC_Null_Setup $06
-DAC_AD_Setup2:			DAC_Null_Setup $10
-DAC_AE_Setup2:			DAC_Null_Chain $18,DAC_AD_Setup2
-DAC_AF_Setup2:			DAC_Null_Setup $09
-DAC_B0_Setup2:			DAC_Null_Chain $12,DAC_AF_Setup2
-DAC_B1_Setup2:			DAC_Null_Setup $18
-DAC_B2_Setup2:			DAC_Null_Setup $16
-DAC_B3_Setup2:			DAC_Null_Chain $20,DAC_B2_Setup2
-DAC_B4_Setup2:			DAC_Null_Setup $0C
-DAC_B5_Setup2:			DAC_Null_Setup $0C
-DAC_B6_Setup2:			DAC_Null_Setup $0C
-DAC_B7_Setup2:			DAC_Null_Setup $18
-DAC_B8_B9_Setup2:		DAC_Null_Setup $0C
-DAC_BA_Setup2:			DAC_Null_Setup $18
-DAC_BB_Setup2:			DAC_Null_Setup $18
-DAC_BC_Setup2:			DAC_Null_Setup $18
-DAC_BD_Setup2:			DAC_Null_Setup $0C
-DAC_BE_Setup2:			DAC_Null_Setup $0C
-DAC_BF_Setup2:			DAC_Null_Setup $1C
-DAC_C0_Setup2:			DAC_Null_Setup $0B
-DAC_C1_Setup2:			DAC_Null_Chain $0F,DAC_B4_Setup2
-DAC_C2_Setup2:			DAC_Null_Chain $11,DAC_C1_Setup2
-DAC_C3_Setup2:			DAC_Null_Chain $12,DAC_C2_Setup2
-DAC_C4_Setup2:			DAC_Null_Chain $0B,DAC_C3_Setup2
-DAC_9C_Setup2:			DAC_Setup $0A,DAC_9C_Data
-DAC_9D_Setup2:			DAC_Setup $18,DAC_9D_Data
-DAC_9E_Setup2:			DAC_Setup $18,DAC_9E_Data
-DAC_9F_Setup2:			DAC_Setup $0C,DAC_9F_Data
-DAC_A0_Setup2:			DAC_Setup $0C,DAC_A0_Data
-DAC_A1_Setup2:			DAC_Setup $0A,DAC_A1_Data
+DAC_81_Setup2:			DAC_Null_Setup 19000
+DAC_82_Setup2:			DAC_Null_Setup 11500
+DAC_83_Setup2:			DAC_Null_Chain 9000,DAC_82_Setup2
+DAC_84_Setup2:			DAC_Null_Chain 7500,DAC_83_Setup2
+DAC_85_Setup2:			DAC_Null_Chain 6500,DAC_84_Setup2
+DAC_86_Setup2:			DAC_Null_Setup 19000
+DAC_87_Setup2:			DAC_Null_Setup 19000
+DAC_88_Setup2:			DAC_Null_Setup 17000
+DAC_89_Setup2:			DAC_Null_Setup 13500
+DAC_8A_Setup2:			DAC_Null_Setup 9000
+DAC_8B_Setup2:			DAC_Null_Chain 7375,DAC_8A_Setup2
+DAC_8C_Setup2:			DAC_Null_Setup 15000
+DAC_8D_Setup2:			DAC_Null_Setup 13000
+DAC_8E_Setup2:			DAC_Null_Chain 10000,DAC_8D_Setup2
+DAC_8F_Setup2:			DAC_Null_Setup 15000
+DAC_90_Setup2:			DAC_Null_Setup 20500
+DAC_91_Setup2:			DAC_Null_Chain 16000,DAC_90_Setup2
+DAC_92_Setup2:			DAC_Null_Chain 13500,DAC_91_Setup2
+DAC_93_Setup2:			DAC_Null_Chain 11100,DAC_92_Setup2
+DAC_94_Setup2:			DAC_Null_Setup 17000
+DAC_95_Setup2:			DAC_Null_Chain 13500,DAC_94_Setup2
+DAC_96_Setup2:			DAC_Null_Chain 12000,DAC_95_Setup2
+DAC_97_Setup2:			DAC_Null_Chain 9750,DAC_96_Setup2
+DAC_98_Setup2:			DAC_Null_Setup 13000
+DAC_99_Setup2:			DAC_Null_Chain 9250,DAC_98_Setup2
+DAC_9A_Setup2:			DAC_Null_Chain 8500,DAC_99_Setup2
+DAC_9B_Setup2:			DAC_Setup 12500,DAC_9B_Data
+DAC_A2_Setup2:			DAC_Setup 13500,DAC_A2_Data
+DAC_A3_Setup2:			DAC_Setup 8000,DAC_A3_Data
+DAC_A4_Setup2:			DAC_Setup 8000,DAC_A4_Data
+DAC_A5_Setup2:			DAC_Setup 12500,DAC_A5_Data
+DAC_A6_Setup2:			DAC_Setup 14000,DAC_A6_Data
+DAC_A7_Setup2:			DAC_Setup 8000,DAC_A7_Data
+DAC_A8_Setup2:			DAC_Setup 8000,DAC_A8_Data
+DAC_A9_Setup2:			DAC_Setup 12500,DAC_A9_Data
+DAC_AA_Setup2:			DAC_Setup 13500,DAC_AA_Data
+DAC_AB_Setup2:			DAC_Null_Setup 12000
+DAC_AC_Setup2:			DAC_Null_Setup 17000
+DAC_AD_Setup2:			DAC_Null_Setup 10500
+DAC_AE_Setup2:			DAC_Null_Chain 8000,DAC_AD_Setup2
+DAC_AF_Setup2:			DAC_Null_Setup 14000
+DAC_B0_Setup2:			DAC_Null_Chain 9750,DAC_AF_Setup2
+DAC_B1_Setup2:			DAC_Null_Setup 8000
+DAC_B2_Setup2:			DAC_Null_Setup 8500
+DAC_B3_Setup2:			DAC_Null_Chain 6500,DAC_B2_Setup2
+DAC_B4_Setup2:			DAC_Null_Setup 12500
+DAC_B5_Setup2:			DAC_Null_Setup 12500
+DAC_B6_Setup2:			DAC_Null_Setup 12500
+DAC_B7_Setup2:			DAC_Null_Setup 8000
+DAC_B8_B9_Setup2:		DAC_Null_Setup 12500
+DAC_BA_Setup2:			DAC_Null_Setup 8000
+DAC_BB_Setup2:			DAC_Null_Setup 8000
+DAC_BC_Setup2:			DAC_Null_Setup 8000
+DAC_BD_Setup2:			DAC_Null_Setup 12500
+DAC_BE_Setup2:			DAC_Null_Setup 12500
+DAC_BF_Setup2:			DAC_Null_Setup 7250
+DAC_C0_Setup2:			DAC_Null_Setup 13000
+DAC_C1_Setup2:			DAC_Null_Chain 11000,DAC_B4_Setup2
+DAC_C2_Setup2:			DAC_Null_Chain 10000,DAC_C1_Setup2
+DAC_C3_Setup2:			DAC_Null_Chain 9750,DAC_C2_Setup2
+DAC_C4_Setup2:			DAC_Null_Chain 13000,DAC_C3_Setup2
+DAC_9C_Setup2:			DAC_Setup 13500,DAC_9C_Data
+DAC_9D_Setup2:			DAC_Setup 8000,DAC_9D_Data
+DAC_9E_Setup2:			DAC_Setup 8000,DAC_9E_Data
+DAC_9F_Setup2:			DAC_Setup 12500,DAC_9F_Data
+DAC_A0_Setup2:			DAC_Setup 12500,DAC_A0_Data
+DAC_A1_Setup2:			DAC_Setup 13500,DAC_A1_Data
 
 Bank2_Filler:			cnop 	$7F7,soundBankStart
 DAC_9C_Data:			DACBINCLUDE "Sound/DAC/9C.bin"
@@ -1524,78 +1571,78 @@ DacBank3:	startBank
 		offsetBankTableEntry.w	DAC_C3_Setup3
 		offsetBankTableEntry.w	DAC_C4_Setup3
 
-DAC_81_Setup3:			DAC_Null_Setup $04
-DAC_82_Setup3:			DAC_Null_Setup $0E
-DAC_83_Setup3:			DAC_Null_Chain $14,DAC_82_Setup3
-DAC_84_Setup3:			DAC_Null_Chain $1A,DAC_83_Setup3
-DAC_85_Setup3:			DAC_Null_Chain $20,DAC_84_Setup3
-DAC_86_Setup3:			DAC_Null_Setup $04
-DAC_87_Setup3:			DAC_Null_Setup $04
-DAC_88_Setup3:			DAC_Null_Setup $06
-DAC_89_Setup3:			DAC_Null_Setup $0A
-DAC_8A_Setup3:			DAC_Null_Setup $14
-DAC_8B_Setup3:			DAC_Null_Chain $1B,DAC_8A_Setup3
-DAC_8C_Setup3:			DAC_Null_Setup $08
-DAC_8D_Setup3:			DAC_Null_Setup $0B
-DAC_8E_Setup3:			DAC_Null_Chain $11,DAC_8D_Setup3
-DAC_8F_Setup3:			DAC_Null_Setup $08
-DAC_90_Setup3:			DAC_Null_Setup $03
-DAC_91_Setup3:			DAC_Null_Chain $07,DAC_90_Setup3
-DAC_92_Setup3:			DAC_Null_Chain $0A,DAC_91_Setup3
-DAC_93_Setup3:			DAC_Null_Chain $0E,DAC_92_Setup3
-DAC_94_Setup3:			DAC_Null_Setup $06
-DAC_95_Setup3:			DAC_Null_Chain $0A,DAC_94_Setup3
-DAC_96_Setup3:			DAC_Null_Chain $0D,DAC_95_Setup3
-DAC_97_Setup3:			DAC_Null_Chain $12,DAC_96_Setup3
-DAC_98_Setup3:			DAC_Null_Setup $0B
-DAC_99_Setup3:			DAC_Null_Chain $13,DAC_98_Setup3
-DAC_9A_Setup3:			DAC_Null_Chain $16,DAC_99_Setup3
-DAC_9B_Setup3:			DAC_Null_Setup $0C
-DAC_A2_Setup3:			DAC_Null_Setup $0A
-DAC_A3_Setup3:			DAC_Null_Setup $18
-DAC_A4_Setup3:			DAC_Null_Setup $18
-DAC_A5_Setup3:			DAC_Null_Setup $0C
-DAC_A6_Setup3:			DAC_Null_Setup $09
-DAC_A7_Setup3:			DAC_Null_Setup $18
-DAC_A8_Setup3:			DAC_Null_Setup $18
-DAC_A9_Setup3:			DAC_Null_Setup $0C
-DAC_AA_Setup3:			DAC_Null_Setup $0A
-DAC_AB_Setup3:			DAC_Setup $0D,DAC_AB_Data
-DAC_AC_Setup3:			DAC_Setup $06,DAC_AC_Data
-DAC_AD_Setup3:			DAC_Setup $10,DAC_AD_AE_Data
-DAC_AE_Setup3:			DAC_Setup $18,DAC_AD_AE_Data
-DAC_AF_Setup3:			DAC_Setup $09,DAC_AF_Data
-DAC_B0_Setup3:			DAC_Setup $12,DAC_AF_Data
-DAC_B1_Setup3:			DAC_Setup $18,DAC_B1_Data
-DAC_B2_Setup3:			DAC_Setup $16,DAC_B2_B3_Data
-DAC_B3_Setup3:			DAC_Setup $20,DAC_B2_B3_Data
-DAC_B4_Setup3:			DAC_Setup $0C,DAC_B4_C1_C2_C3_C4_Data
-DAC_B5_Setup3:			DAC_Setup $0C,DAC_B5_Data
-DAC_B6_Setup3:			DAC_Setup $0C,DAC_B6_Data
-DAC_B7_Setup3:			DAC_Setup $18,DAC_B7_Data
-DAC_B8_B9_Setup3:		DAC_Setup $0C,DAC_B8_B9_Data
-DAC_BA_Setup3:			DAC_Setup $18,DAC_BA_Data
-DAC_BB_Setup3:			DAC_Setup $18,DAC_BB_Data
-DAC_BC_Setup3:			DAC_Setup $18,DAC_BC_Data
-DAC_BD_Setup3:			DAC_Setup $0C,DAC_BD_Data
-DAC_BE_Setup3:			DAC_Setup $0C,DAC_BE_Data
-DAC_BF_Setup3:			DAC_Setup $1C,DAC_BF_Data
-DAC_C0_Setup3:			DAC_Setup $0B,DAC_C0_Data
-DAC_C1_Setup3:			DAC_Setup $0F,DAC_B4_C1_C2_C3_C4_Data
-DAC_C2_Setup3:			DAC_Setup $11,DAC_B4_C1_C2_C3_C4_Data
-DAC_C3_Setup3:			DAC_Setup $12,DAC_B4_C1_C2_C3_C4_Data
-DAC_C4_Setup3:			DAC_Setup $0B,DAC_B4_C1_C2_C3_C4_Data
-DAC_9C_Setup3:			DAC_Null_Setup $0A
-DAC_9D_Setup3:			DAC_Null_Setup $18
-DAC_9E_Setup3:			DAC_Null_Setup $18
-DAC_9F_Setup3:			DAC_Null_Setup $0C
-DAC_A0_Setup3:			DAC_Null_Setup $0C
-DAC_A1_Setup3:			DAC_Null_Setup $0A
+DAC_81_Setup3:			DAC_Null_Setup 19000
+DAC_82_Setup3:			DAC_Null_Setup 11500
+DAC_83_Setup3:			DAC_Null_Chain 9000,DAC_82_Setup3
+DAC_84_Setup3:			DAC_Null_Chain 7500,DAC_83_Setup3
+DAC_85_Setup3:			DAC_Null_Chain 6500,DAC_84_Setup3
+DAC_86_Setup3:			DAC_Null_Setup 19000
+DAC_87_Setup3:			DAC_Null_Setup 19000
+DAC_88_Setup3:			DAC_Null_Setup 17000
+DAC_89_Setup3:			DAC_Null_Setup 13500
+DAC_8A_Setup3:			DAC_Null_Setup 9000
+DAC_8B_Setup3:			DAC_Null_Chain 7375,DAC_8A_Setup3
+DAC_8C_Setup3:			DAC_Null_Setup 15000
+DAC_8D_Setup3:			DAC_Null_Setup 13000
+DAC_8E_Setup3:			DAC_Null_Chain 10000,DAC_8D_Setup3
+DAC_8F_Setup3:			DAC_Null_Setup 15000
+DAC_90_Setup3:			DAC_Null_Setup 20500
+DAC_91_Setup3:			DAC_Null_Chain 16000,DAC_90_Setup3
+DAC_92_Setup3:			DAC_Null_Chain 13500,DAC_91_Setup3
+DAC_93_Setup3:			DAC_Null_Chain 11100,DAC_92_Setup3
+DAC_94_Setup3:			DAC_Null_Setup 17000
+DAC_95_Setup3:			DAC_Null_Chain 13500,DAC_94_Setup3
+DAC_96_Setup3:			DAC_Null_Chain 12000,DAC_95_Setup3
+DAC_97_Setup3:			DAC_Null_Chain 9750,DAC_96_Setup3
+DAC_98_Setup3:			DAC_Null_Setup 13000
+DAC_99_Setup3:			DAC_Null_Chain 9250,DAC_98_Setup3
+DAC_9A_Setup3:			DAC_Null_Chain 8500,DAC_99_Setup3
+DAC_9B_Setup3:			DAC_Null_Setup 12500
+DAC_A2_Setup3:			DAC_Null_Setup 13500
+DAC_A3_Setup3:			DAC_Null_Setup 8000
+DAC_A4_Setup3:			DAC_Null_Setup 8000
+DAC_A5_Setup3:			DAC_Null_Setup 12500
+DAC_A6_Setup3:			DAC_Null_Setup 14000
+DAC_A7_Setup3:			DAC_Null_Setup 8000
+DAC_A8_Setup3:			DAC_Null_Setup 8000
+DAC_A9_Setup3:			DAC_Null_Setup 12500
+DAC_AA_Setup3:			DAC_Null_Setup 13500
+DAC_AB_Setup3:			DAC_Setup 12000,DAC_AB_Data
+DAC_AC_Setup3:			DAC_Setup 17000,DAC_AC_Data
+DAC_AD_Setup3:			DAC_Setup 10500,DAC_AD_AE_Data
+DAC_AE_Setup3:			DAC_Setup 8000,DAC_AD_AE_Data
+DAC_AF_Setup3:			DAC_Setup 14000,DAC_AF_B0_Data
+DAC_B0_Setup3:			DAC_Setup 9750,DAC_AF_B0_Data
+DAC_B1_Setup3:			DAC_Setup 8000,DAC_B1_Data
+DAC_B2_Setup3:			DAC_Setup 8500,DAC_B2_B3_Data
+DAC_B3_Setup3:			DAC_Setup 6500,DAC_B2_B3_Data
+DAC_B4_Setup3:			DAC_Setup 12500,DAC_B4_C1_C2_C3_C4_Data
+DAC_B5_Setup3:			DAC_Setup 12500,DAC_B5_Data
+DAC_B6_Setup3:			DAC_Setup 12500,DAC_B6_Data
+DAC_B7_Setup3:			DAC_Setup 8000,DAC_B7_Data
+DAC_B8_B9_Setup3:		DAC_Setup 12500,DAC_B8_B9_Data
+DAC_BA_Setup3:			DAC_Setup 8000,DAC_BA_Data
+DAC_BB_Setup3:			DAC_Setup 8000,DAC_BB_Data
+DAC_BC_Setup3:			DAC_Setup 8000,DAC_BC_Data
+DAC_BD_Setup3:			DAC_Setup 12500,DAC_BD_Data
+DAC_BE_Setup3:			DAC_Setup 12500,DAC_BE_Data
+DAC_BF_Setup3:			DAC_Setup 7250,DAC_BF_Data
+DAC_C0_Setup3:			DAC_Setup 13000,DAC_C0_Data
+DAC_C1_Setup3:			DAC_Setup 11000,DAC_B4_C1_C2_C3_C4_Data
+DAC_C2_Setup3:			DAC_Setup 10000,DAC_B4_C1_C2_C3_C4_Data
+DAC_C3_Setup3:			DAC_Setup 9750,DAC_B4_C1_C2_C3_C4_Data
+DAC_C4_Setup3:			DAC_Setup 13000,DAC_B4_C1_C2_C3_C4_Data
+DAC_9C_Setup3:			DAC_Null_Setup 13500
+DAC_9D_Setup3:			DAC_Null_Setup 8000
+DAC_9E_Setup3:			DAC_Null_Setup 8000
+DAC_9F_Setup3:			DAC_Null_Setup 12500
+DAC_A0_Setup3:			DAC_Null_Setup 12500
+DAC_A1_Setup3:			DAC_Null_Setup 13500
 
 DAC_AB_Data:			DACBINCLUDE "Sound/DAC/AB.bin"
 DAC_AC_Data:			DACBINCLUDE "Sound/DAC/AC.bin"
 DAC_AD_AE_Data:			DACBINCLUDE "Sound/DAC/AD-AE.bin"
-DAC_AF_Data:			DACBINCLUDE "Sound/DAC/AF.bin"
+DAC_AF_B0_Data:			DACBINCLUDE "Sound/DAC/AF-B0.bin"
 Bank3_Filler1:			cnop 	$28E0,soundBankStart
 DAC_B1_Data:			DACBINCLUDE "Sound/DAC/B1.bin"
 Bank3_Filler2:			cnop 	$3CAD,soundBankStart
@@ -1785,35 +1832,50 @@ LBZ2_128x128_Kos:
 LBZ2_128x128_DeathEgg_Kos:
 		binclude "Levels/LBZ/Chunks/Act 2 Death Egg.bin"
 		even
-ALZ_16x16_Kos:	binclude "Levels/ALZ/Blocks/Primary.bin"
+ALZ_16x16_Kos:
+		binclude "Levels/ALZ/Blocks/Primary.bin"
 		even
-ALZ_8x8_KosM:	binclude "Levels/ALZ/Tiles/Primary.bin"
+ALZ_8x8_KosM:
+		binclude "Levels/ALZ/Tiles/Primary.bin"
 		even
-ALZ_128x128_Kos:binclude "Levels/ALZ/Chunks/Primary.bin"
+ALZ_128x128_Kos:
+		binclude "Levels/ALZ/Chunks/Primary.bin"
 		even
-BPZ_16x16_Kos:	binclude "Levels/BPZ/Blocks/Primary.bin"
+BPZ_16x16_Kos:
+		binclude "Levels/BPZ/Blocks/Primary.bin"
 		even
-BPZ_8x8_KosM:	binclude "Levels/BPZ/Tiles/Primary.bin"
+BPZ_8x8_KosM:
+		binclude "Levels/BPZ/Tiles/Primary.bin"
 		even
-BPZ_128x128_Kos:binclude "Levels/BPZ/Chunks/Primary.bin"
+BPZ_128x128_Kos:
+		binclude "Levels/BPZ/Chunks/Primary.bin"
 		even
-DPZ_16x16_Kos:	binclude "Levels/DPZ/Blocks/Primary.bin"
+DPZ_16x16_Kos:
+		binclude "Levels/DPZ/Blocks/Primary.bin"
 		even
-DPZ_8x8_KosM:	binclude "Levels/DPZ/Tiles/Primary.bin"
+DPZ_8x8_KosM:
+		binclude "Levels/DPZ/Tiles/Primary.bin"
 		even
-DPZ_128x128_Kos:binclude "Levels/DPZ/Chunks/Primary.bin"
+DPZ_128x128_Kos:
+		binclude "Levels/DPZ/Chunks/Primary.bin"
 		even
-CGZ_16x16_Kos:	binclude "Levels/CGZ/Blocks/Primary.bin"
+CGZ_16x16_Kos:
+		binclude "Levels/CGZ/Blocks/Primary.bin"
 		even
-CGZ_8x8_KosM:	binclude "Levels/CGZ/Tiles/Primary.bin"
+CGZ_8x8_KosM:
+		binclude "Levels/CGZ/Tiles/Primary.bin"
 		even
-CGZ_128x128_Kos:binclude "Levels/CGZ/Chunks/Primary.bin"
+CGZ_128x128_Kos:
+		binclude "Levels/CGZ/Chunks/Primary.bin"
 		even
-EMZ_16x16_Kos:	binclude "Levels/EMZ/Blocks/Primary.bin"
+EMZ_16x16_Kos:
+		binclude "Levels/EMZ/Blocks/Primary.bin"
 		even
-EMZ_8x8_KosM:	binclude "Levels/EMZ/Tiles/Primary.bin"
+EMZ_8x8_KosM:
+		binclude "Levels/EMZ/Tiles/Primary.bin"
 		even
-EMZ_128x128_Kos:binclude "Levels/EMZ/Chunks/Primary.bin"
+EMZ_128x128_Kos:
+		binclude "Levels/EMZ/Chunks/Primary.bin"
 		even
 Gumball_16x16_Kos:
 		binclude "Levels/Gumball/Blocks/Primary.bin"
