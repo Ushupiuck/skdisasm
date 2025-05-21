@@ -18905,71 +18905,71 @@ loc_125F4:
 Animate_Sonic:
 		lea	(AniSonic).l,a1
 		tst.b	(Super_Sonic_Knux_flag).w
-		beq.s	loc_12612
+		beq.s	+
 		lea	(AniSuperSonic).l,a1
-
-loc_12612:
++
 		moveq	#0,d0
 		move.b	$20(a0),d0
 		cmp.b	$21(a0),d0
-		beq.s	loc_12634
+		beq.s	SAnim_Do
 		move.b	d0,$21(a0)
 		move.b	#0,$23(a0)
 		move.b	#0,$24(a0)
 		bclr	#5,$2A(a0)
 
-loc_12634:
+SAnim_Do:
 		add.w	d0,d0
 		adda.w	(a1,d0.w),a1
 		move.b	(a1),d0
-		bmi.s	loc_126A4
+		bmi.s	SAnim_WalkRun
 		move.b	$2A(a0),d1
 		andi.b	#1,d1
 		andi.b	#-4,4(a0)
 		or.b	d1,4(a0)
 		subq.b	#1,$24(a0)
-		bpl.s	locret_12672
+		bpl.s	SAnim_Delay
 		move.b	d0,$24(a0)
+
+; -------------------------------------------------------------------------
 
 loc_1265A:
 		moveq	#0,d1
 		move.b	$23(a0),d1	; load current frame number
 		move.b	1(a1,d1.w),d0	; read sprite number from script
-		cmpi.b	#-4,d0		; is it a flag from FD to FF?
-		bhs.s	loc_12674	; MJ: if so, branch to flag routines
+		beq.s	SAnim_Next	; If it's a frame ID, branch
+		bpl.s	SAnim_Next
+		cmpi.b	#$FD,d0		; is it a flag from FD to FF?
+		bge.s	SAnim_End_FF	; MJ: if so, branch to flag routines
 
-loc_1266A:
+SAnim_Next:
 		move.b	d0,$22(a0)	; load sprite number
 		addq.b	#1,$23(a0)	; next frame number
 
-locret_12672:
+SAnim_Delay:
 		rts
 ; ---------------------------------------------------------------------------
-
-loc_12674:
+SAnim_End_FF:
 		addq.b	#1,d0
-		bne.s	loc_12684
+		bne.s	SAnim_End_FE
 		move.b	#0,$23(a0)
 		move.b	1(a1),d0
-		bra.s	loc_1266A
+		bra.s	SAnim_Next
 ; ---------------------------------------------------------------------------
-
-loc_12684:
+SAnim_End_FE:
 		addq.b	#1,d0
-		bne.s	loc_12698
+		bne.s	SAnim_End_FD
 		move.b	2(a1,d1.w),d0
 		sub.b	d0,$23(a0)
 		sub.b	d0,d1
 		move.b	1(a1,d1.w),d0
-		bra.s	loc_1266A
+		bra.s	SAnim_Next
 ; ---------------------------------------------------------------------------
-
-loc_12698:
+SAnim_End_FD:
 		addq.b	#1,d0
-		bne.s	locret_126A2
+		bne.s	SAnim_End
 		move.b	2(a1,d1.w),$20(a0)
 
-locret_126A2:
+SAnim_End:
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -18977,28 +18977,25 @@ loc_126A4:
 		addq.b	#1,d0
 		bne.w	loc_12A2A
 		moveq	#0,d0
-		tst.b	$2D(a0)
+		tst.b	flip_type(a0)
 		bmi.w	loc_127C0
-		move.b	$27(a0),d0
+		move.b	flip_angle(a0),d0
 		bne.w	loc_127C0
 		moveq	#0,d1
 		move.b	$26(a0),d0
-		bmi.s	loc_126C8
-		beq.s	loc_126C8
+		bmi.s	+
+		beq.s	+
 		subq.b	#1,d0
-
-loc_126C8:
++
 		move.b	$2A(a0),d2
 		andi.b	#1,d2
-		bne.s	loc_126D4
+		bne.s	+
 		not.b	d0
-
-loc_126D4:
++
 		addi.b	#$10,d0
-		bpl.s	loc_126DC
+		bpl.s	+
 		moveq	#3,d1
-
-loc_126DC:
++
 		andi.b	#-4,4(a0)
 		eor.b	d1,d2
 		or.b	d2,4(a0)
@@ -19017,35 +19014,32 @@ loc_12700:
 
 loc_1270A:
 		tst.b	(Super_Sonic_Knux_flag).w
-		bne.s	loc_12766
+		bne.s	SAnim_Super
 		lea	(AniSonic01).l,a1
 		cmpi.w	#$600,d2
-		bhs.s	loc_12724
+		bhs.s	+
 		lea	(AniSonic00).l,a1
 		add.b	d0,d0
-
-loc_12724:
++
 		add.b	d0,d0
 		move.b	d0,d3
 		moveq	#0,d1
 		move.b	$23(a0),d1
 		move.b	1(a1,d1.w),d0
 		cmpi.b	#-1,d0
-		bne.s	loc_12742
+		bne.s	+
 		move.b	#0,$23(a0)
 		move.b	1(a1),d0
-
-loc_12742:
++
 		move.b	d0,$22(a0)
 		add.b	d3,$22(a0)
 		subq.b	#1,$24(a0)
 		bpl.s	locret_12764
 		neg.w	d2
 		addi.w	#$800,d2
-		bpl.s	loc_1275A
+		bpl.s	+
 		moveq	#0,d2
-
-loc_1275A:
++
 		lsr.w	#8,d2
 		move.b	d2,$24(a0)
 		addq.b	#1,$23(a0)
@@ -19054,40 +19048,38 @@ locret_12764:
 		rts
 ; ---------------------------------------------------------------------------
 
-loc_12766:
+SAnim_Super:
 		lea	(AniSuperSonic01).l,a1
 		cmpi.w	#$800,d2
-		bhs.s	loc_1277E
+		bhs.s	SAnim_SuperRun
 		lea	(AniSuperSonic00).l,a1
 		add.b	d0,d0
 		add.b	d0,d0
-		bra.s	loc_12780
+		bra.s	SAnim_SuperWalk
 ; ---------------------------------------------------------------------------
 
-loc_1277E:
+SAnim_SuperRun:
 		add.b	d0,d0
 
-loc_12780:
+SAnim_SuperWalk:
 		move.b	d0,d3
 		moveq	#0,d1
 		move.b	$23(a0),d1
 		move.b	1(a1,d1.w),d0
 		cmpi.b	#-1,d0
-		bne.s	loc_1279C
+		bne.s	+
 		move.b	#0,$23(a0)
 		move.b	1(a1),d0
-
-loc_1279C:
++
 		move.b	d0,$22(a0)
 		add.b	d3,$22(a0)
 		subq.b	#1,$24(a0)
 		bpl.s	locret_127BE
 		neg.w	d2
 		addi.w	#$800,d2
-		bpl.s	loc_127B4
+		bpl.s	+
 		moveq	#0,d2
-
-loc_127B4:
++
 		lsr.w	#8,d2
 		move.b	d2,$24(a0)
 		addq.b	#1,$23(a0)
@@ -19097,7 +19089,7 @@ locret_127BE:
 ; ---------------------------------------------------------------------------
 
 loc_127C0:
-		move.b	$2D(a0),d1
+		move.b	flip_type(a0),d1
 		andi.w	#$7F,d1
 		bne.w	loc_12872
 		move.b	$27(a0),d0
@@ -19106,7 +19098,7 @@ loc_127C0:
 		andi.b	#1,d2
 		bne.s	loc_1281E
 		andi.b	#-4,4(a0)
-		tst.b	$2D(a0)
+		tst.b	flip_type(a0)
 		bpl.s	loc_12806
 		cmpi.b	#$B,(Current_zone).w
 		beq.s	loc_1280A
@@ -19325,7 +19317,7 @@ loc_12A2A:
 		andi.b	#-4,4(a0)
 		or.b	d1,4(a0)
 		subq.b	#1,$24(a0)
-		bpl.w	locret_12672
+		bpl.w	SAnim_Delay
 		move.w	$1C(a0),d2
 		bpl.s	loc_12A4C
 		neg.w	d2
@@ -19350,7 +19342,7 @@ loc_12A68:
 
 loc_12A72:
 		subq.b	#1,$24(a0)
-		bpl.w	locret_12672
+		bpl.w	SAnim_Delay
 		move.w	$1C(a0),d2
 		bmi.s	loc_12A82
 		neg.w	d2
