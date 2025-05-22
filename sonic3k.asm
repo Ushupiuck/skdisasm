@@ -24415,7 +24415,7 @@ SAnim_Do:
 
 ; -------------------------------------------------------------------------
 
-loc_1265A:
+SAnim_WalkRun:
 		moveq	#0,d1
 		move.b	anim_frame(a0),d1	; load current frame number
 		move.b	1(a1,d1.w),d0	; read sprite number from script
@@ -24822,7 +24822,7 @@ loc_12A5E:
 loc_12A68:
 		lsr.w	#8,d2
 		move.b	d2,anim_frame_timer(a0)
-		bra.w	loc_1265A
+		bra.w	SAnim_WalkRun
 ; ---------------------------------------------------------------------------
 
 loc_12A72:
@@ -24846,7 +24846,7 @@ loc_12A8A:
 		lea	(AniSuperSonic04).l,a1
 
 loc_12AA2:
-		bra.w	loc_1265A
+		bra.w	SAnim_WalkRun
 ; End of function Animate_Sonic
 
 ; ---------------------------------------------------------------------------
@@ -33406,7 +33406,7 @@ Obj_Invincibility:
 		lea	(a0),a1
 		moveq	#4-1,d1
 
-loc_1880E:
+-
 		move.l	#Obj_188E8,(a1)
 		move.l	#Map_Invincibility,mappings(a1)
 		move.w	#make_art_tile(ArtTile_Shield,0,0),art_tile(a1)
