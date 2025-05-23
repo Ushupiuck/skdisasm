@@ -3295,13 +3295,6 @@ loc_256E:
 locret_257A:
 		rts
 ; ---------------------------------------------------------------------------
-		; unused
-		move.w	#900-1,(Palette_cycle_counter1).w
-		move.b	#0,(_unkF7C3).w
-		move.w	(Palette_cycle_counters+$06).w,d0
-		neg.b	d0
-		move.b	d0,(Palette_cycle_counters+$00).w
-		move.w	#0,(Palette_cycle_counters+$08).w
 
 AnPal_SOZ2:
 		subq.w	#1,(Palette_cycle_counter1).w
@@ -128583,8 +128576,6 @@ CutsceneKnux_CNZ2A_Index:
 		dc.w loc_6237C-CutsceneKnux_CNZ2A_Index
 		dc.w loc_62354-CutsceneKnux_CNZ2A_Index
 		dc.w loc_623FE-CutsceneKnux_CNZ2A_Index
-word_622DC:	; used in S3, unused in S&K
-		dc.w   $176,  $300, $1B00, $1D00
 ; ---------------------------------------------------------------------------
 
 loc_622E4:
@@ -138607,9 +138598,6 @@ ChildObjDat_69D66:
 ChildObjDat_69D8C:
 		dc.w 1-1
 		dc.l Obj_EggCapsule
-ChildObjDat_69D92:	; used in S3, unused in S&K
-		dc.w 1-1
-		dc.l Obj_CutsceneKnuckles
 byte_69D98:
 		dc.b  $2B,   0
 		dc.b  $2B,   0
@@ -144162,12 +144150,6 @@ ChildObjDat_6D83E:
 ChildObjDat_6D844:
 		dc.w 1-1
 		dc.l loc_6D1BE
-byte_6D84A:	; unused
-		dc.b    0,   5
-		dc.b    1,   5
-		dc.b    2,   5
-		dc.b    3,   5
-		dc.b  $FC
 byte_6D853:
 		dc.b    9,   7
 		dc.b   $A,   7
@@ -144185,11 +144167,6 @@ byte_6D853:
 		dc.b   $A,   3
 		dc.b   $B,   3
 		dc.b  $F8, $20
-byte_6D873:	; unused
-		dc.b    9,   2
-		dc.b   $A,   2
-		dc.b   $B,   2
-		dc.b  $FC
 byte_6D87A:
 		dc.b   $C,   7
 		dc.b   $D,   7
@@ -147491,14 +147468,6 @@ word_6FA58:
 word_6FA5E:
 		dc.w   $180
 		dc.b  $10,   8, $11,   0
-word_6FA64:	; used in S3, unused in S&K
-		dc.w   $280
-		dc.b  $10,   8,   4,   0
-ObjDat3_6FA6A:	; unused
-		dc.l Map_EggCapsule
-		dc.w make_art_tile($494,0,1)
-		dc.w   $100
-		dc.b    8,   8,   0,   0
 ChildObjDat_6FA76:
 		dc.w 7-1
 		dc.l loc_6F10E
@@ -155089,8 +155058,6 @@ byte_75194:
 		dc.b    9,   7,   4,   5,   6,   5,   4, $FC
 byte_7519C:
 		dc.b    9,  $B,   8,   9,  $A,   9,   8, $FC
-byte_751A4:	; used in S3, unused in S3K
-		dc.b    2,   4,   4,   5,   6, $F4
 Pal_LBZFinalBoss2:
 		binclude "Levels/LBZ/Palettes/Final Boss 2.bin"
 		even
@@ -162180,7 +162147,7 @@ loc_7A32C:
 		move.b	#6,routine(a0)
 		bset	#6,$38(a0)
 		lea	ChildObjDat_7A684(pc),a2
-		jsr	(CreateChild9_TreeList).l
+		jmp	(CreateChild9_TreeList).l
 
 locret_7A35C:
 		rts
@@ -162956,7 +162923,7 @@ sub_7AB56:
 		move.b	#$10,$33(a0)
 		move.w	#$1E,(SSZ_MTZ_boss_laser_timer).w
 		lea	ChildObjDat_7AB80(pc),a2
-		jsr	(CreateChild1_Normal).l
+		jmp	(CreateChild1_Normal).l
 
 locret_7AB7E:
 		rts
@@ -163980,8 +163947,7 @@ loc_7B666:
 		move.w	d1,$40(a0)
 		clr.w	y_vel(a0)
 		moveq	#signextendB(sfx_Dash),d0
-		jsr	(Play_SFX).l
-		rts
+		jmp	(Play_SFX).l
 ; ---------------------------------------------------------------------------
 
 loc_7B67C:
@@ -164017,8 +163983,7 @@ loc_7B6C0:
 		move.b	#$1C,routine(a0)
 		move.w	#-$900,y_vel(a0)
 		moveq	#signextendB(sfx_Thump),d0
-		jsr	(Play_SFX).l
-		rts
+		jmp	(Play_SFX).l
 ; ---------------------------------------------------------------------------
 
 loc_7B6DA:
@@ -164545,7 +164510,7 @@ sub_7BD30:
 		subq.b	#1,$39(a0)
 		bmi.s	locret_7BD4A
 		moveq	#signextendB(sfx_MissileExplode),d0
-		jsr	(Play_SFX).l
+		jmp	(Play_SFX).l
 
 locret_7BD4A:
 		rts
@@ -164671,8 +164636,7 @@ loc_7BE7E:
 
 loc_7BE92:
 		moveq	#signextendB(sfx_SuperTransform),d0
-		jsr	(Play_SFX).l
-		rts
+		jmp	(Play_SFX).l
 ; ---------------------------------------------------------------------------
 
 loc_7BE9C:
@@ -177665,8 +177629,6 @@ Obj_IncLevEndXGradual:
 
 loc_84A6A:
 		move.w	(Camera_stored_max_X_pos).w,(Camera_max_X_pos).w
-
-loc_84A70:	; used in S3, unused in S&K
 		jmp	(Delete_Current_Sprite).l
 ; ---------------------------------------------------------------------------
 
@@ -177726,9 +177688,6 @@ loc_84AF4:
 Child6_IncLevX:
 		dc.w 1-1
 		dc.l Obj_IncLevEndXGradual
-Child6_DecLevX:	; used in S3, unused in S3K
-		dc.w 1-1
-		dc.l Obj_DecLevStartXGradual
 Child6_DecLevY:
 		dc.w 1-1
 		dc.l Obj_DecLevStartYGradual
@@ -178227,72 +178186,6 @@ loc_84EA6:
 		move.w	d2,y_pos(a0)
 		rts
 ; ---------------------------------------------------------------------------
-		moveq	#0,d0			; Same as above but unused
-		move.b	$3C(a0),d0
-		move.b	d0,d1
-		rol.b	#3,d1
-		andi.w	#6,d1
-		move.w	off_84ED4(pc,d1.w),d2
-		jmp	off_84ED4(pc,d2.w)
-; ---------------------------------------------------------------------------
-off_84ED4:
-		dc.w loc_84EDC-off_84ED4
-		dc.w loc_84EE4-off_84ED4
-		dc.w loc_84EF0-off_84ED4
-		dc.w loc_84F00-off_84ED4
-; ---------------------------------------------------------------------------
-
-loc_84EDC:
-		move.b	(a1,d0.w),d1
-		bra.w	loc_84F10
-; ---------------------------------------------------------------------------
-
-loc_84EE4:
-		moveq	#$7F,d1
-		sub.w	d0,d1
-		move.w	(a1,d1.w),d1
-		bra.w	loc_84F10
-; ---------------------------------------------------------------------------
-
-loc_84EF0:
-		move.w	d0,d1
-		andi.w	#$3F,d1
-		move.w	(a1,d1.w),d1
-		neg.w	d1
-		bra.w	loc_84F10
-; ---------------------------------------------------------------------------
-
-loc_84F00:
-		move.w	#$FF,d1
-		sub.w	d0,d1
-		move.w	(a1,d1.w),d1
-		neg.w	d1
-		bra.w	loc_84F10
-
-loc_84F10:
-		movea.w	parent3(a0),a1
-		move.w	x_pos(a1),d2
-		move.b	child_dx(a0),d3
-		ext.w	d3
-		add.w	d3,d2
-		move.w	d2,x_pos(a0)
-		move.w	y_pos(a1),d2
-		move.b	child_dy(a0),d3
-		ext.w	d3
-		add.w	d3,d2
-		add.w	d1,d2
-		move.w	d2,y_pos(a0)
-		rts
-; ---------------------------------------------------------------------------
-		subq.w	#1,$2E(a0)			; Timed object, not actually used
-		bmi.w	Go_Delete_Sprite
-		jmp	(Draw_Sprite).l
-; ---------------------------------------------------------------------------
-		subq.w	#1,$2E(a0)			; Timed object with gravity-influenced movement
-		bmi.w	Go_Delete_Sprite
-		jsr	(MoveSprite).l
-		jmp	(Draw_Sprite).l
-; ---------------------------------------------------------------------------
 
 MoveDraw_SpriteTimed:
 		subq.w	#1,$2E(a0)
@@ -178591,37 +178484,6 @@ Sprite_CheckDeleteTouchSlotted:
 Go_Delete_SpriteSlotted3:
 		move.l	#Delete_Current_Sprite,(a0)
 		bra.s	Remove_From_TrackingSlot
-; ---------------------------------------------------------------------------
-		tst.b	status(a0)				; Unused, seems to be identical to the above
-		bmi.s	Go_Delete_SpriteSlotted3
-		move.w	x_pos(a0),d0
-		andi.w	#$FF80,d0
-		sub.w	(Camera_X_pos_coarse_back).w,d0
-		cmpi.w	#$280,d0
-		bhi.w	Go_Delete_SpriteSlotted
-		jsr	(Add_SpriteToCollisionResponseList).l
-		jmp	(Draw_Sprite).l
-; ---------------------------------------------------------------------------
-		move.w	x_pos(a0),d0				; Next three are unused, virtually the same
-		andi.w	#$FF80,d0
-		sub.w	(Camera_X_pos_coarse_back).w,d0
-		cmpi.w	#$280,d0
-		bhi.w	loc_85088
-		rts
-; ---------------------------------------------------------------------------
-		move.w	x_pos(a0),d0
-		andi.w	#$FF80,d0
-		sub.w	(Camera_X_pos_coarse_back).w,d0
-		cmpi.w	#$280,d0
-		bhi.w	loc_85088
-		rts
-; ---------------------------------------------------------------------------
-		move.w	x_pos(a0),d0
-		andi.w	#$FF80,d0
-		sub.w	(Camera_X_pos_coarse_back).w,d0
-		cmpi.w	#$280,d0
-		bhi.w	loc_85088
-		jmp	(Add_SpriteToCollisionResponseList).l
 
 ; =============== S U B R O U T I N E =======================================
 
@@ -179013,7 +178875,7 @@ loc_85576:
 		subq.b	#1,$39(a0)
 		bpl.s	locret_8558E
 		clr.b	(Palette_rotation_disable).w
-		jsr	(Go_Delete_Sprite).l
+		jmp	(Go_Delete_Sprite).l
 
 locret_8558E:
 		rts
@@ -179127,7 +178989,6 @@ MoveSlowFall_AnimateRaw:
 		jsr	MoveSprite_LightGravity(pc)
 		jmp	Animate_Raw(pc)
 ; ---------------------------------------------------------------------------
-		jsr	Swing_UpAndDown(pc)
 
 Move_AnimateRaw_Wait:
 		jsr	(MoveSprite2).l
@@ -179182,9 +179043,6 @@ MoveWaitTouch:
 		jmp	Draw_And_Touch_Sprite(pc)
 ; ---------------------------------------------------------------------------
 
-loc_856C0:	; used in S3, unused in S&K
-		jsr	Refresh_ChildPosition(pc)
-
 AnimateRaw_DrawTouch:
 		jsr	Animate_RawMultiDelay(pc)
 		jmp	Draw_And_Touch_Sprite(pc)
@@ -179197,7 +179055,6 @@ MoveChkDel:
 		jsr	(MoveSprite).l
 		jmp	Sprite_CheckDeleteXY(pc)
 ; ---------------------------------------------------------------------------
-		jsr	Animate_Raw(pc)
 
 MoveTouchChkDel:
 		jsr	(MoveSprite).l
@@ -179213,23 +179070,6 @@ Swing_MoveWaitNoFall:
 		jsr	Swing_UpAndDown(pc)
 		jsr	(MoveSprite2).l
 		jmp	Obj_Wait(pc)
-; ---------------------------------------------------------------------------
-		jsr	Animate_Raw(pc)
-		jmp	Draw_And_Touch_Sprite(pc)
-; ---------------------------------------------------------------------------
-		jsr	Animate_Raw(pc)
-		jmp	(Draw_Sprite).l
-; ---------------------------------------------------------------------------
-		jsr	(MoveSprite2).l
-		jsr	Animate_Raw(pc)
-		jmp	Obj_Wait(pc)
-; ---------------------------------------------------------------------------
-		jmp	(Draw_Sprite).l
-; ---------------------------------------------------------------------------
-		jsr	Animate_Raw(pc)
-		jmp	Obj_Wait(pc)
-; ---------------------------------------------------------------------------
-		jmp	Draw_And_Touch_Sprite(pc)
 
 ; =============== S U B R O U T I N E =======================================
 
@@ -179907,9 +179747,6 @@ Obj_EndSignControlDoStart:
 		beq.w	locret_8405E
 		jsr	Change_Act2Sizes(pc)
 		jmp	(Delete_Current_Sprite).l
-; ---------------------------------------------------------------------------
-		jsr	Displace_PlayerOffObject(pc)
-		jmp	(Delete_Current_Sprite).l
 
 ; =============== S U B R O U T I N E =======================================
 
@@ -179959,7 +179796,7 @@ loc_85C7E:
 		cmp.w	(Camera_X_pos).w,d0
 		bhi.s	locret_85CA2
 		movea.l	$34(a0),a1
-		jsr	(a1)
+		jmp	(a1)
 
 locret_85CA2:
 		rts
@@ -180098,6 +179935,7 @@ Child1_Act2LevelSize:
 		dc.l Obj_IncLevEndYGradual
 		dc.b    0,   0
 ; ---------------------------------------------------------------------------
+; Change_Act2Sizes_unused
 		lea	(Current_zone_and_act).w,a1		; Unused
 		moveq	#0,d0
 		moveq	#0,d1
@@ -180271,26 +180109,6 @@ loc_85F62:
 		move.b	d5,(a1)+
 		rts
 ; End of function sub_85F2A
-
-; ---------------------------------------------------------------------------
-loc_85F68:	; used in S3, unused in S3&K
-		move.w	(Player_mode).w,d0
-		cmpi.w	#2,d0
-		beq.s	loc_85F7E
-		cmpi.w	#7,(Emerald_counts).w
-		beq.s	loc_85F82
-		moveq	#0,d0
-		rts
-; ---------------------------------------------------------------------------
-
-loc_85F7E:
-		moveq	#1,d0
-		rts
-; ---------------------------------------------------------------------------
-
-loc_85F82:
-		moveq	#2,d0
-		rts
 
 ; =============== S U B R O U T I N E =======================================
 
@@ -196517,8 +196335,7 @@ loc_90310:
 		move.w	#$7F,$2E(a0)
 		move.l	#loc_90352,$34(a0)
 		lea	(Child6_CreateBossExplosion).l,a2
-		jsr	(CreateChild6_Simple).l
-		rts
+		jmp	(CreateChild6_Simple).l
 ; ---------------------------------------------------------------------------
 
 loc_90338:
@@ -197525,7 +197342,7 @@ loc_90DDC:
 		bset	#7,$38(a0)
 		bne.s	locret_90DFA
 		moveq	#signextendB(sfx_SuperEmerald),d0
-		jsr	(Play_SFX).l
+		jmp	(Play_SFX).l
 
 locret_90DFA:
 		rts
@@ -198308,8 +198125,7 @@ loc_91A9A:
 		move.b	#4,routine(a0)
 		bset	#3,$38(a0)
 		moveq	#signextendB(sfx_Bouncy),d0
-		jsr	(Play_SFX).l
-		rts
+		jmp	(Play_SFX).l
 ; ---------------------------------------------------------------------------
 
 loc_91AB0:
@@ -198526,8 +198342,7 @@ loc_91CA6:
 		move.w	$3E(a0),x_vel(a0)
 		move.w	$3C(a0),$40(a0)
 		moveq	#signextendB(sfx_TunnelBooster),d0
-		jsr	(Play_SFX).l
-		rts
+		jmp	(Play_SFX).l
 ; ---------------------------------------------------------------------------
 
 loc_91CC2:
