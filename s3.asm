@@ -21767,7 +21767,6 @@ loc_134B6:
 locret_134BE:
 		rts
 ; ---------------------------------------------------------------------------
-
 loc_134C0:
 		addq.b	#1,d0
 		bne.s	loc_134D0
@@ -21775,7 +21774,6 @@ loc_134C0:
 		move.b	1(a1),d0
 		bra.s	loc_134B6
 ; ---------------------------------------------------------------------------
-
 loc_134D0:
 		addq.b	#1,d0
 		bne.s	loc_134E4
@@ -21785,7 +21783,6 @@ loc_134D0:
 		move.b	1(a1,d1.w),d0
 		bra.s	loc_134B6
 ; ---------------------------------------------------------------------------
-
 loc_134E4:
 		addq.b	#1,d0
 		bne.s	locret_134EE
@@ -21808,18 +21805,15 @@ loc_134F0:
 		bmi.s	loc_13514
 		beq.s	loc_13514
 		subq.b	#1,d0
-
 loc_13514:
 		move.b	status(a0),d2
 		andi.b	#1,d2
 		bne.s	loc_13520
 		not.b	d0
-
 loc_13520:
 		addi.b	#$10,d0
 		bpl.s	loc_13528
 		moveq	#3,d1
-
 loc_13528:
 		andi.b	#$FC,render_flags(a0)
 		eor.b	d1,d2
@@ -21845,7 +21839,6 @@ loc_13556:
 		bhs.s	loc_13570
 		lea	(AniSonic00).l,a1
 		add.b	d0,d0
-
 loc_13570:
 		add.b	d0,d0
 		move.b	d0,d3
@@ -21856,7 +21849,6 @@ loc_13570:
 		bne.s	loc_1358E
 		move.b	#0,anim_frame(a0)
 		move.b	1(a1),d0
-
 loc_1358E:
 		move.b	d0,mapping_frame(a0)
 		add.b	d3,mapping_frame(a0)
@@ -21866,7 +21858,6 @@ loc_1358E:
 		addi.w	#$800,d2
 		bpl.s	loc_135A6
 		moveq	#0,d2
-
 loc_135A6:
 		lsr.w	#8,d2
 		move.b	d2,anim_frame_timer(a0)
@@ -21898,7 +21889,6 @@ loc_135CC:
 		bne.s	loc_135E8
 		move.b	#0,anim_frame(a0)
 		move.b	1(a1),d0
-
 loc_135E8:
 		move.b	d0,mapping_frame(a0)
 		add.b	d3,mapping_frame(a0)
@@ -21908,7 +21898,6 @@ loc_135E8:
 		addi.w	#$800,d2
 		bpl.s	loc_13600
 		moveq	#0,d2
-
 loc_13600:
 		lsr.w	#8,d2
 		move.b	d2,anim_frame_timer(a0)
