@@ -26573,7 +26573,7 @@ Obj_S1Shield_Main:
 		move.w	x_pos(a2),x_pos(a0)
 		move.w	y_pos(a2),y_pos(a0)
 		move.b	status(a2),status(a0)
-		andi.b	#1,status(a0)			; Limit inheritance to 'orientation' bit
+		andi.b	#1,status(a0)				; Limit inheritance to 'orientation' bit
 		tst.b	(Reverse_gravity_flag).w
 		beq.s	.normalgravity
 		ori.b	#2,status(a0)				; If in reverse gravity, reverse the vertical mirror render_flag bit (On if Off beforehand and vice versa)
