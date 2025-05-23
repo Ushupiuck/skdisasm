@@ -24404,7 +24404,7 @@ SAnim_Do:
 		add.w	d0,d0
 		adda.w	(a1,d0.w),a1
 		move.b	(a1),d0
-		bmi.s	SAnim_WalkRun
+		bmi.s	loc_126A4
 		move.b	status(a0),d1
 		andi.b	#1,d1
 		andi.b	#$FC,render_flags(a0)
@@ -24418,11 +24418,12 @@ SAnim_Do:
 SAnim_WalkRun:
 		moveq	#0,d1
 		move.b	anim_frame(a0),d1	; load current frame number
-		move.b	1(a1,d1.w),d0	; read sprite number from script
-		beq.s	SAnim_Next	; If it's a frame ID, branch
+		move.b	1(a1,d1.w),d0		; read sprite number from script
+		beq.s	SAnim_Next		; If it's a frame ID, branch
 		bpl.s	SAnim_Next
-		cmpi.b	#$FD,d0		; is it a flag from FD to FF?
-		bge.s	SAnim_End_FF	; MJ: if so, branch to flag routines
+		cmpi.b	#$FD,d0			; is it a flag from FC to FF?
+;		bhs.s	SAnim_End_FF		; MJ: if so, branch to flag routines
+		bge.s	SAnim_End_FF		; MJ: if so, branch to flag routines
 
 SAnim_Next:
 		move.b	d0,mapping_frame(a0)	; load sprite number
@@ -24478,8 +24479,7 @@ loc_126A4:
 		addi.b	#$10,d0
 		bpl.s	+
 		moveq	#3,d1
-
-loc_126DC:
++
 		andi.b	#$FC,render_flags(a0)
 		eor.b	d1,d2
 		or.b	d2,render_flags(a0)
