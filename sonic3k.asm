@@ -160209,7 +160209,12 @@ sub_78CCA:
 		moveq	#0,d0
 		btst	#0,$20(a0)
 		bne.s	loc_78CE4
-		addi.w	#4,d0
+	if FixBugs
+		addi.w	#2*6,d0
+	else
+		; Bug: this should be 2*6
+		addi.w	#2*2,d0
+	endif
 
 loc_78CE4:
 		bsr.s	sub_78C98
@@ -175818,14 +175823,23 @@ EndSign_CheckPlayerHit:
 		jsr	Check_PlayerInRange(pc)
 		tst.l	d0
 		beq.s	locret_83ABC		; If neither player is in range, don't do anything
-		tst.w	d0
-		beq.s	loc_83A6A
+		tst.w	d0				; Is Sonic?
+		beq.s	loc_83A6A		; If it's not Sonic, branch
+
+	if FixBugs
+		move.l	d0,-(sp)			; Save players address
 		bsr.w	sub_83A70
+		move.l	(sp)+,d0			; Restore players address
+	else
+		; Bug: After returning from the subroutine, the address of the characters in d0
+		; will be corrupted and the check will not work correctly.
+		bsr.w	sub_83A70
+	endif
 
 loc_83A6A:
-		swap	d0
-		tst.w	d0
-		beq.s	locret_83ABC
+		swap	d0				; Get Tails address
+		tst.w	d0				; Is Tails?
+		beq.s	locret_83ABC		; If it's not Tails, branch
 ; End of function EndSign_CheckPlayerHit
 
 
