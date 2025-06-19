@@ -28767,23 +28767,22 @@ loc_1ABBC:
 Draw_Sprite:
 		lea	(Sprite_table_input).w,a1
 		adda.w	8(a0),a1
+		moveq	#7,d1		; 8 entries, 0–7
 
-loc_1ABCE:
-		cmpi.w	#$7E,(a1)
-		bhs.s	loc_1ABDC
+.loop:
+		cmpi.w	#$7E,(a1)	; is there space?
+		blo.s	.found_slot	; if so, continue
+
+		adda.w	#$80,a1		; Step to the next entry
+		dbf	d1,.loop	; loop for all entries
+		rts			; if the table is full, we bail!
+
+.found_slot:
 		addq.w	#2,(a1)
 		adda.w	(a1),a1
 		move.w	a0,(a1)
-
-locret_1ABDA:
 		rts
-; ---------------------------------------------------------------------------
 
-loc_1ABDC:
-		cmpa.w	#Sprite_table_input+($80*7),a1
-		beq.s	locret_1ABDA
-		adda.w	#$80,a1
-		bra.s	loc_1ABCE
 ; End of function Draw_Sprite
 
 
