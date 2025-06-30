@@ -86655,7 +86655,6 @@ Map_SOZRapelWire:
 
 ; =============== S U B R O U T I N E =======================================
 
-
 Slots_RenderLayout:
 		bsr.w	Slots_AniWallsRings
 		bsr.w	Slots_AniItems
@@ -86707,11 +86706,11 @@ loc_4B3C8:
 		add.l	d5,d2
 		add.l	d4,d1
 		dbf	d6,loc_4B3C8
-
 		movem.w	(sp)+,d0-d2
 		addi.w	#$18,d3
 		dbf	d7,loc_4B3A6
 
+; Populate the 16x16 grid with sprites based on the level layout
 ;		move.w	(sp)+,d5
 		lea	(RAM_start+$3000).l,a0
 		moveq	#0,d0
@@ -86815,7 +86814,7 @@ locret_4B4C2:
 
 
 Slots_AniWallsRings:
-		lea	(Chunk_table+$700C).l,a1
+		lea	(Chunk_table+$7000+$C).l,a1
 		moveq	#0,d0
 		move.b	(Stat_table).w,d0
 		lsr.b	#2,d0
@@ -86826,14 +86825,14 @@ loc_4B4D8:
 		move.w	d0,(a1)
 		addq.w	#8,a1
 		dbf	d1,loc_4B4D8
-		lea	(Chunk_table+$706C).l,a1
+		lea	(Chunk_table+$7000+$6C).l,a1
 		moveq	#2,d1
 
 loc_4B4E8:
 		move.w	d0,(a1)
 		addq.w	#8,a1
 		dbf	d1,loc_4B4E8
-		lea	(Chunk_table+$7005).l,a1
+		lea	(Chunk_table+$7000+$5).l,a1
 		subq.b	#1,(Slot_machine_goal_frame_timer).w
 		bpl.s	loc_4B526
 		move.b	#1,(Slot_machine_goal_frame_timer).w
@@ -86892,7 +86891,7 @@ loc_4B59C:
 		move.b	(a0),d0
 		beq.s	loc_4B5AA
 		lsl.w	#2,d0
-		movea.l	off_4B5B2-4(pc,d0.w),a1
+		movea.l	Slots_AniIndex-4(pc,d0.w),a1
 		jsr	(a1)
 
 loc_4B5AA:
@@ -86902,13 +86901,13 @@ loc_4B5AA:
 ; End of function Slots_AniItems
 
 ; ---------------------------------------------------------------------------
-off_4B5B2:	dc.l loc_4B5C2
-		dc.l loc_4B5F2
-		dc.l loc_4B65A
-		dc.l loc_4B626
+Slots_AniIndex:	dc.l SS_AniRingSparks
+		dc.l SS_AniBumper
+		dc.l SS_AniReverse
+		dc.l SS_AniGlassBlock
 ; ---------------------------------------------------------------------------
 
-loc_4B5C2:
+SS_AniRingSparks:
 		subq.b	#1,2(a0)
 		bpl.s	locret_4B5EA
 		move.b	#5,2(a0)
@@ -86916,7 +86915,7 @@ loc_4B5C2:
 		move.b	3(a0),d0
 		addq.b	#1,3(a0)
 		movea.l	4(a0),a1
-		move.b	byte_4B5EC(pc,d0.w),d0
+		move.b	SS_AniRingData(pc,d0.w),d0
 		move.b	d0,(a1)
 		bne.s	locret_4B5EA
 		clr.l	(a0)
@@ -86925,7 +86924,7 @@ loc_4B5C2:
 locret_4B5EA:
 		rts
 ; ---------------------------------------------------------------------------
-byte_4B5EC:	dc.b $10
+SS_AniRingData:	dc.b $10
 		dc.b $11
 		dc.b $12
 		dc.b $13
@@ -86933,7 +86932,7 @@ byte_4B5EC:	dc.b $10
 		dc.b 0
 ; ---------------------------------------------------------------------------
 
-loc_4B5F2:
+SS_AniBumper:
 		subq.b	#1,2(a0)
 		bpl.s	locret_4B620
 		move.b	#1,2(a0)
@@ -86941,7 +86940,7 @@ loc_4B5F2:
 		move.b	3(a0),d0
 		addq.b	#1,3(a0)
 		movea.l	4(a0),a1
-		move.b	byte_4B622(pc,d0.w),d0
+		move.b	SS_AniBumpData(pc,d0.w),d0
 		bne.s	loc_4B61E
 		clr.l	(a0)
 		clr.l	4(a0)
@@ -86955,13 +86954,13 @@ loc_4B61E:
 locret_4B620:
 		rts
 ; ---------------------------------------------------------------------------
-byte_4B622:	dc.b $A
+SS_AniBumpData:	dc.b $A
 		dc.b $B
 		dc.b 0
 		dc.b 0
 ; ---------------------------------------------------------------------------
 
-loc_4B626:
+SS_AniReverse:
 		subq.b	#1,2(a0)
 		bpl.s	locret_4B654
 		move.b	#7,2(a0)
@@ -86969,7 +86968,7 @@ loc_4B626:
 		move.b	3(a0),d0
 		addq.b	#1,3(a0)
 		movea.l	4(a0),a1
-		move.b	byte_4B656(pc,d0.w),d0
+		move.b	SS_AniRevData(pc,d0.w),d0
 		bne.s	loc_4B652
 		clr.l	(a0)
 		clr.l	4(a0)
@@ -86983,13 +86982,13 @@ loc_4B652:
 locret_4B654:
 		rts
 ; ---------------------------------------------------------------------------
-byte_4B656:	dc.b $C
+SS_AniRevData:	dc.b $C
 		dc.b 6
 		dc.b $C
 		dc.b 0
 ; ---------------------------------------------------------------------------
 
-loc_4B65A:
+SS_AniGlassBlock:
 		subq.b	#1,2(a0)
 		bpl.s	locret_4B686
 		move.b	#1,2(a0)
@@ -86997,7 +86996,7 @@ loc_4B65A:
 		move.b	3(a0),d0
 		addq.b	#1,3(a0)
 		movea.l	4(a0),a1
-		move.b	byte_4B688(pc,d0.w),d0
+		move.b	SS_AniGlassData(pc,d0.w),d0
 		move.b	d0,(a1)
 		bne.s	locret_4B686
 		move.b	4(a0),(a1)
@@ -87007,7 +87006,8 @@ loc_4B65A:
 locret_4B686:
 		rts
 ; ---------------------------------------------------------------------------
-byte_4B688:	dc.b $D
+SS_AniGlassData:
+		dc.b $D
 		dc.b $E
 		dc.b $F
 		dc.b $D
