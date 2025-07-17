@@ -1165,7 +1165,6 @@ HInt2:
 		beq.s	HInt2_Done
 		move.w	#0,(H_int_flag).w
 		movem.l	a0-a1,-(sp)
-
 		lea	(VDP_data_port).l,a1
 		move.w	#$8ADF,VDP_control_port-VDP_data_port(a1)
 		lea	(Water_palette).w,a0
@@ -167943,12 +167942,11 @@ Find_SonicTails:
 
 
 Change_FlipX:
-		bclr	#0,4(a0)
+		bclr	#0,render_flags(a0)
 		tst.w	d0
-		beq.s	locret_84B6C
-		bset	#0,4(a0)
-
-locret_84B6C:
+		beq.s	+
+		bset	#0,render_flags(a0)
++
 		rts
 ; End of function Change_FlipX
 
@@ -167957,12 +167955,11 @@ locret_84B6C:
 
 
 Change_FlipXWithVelocity:
-		bclr	#0,4(a0)
-		tst.w	$18(a0)
-		bmi.s	locret_84B80
-		bset	#0,4(a0)
-
-locret_84B80:
+		bclr	#0,render_flags(a0)
+		tst.w	x_vel(a0)
+		bmi.s	+
+		bset	#0,render_flags(a0)
++
 		rts
 ; End of function Change_FlipXWithVelocity
 
@@ -167971,13 +167968,12 @@ locret_84B80:
 
 
 Change_FlipXUseParent:
-		bclr	#0,4(a0)
-		movea.w	$46(a0),a1
-		btst	#0,4(a1)
-		beq.s	locret_84B9A
-		bset	#0,4(a0)
-
-locret_84B9A:
+		bclr	#0,render_flags(a0)
+		movea.w	parent3(a0),a1
+		btst	#0,render_flags(a1)
+		beq.s	+
+		bset	#0,render_flags(a0)
++
 		rts
 ; End of function Change_FlipXUseParent
 
@@ -167990,19 +167986,17 @@ Find_OtherObject:
 		moveq	#0,d1			; d1 = 0 if other object is above calling object, 2 if below it
 		move.w	x_pos(a0),d2
 		sub.w	x_pos(a1),d2
-		bpl.s	loc_84BAE
+		bpl.s	+
 		neg.w	d2
 		addq.w	#2,d0
-
-loc_84BAE:
++
 		moveq	#0,d1
 		move.w	y_pos(a0),d3
 		sub.w	y_pos(a1),d3
-		bpl.s	locret_84BBE
+		bpl.s	+
 		neg.w	d3
 		addq.w	#2,d1
-
-locret_84BBE:
++
 		rts
 ; End of function Find_OtherObject
 
@@ -168057,16 +168051,16 @@ ObjectMoveAndFall_Circular:
 		swap	d2
 		muls.w	d1,d3
 		swap	d3
-		movea.w	$46(a0),a1
+		movea.w	parent3(a0),a1
 		move.w	x_pos(a1),d0
 		add.w	d2,d0
-		move.b	$42(a0),d4
+		move.b	child_dx(a0),d4
 		ext.w	d4
 		add.w	d4,d0
 		move.w	d0,x_pos(a0)
 		move.w	y_pos(a1),d1
 		add.w	d3,d1
-		move.b	$43(a0),d4
+		move.b	child_dy(a0),d4
 		ext.w	d4
 		add.w	d4,d1
 		move.w	d1,y_pos(a0)
