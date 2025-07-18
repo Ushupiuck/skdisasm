@@ -244,6 +244,29 @@ PSG_input =			$C00011
 
 ; RAM addresses
 
+; SRAM addresses
+; Notes: SRAM in Sonic 3 Alone and Sonic 3 & Knuckles is 1KB in size.
+; Both games use odd 8-bit addresses for saving.
+	phase $200001
+SRAM_start	=		*
+	ds.b	$10	; unused
+SRAM_competition	ds.b $2A*4	; $A8 bytes
+	ds.b	4	; unused
+SRAM_competition_backup	ds.b	$2A*4	; $A8 bytes
+	ds.b	4	; unused
+SRAM_S3game	ds.b	$1A*4	; $68 bytes
+	ds.b	$24	; unused
+SRAM_S3game_backup	ds.b	$1A*4	; $68 bytes
+	ds.b	$24 ; unused
+SRAM_SKgame	ds.b	$2A*4	; $A8 bytes
+	ds.b	4	; unused
+SRAM_SKgame_backup	ds.b	$2A*4	; $A8 bytes
+	ds.b	$2A	; unused
+SRAM_end	=		*
+	dephase
+
+; M68K RAM addresses
+
 Sprite_table_alternate =	ramaddr(   $FF7880 ) ; $280 bytes ; alternate sprite table for player 1 in competition mode
 Sprite_table_P2 =		ramaddr(   $FF7B00 ) ; $280 bytes ; sprite table for player 2 in competition mode
 Sprite_table_P2_alternate =	ramaddr(   $FF7D80 ) ; $280 bytes ; alternate sprite table for player 2 in competition mode
@@ -257,9 +280,10 @@ Level_layout_main		ds.b $FF8		; $40 word-sized line pointers followed by actual 
 Object_respawn_table_2 :=	Level_layout_header+$400; $200 bytes ; respawn table used by glowing spheres bonus stage, because... Reasons?
 Ring_status_table_2 :=		Level_layout_header+$600; $400 bytes ; ring status table used by glowing spheres bonus stage, because... Reasons?
 Block_table			ds.b $1800		; block (16x16) definitions, 8 bytes per definition, space for $300 blocks
-SStage_collision_response_list := Block_table+$1400	; $100 bytes ; sprite collision list during a special stage
-SStage_unkA500 :=		Block_table+$1500	; unknown special stage array
-SStage_unkA600 :=		Block_table+$1600	; unknown special stage array
+SStage_collision_response_list := 	Block_table+$1400	; $100 bytes ; sprite collision list during a special stage
+SStage_blue_sphere_to_ring_queue :=	Block_table+$1500	; $100 bytes ; queue used by special stages to temporarily store the positions of blue spheres that have turned into rings
+SStage_red_sphere_dfs_walk_stack :=	Block_table+$1600	; $100 bytes ; stack of (direction index bounds, direction index, position) used by special stages
+								; as part of the red sphere DFS walk to check for loops of red spheres
 HScroll_table			ds.b $200		; array of background scroll positions for the level. WARNING: some references are before this label
 _unkA880 :=			HScroll_table+$80	; used in SSZ screen/background events
 _unkA8E0 :=			HScroll_table+$E0	; used in SSZ screen/background events
@@ -373,9 +397,9 @@ Camera_X_pos_P2_copy		ds.w 1
 			ds.w 1				; unused
 Camera_Y_pos_P2_copy		ds.w 1
 			ds.w 1				; unused
-_unkEE70			ds.w 1			; it is unclear how this is used
+Camera_X_pos_P2_BG_copy		ds.w 1			; this is used in competition mode, and it acts as a copy of the x position for player 2's background
 			ds.w 1				; unused
-_unkEE74			ds.w 1			; it is unclear how this is used
+Camera_Y_pos_P2_BG_copy		ds.w 1			; this is used in competition mode, and it acts as a copy of the y position for player 2's background
 			ds.w 1				; unused
 Camera_X_pos			ds.l 1
 Camera_Y_pos			ds.l 1
@@ -400,12 +424,12 @@ Screen_Y_wrap_value		ds.w 1			; either $7FF or $FFF
 Camera_Y_pos_mask		ds.w 1			; either $7F0 or $FF0
 Layout_row_index_mask		ds.w 1			; either $3C or $7C
 
-_unkEEB0			ds.w 1			;
+_unkEEB0			ds.w 1			; only ever set to $100 or $80, used in competition mode
 Special_events_routine		ds.w 1			; routine counter for various special events. Used for example with LBZ2 Death Egg sequence
 Events_fg_0			ds.w 1			; various flags used by screen events
 Events_fg_1			ds.w 1			; various flags used by screen events
 Events_fg_2			ds.w 1			; various flags used by screen events
-_unkEEBA			ds.w 1			; only used in Sonic 3
+_unkEEBA			ds.w 1			; only used in Sonic 3, and only used in the competition mode
 Level_repeat_offset		ds.w 1			; the number of pixels the screen was moved this frame, used to offset level objects horizontally. Used only for level repeat sections, such as AIZ airship.
 Events_fg_3			ds.w 1			; various flags used by screen events
 Events_routine_fg		ds.w 1			; screen events routine counter
@@ -422,7 +446,7 @@ Events_bg			ds.b $18		; $18 bytes ; various flags used by background events
 SStage_results_object_addr =	Events_bg+$E		; word ; RAM address of the special stage results object
 FBZ_cloud_addr =		*			; $14 bytes ; addresses for cloud objects in FBZ2
 Vscroll_buffer =		*			; $50 bytes ; vertical scroll buffer used in various levels
-_unkEEEA			ds.w 1			; various unknown uses for EEEA
+_unkEEEA			ds.w 1			; used in save screen to store VRAM addresses (4 word VRAM addresses), also used in SSZ screen events
 			ds.w 1				; used in some instances (see above)
 _unkEEEE			ds.w 1			; used exclusively in SSZ background events code
 			ds.w 1				; used in some instances (see above)
@@ -741,6 +765,8 @@ Target_palette_line_4 =		Target_palette+$60	; $20 bytes
 Stack_contents			ds.b $100		; stack contents
 System_stack =			*			; this is the top of the stack, it grows downwards
 
+CrossResetRAM:	; RAM in this region will not be cleared after a soft reset.
+
 			ds.w 1				; unused
 Restart_level_flag		ds.w 1
 Level_frame_counter		ds.w 1			; the number of frames which have elapsed since the level started
@@ -852,10 +878,10 @@ Loser_time_left			ds.b 1			; left over from Sonic 2
 			ds.b $23			; unused
 Results_screen_2P		ds.w 1			; left over from Sonic 2
 Perfect_rings_left		ds.w 1			; left over from Sonic 2
-_unkFF06			ds.w 1			; unknown
+Perfect_rings_flag		ds.w 1			; unknown
 Player_mode			ds.w 1			; 0 = Sonic and Tails, 1 = Sonic alone, 2 = Tails alone, 3 = Knuckles alone
 Player_option			ds.w 1			; option selected on level select, data select screen or Sonic & Knuckles title screen
-			ds.w 1				; unused
+Two_player_items		ds.w 1			; left over from Sonic 2
 
 Kos_decomp_queue_count		ds.w 1			; the number of pieces of data on the queue. Sign bit set indicates a decompression is in progress
 Kos_decomp_stored_registers	ds.w 20			; allows decompression to be spread over multiple frames
@@ -954,6 +980,8 @@ P1_character :=			*		; S3 uses a different address
 P2_character :=			*		; S3 uses a different address
 				ds.b 1
 			ds.l 1				; unused
+
+CrossResetRAM_End :=		*		; S3 uses a different address
 
 V_int_jump :=			*		; S3 uses a different address
 				ds.b 6			; contains an instruction to jump to the V-int handler
@@ -1067,17 +1095,17 @@ ArtTile_DashDust_P2                   = $07F0
 ; Sound commands list.
 
 	phase $E1
-mus__FirstCmd =			*		; ID of the first sound command
-mus_FadeOut			ds.b 1		; $E1 - fade out music
-mus_Stop			ds.b 1		; $E2 - stop music and sound effects
-mus_MutePSG			ds.b 1		; $E3 - mute all PSG channels
-mus_StopSFX			ds.b 1		; $E4 - stop all sound effects
-mus_FadeOut2			ds.b 1		; $E5 - fade out music (duplicate)
-mus__EndCmd =			*		; next ID after last sound command
+cmd__First =			*		; ID of the first sound command
+cmd_FadeOut			ds.b 1		; $E1 - fade out music
+cmd_Stop			ds.b 1		; $E2 - stop music and sound effects
+cmd_MutePSG			ds.b 1		; $E3 - mute all PSG channels
+cmd_StopSFX			ds.b 1		; $E4 - stop all sound effects
+cmd_FadeOut2			ds.b 1		; $E5 - fade out music (duplicate)
+cmd__End =			*		; next ID after last sound command
 
-mus_S2SEGA =			$FA		; $FA - SEGA sound ID in Sonic 2
-mus_StopSEGA =			$FE		; $FE - Stop SEGA sound
-mus_SEGA =			$FF		; $FF - Play SEGA sound
+cmd_S2SEGA =			$FA		; $FA - SEGA sound ID in Sonic 2
+cmd_StopSEGA =			$FE		; $FE - Stop SEGA sound
+cmd_SEGA =			$FF		; $FF - Play SEGA sound
 	dephase
 ; ---------------------------------------------------------------------------
 ; Music ID's list. These do not affect the sound driver, be careful.

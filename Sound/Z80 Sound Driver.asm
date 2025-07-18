@@ -674,7 +674,10 @@ zUpdateMusic:
 
 ;loc_149
 .check_fade_in:
+	if ~~fix_sndbugs
+		; Redundant; 'a' already holds this value.
 		ld	a, (zFadeToPrevFlag)		; Get fade-to-previous flag
+	endif
 		cp	0FFh				; Is it 0FFh?
 		jr	z, .update_music		; Branch if yes
 		ld	hl, zMusicNumber		; Point hl to M68K input
@@ -1634,17 +1637,17 @@ zPlaySoundByIndex:
 		cp	mus_CreditsK			; Is this the credits music?
 		jp	z, zPlayMusicCredits		; Branch if yes
 	endif
-		cp	mus_SEGA			; Is this the SEGA sound?
+		cp	cmd_SEGA			; Is this the SEGA sound?
 		jp	z, zPlaySegaSound		; Branch if yes
 		cp	mus__End			; Is this a music?
 		jp	c, zPlayMusic			; Branch if yes
 		cp	sfx__End			; Is this a sound effect?
 		jp	c, zPlaySound_CheckRing		; Branch if yes
-		cp	mus__FirstCmd			; Is it before the first fade effect?
+		cp	cmd__First			; Is it before the first fade effect?
 		jp	c, zStopAllSound		; Branch if yes
-		cp	mus__EndCmd			; Is this after the last fade effect?
+		cp	cmd__End			; Is this after the last fade effect?
 		jp	nc, zStopAllSound		; Branch if yes
-		sub	mus__FirstCmd			; If none of the checks passed, do fade effects.
+		sub	cmd__First			; If none of the checks passed, do fade effects.
 		ld	hl, zFadeEffects		; hl = switch table pointer
 		rst	PointerTableOffset		; Get address of function that handles the fade effect
 	if fix_sndbugs=0
@@ -4275,7 +4278,7 @@ zPlayDigitalAudio:
 		ld	a, (hl)				; a = DAC index
 		dec	a				; a -= 1
 		set	7, (hl)				; Set bit 7 to indicate that DAC sample is being played
-		ld	hl, zmake68kPtr(DAC_Offsets)	; hl = pointer to ROM window
+		ld	hl, zROMWindow			; hl = pointer to ROM window
 		rst	PointerTableOffset		; hl = pointer to DAC data
 		ld	c, 80h				; c is an accumulator below; this initializes it to 80h
 		ld	a, (hl)				; a = DAC rate
@@ -4294,6 +4297,8 @@ zPlayDigitalAudio:
 
 .dac_playback_loop:
 .sample1_rate:
+		; According to Kabuto, the Z80 suffers a delay of approximately 3.3 cycles for each ROM access.
+		; https://plutiedev.com/mirror/kabuto-hardware-notes#bus-system
 		ld	b, 0Ah			; 7	; self-modified code; b is set to DAC rate
 		ei				; 4	; Enable interrupts
 		djnz	$			; 8	; Loop in this instruction, decrementing b each iteration, until b = 0
@@ -4301,7 +4306,7 @@ zPlayDigitalAudio:
 		di				; 4	; Disable interrupts
 		ld	a, 2Ah			; 7	; DAC channel register
 		ld	(zYM2612_A0), a		; 13	; Send to YM2612
-		ld	a, (hl)			; 7	; a = next byte of DAC sample
+		ld	a, (hl)			; 7+3	; a = next byte of DAC sample
 		; Want only the high nibble now, so shift it into position
 		rlca				; 4
 		rlca				; 4
@@ -4324,7 +4329,7 @@ zPlayDigitalAudio:
 		di				; 4	; Disable interrupts
 		ld	a, 2Ah			; 7	; DAC channel register
 		ld	(zYM2612_A0), a		; 13	; Send to YM2612
-		ld	a, (hl)			; 7	; a = next byte of DAC sample
+		ld	a, (hl)			; 7+3	; a = next byte of DAC sample
 		and	0Fh			; 7	; Want only the low nibble
 		ld	(.sample2_index+2), a	; 13	; Store into following instruction (self-modifying code)
 		ld	a, c			; 4	; a = c
@@ -4343,7 +4348,7 @@ zPlayDigitalAudio:
 		ld	a, d			; 4	; a = d
 		or	e			; 4	; Is length zero?
 		jp	nz, .dac_playback_loop	; 10	; Loop if not
-						; total: 7+4+8+4+7+13+7+4+4+4+4+7+13+4+19+13+4+7+4+8+4+7+13+7+7+13+4+19+13+4+4+13+4+10+6+6+4+4+10
+						; total: 7+4+8+4+7+13+7+3+4+4+4+4+7+13+4+19+13+4+7+4+8+4+7+13+7+3+7+13+4+19+13+4+4+13+4+10+6+6+4+4+10
 		xor	a				; a = 0
 		ld	(zDACIndex), a			; Mark DAC as being idle
 		jp	zPlayDigitalAudio		; Loop
@@ -4352,8 +4357,7 @@ zPlayDigitalAudio:
 ; JMan2050's DAC decode lookup table
 ; ===========================================================================
 DecTable:
-		db	   0,  1,   2,   4,   8,  10h,  20h,  40h
-		db	 80h, -1,  -2,  -4,  -8, -10h, -20h, -40h
+		binclude "Sound/DAC/deltas.bin"
 ; ---------------------------------------------------------------------------
 
 ; =============== S U B	R O U T	I N E =======================================
@@ -4362,7 +4366,7 @@ DecTable:
 ; disables interrupts) until either of the following conditions hold:
 ;
 ;	(1)	The SEGA PCM is fully played
-;	(2)	The next song to play is 0FEh (mus_StopSEGA)
+;	(2)	The next song to play is 0FEh (cmd_StopSEGA)
 ;loc_1126
 zPlaySEGAPCM:
 		di					; Disable interrupts
@@ -4380,21 +4384,23 @@ zPlaySEGAPCM:
 		ld	a, zmake68kBank(SEGA_PCM)	; a = sound bank index
 		bankswitch3				; Bank switch to sound bank
 		ld	hl, zmake68kPtr(SEGA_PCM)	; hl = pointer to SEGA PCM
-		ld	de, SEGA_PCM_End-SEGA_PCM	; de = length of SEGA PCM
+		ld	de, SEGA_PCM.size		; de = length of SEGA PCM
 		ld	a, 2Ah				; DAC channel register
 		ld	(zYM2612_A0), a			; Send to YM2612
 		nop					; Delay
 
 .loop:
-		ld	a, (hl)			; 7	; a = next byte of SEGA PCM
+		; According to Kabuto, the Z80 suffers a delay of approximately 3.3 cycles for each ROM access.
+		; https://plutiedev.com/mirror/kabuto-hardware-notes#bus-system
+		ld	a, (hl)			; 7+3	; a = next byte of SEGA PCM
 		ld	(zYM2612_D0), a		; 13	; Send to DAC
 		ld	a, (zMusicNumber)	; 13	; Check next song number
-		cp	mus_StopSEGA		; 7	; Is it the command to stop playing SEGA PCM?
+		cp	cmd_StopSEGA		; 7	; Is it the command to stop playing SEGA PCM?
 		jr	z, .done		; 7	; Break the loop if yes
 		nop				; 4
 		nop				; 4
 
-		ld	b, pcmLoopCounter(14500); 7	; Loop counter
+		ld	b, pcmLoopCounter(SEGA_PCM.sample_rate); 7	; Loop counter
 		djnz	$			; 8	; Loop in this instruction, decrementing b each iteration, until b = 0
 
 		inc	hl			; 6	; Advance to next byte of SEGA PCM
@@ -4402,7 +4408,7 @@ zPlaySEGAPCM:
 		ld	a, d			; 4	; a = d
 		or	e			; 4	; Is length zero?
 		jr	nz, .loop		; 12	; Loop if not
-						; total: 102
+						; total: 105
 
 .done:
 	if SonicDriverVer==3
@@ -4663,10 +4669,6 @@ z80_SFXPointers:
 ; ===========================================================================
 ; FM Universal Voice Bank
 ; ===========================================================================
-	align 17D8h
-	if $ <> 17D8h
-		fatal "The universal voice bank is not in a location where music can find it; any song using it will fail."
-	endif
 
 z80_UniVoiceBank:
 ;	Voice 00h - Synth Bass 2

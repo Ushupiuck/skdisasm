@@ -80,12 +80,12 @@ RAMStartLoc:	dc.l (RAM_start&$FFFFFF)
 RAMEndLoc:	dc.l (RAM_start&$FFFFFF)+$FFFF
 	if Sonic3_Complete
 CartRAM_Info:	dc.b "RA"
-CartRAM_Type:	dc.w %1111100000100000
-CartRAMStartLoc:dc.l $00200001
-CartRAMEndLoc:	dc.l $002003FF
+CartRAM_Type:	dc.w %1111100000100000	; Save odd number 8-bit addresses
+CartRAMStartLoc:dc.l SRAM_start
+CartRAMEndLoc:	dc.l SRAM_end
 	else
 CartRAM_Info:	dc.b "  "
-CartRAM_Type:	dc.w %10000000100000
+CartRAM_Type:	dc.w %10000000100000	; No SRAM
 CartRAMStartLoc:dc.b "    "
 CartRAMEndLoc:	dc.b "    "
 	endif
@@ -278,9 +278,9 @@ Test_LockOn:
 		move.w	(VDP_control_port).l,d1
 		btst	#1,d1
 		bne.s	-	; wait till a DMA is completed
-		lea	((RAM_start&$FFFFFF)).l,a6
+		lea	(RAM_start&$FFFFFF).l,a6
 		moveq	#0,d7
-		move.w	#bytesToLcnt($FE00),d6
+		move.w	#bytesToLcnt(CrossResetRAM-RAM_start),d6
 
 -
 		move.l	d7,(a6)+
@@ -1228,7 +1228,7 @@ SndDrvInit:
 		bsr.w	Kos_Decomp
 		; Load sound driver data (PSG envelopes, music/sound pointers, FM voice bank)
 		lea	(Z80_SoundDriverData).l,a0
-		lea	(Z80_RAM+$1300).l,a1
+		lea	(Z80_RAM+z80_SoundDriverPointers).l,a1
 		bsr.w	Kos_Decomp
 		; Load default variables
 		lea	(Z80_DefaultVariables).l,a0
@@ -2055,7 +2055,7 @@ Process_Nem_Queue_ShiftUp:
 		; The above code does not properly 'pop' the 16th PLC entry.
 		; Because of this, occupying the 16th slot will cause it to
 		; be repeatedly decompressed infinitely.
-		; Granted, this could be conisdered more of an optimisation
+		; Granted, this could be considered more of an optimisation
 		; than a bug: treating the 16th entry as a dummy that
 		; should never be occupied makes this code unnecessary.
 		; Still, the overhead of this code is minimal.
@@ -2069,6 +2069,7 @@ Process_Nem_Queue_ShiftUp:
 ; End of function Process_Nem_Queue_Main
 
 ; ---------------------------------------------------------------------------
+		; unused
 		lea	(Offs_PLC).l,a1
 		add.w	d0,d0
 		move.w	(a1,d0.w),d0
@@ -2927,6 +2928,7 @@ AnPal_Load:
 		move.w	OffsAnPal(pc,d0.w),d0
 		jmp	OffsAnPal(pc,d0.w)
 ; ---------------------------------------------------------------------------
+		; unused
 		rts
 ; ---------------------------------------------------------------------------
 OffsAnPal:
@@ -5197,7 +5199,7 @@ Sega_Screen:
 ; ---------------------------------------------------------------------------
 
 Title_Screen:
-		moveq	#signextendB(mus_FadeOut),d0
+		moveq	#signextendB(cmd_FadeOut),d0
 		bsr.w	Play_Music			; Fade music if any is playing
 		clr.w	(Kos_decomp_queue_count).w
 		clearRAM	Kos_decomp_stored_registers,$6C	; Clear FFFF10-FFFF7B
@@ -5239,12 +5241,19 @@ Title_Screen:
 		move.w	#(6*60)-1,(Demo_timer).w		; Wait on title screen for six seconds
 		clr.w	(DMA_queue).w
 		move.l	#DMA_queue,(DMA_queue_slot).w	; Clear DMA queue
+	if 0
+		; Sonic 2 Beta 4 reveals that these were the original instructions.
+		; The original source code may have been able to produce debug builds with this enabled.
+		move.w	#$101,(Level_select_flag).w
+		move.w	#$101,(Debug_mode_flag).w
+	else
 		nop
 		nop
 		nop
 		nop
 		nop
 		nop
+	endif
 		tst.w	(SK_alone_flag).w
 		bne.w	SK_Alone_Title_Screen
 		lea	(ArtKos_S3TitleSonic1).l,a0	;S3DATA
@@ -5282,7 +5291,7 @@ loc_3F9E:
 		ori.b	#$40,d0
 		move.w	d0,(VDP_control_port).l			; Turn the display on
 		bsr.w	Pal_FadeFromBlack		; Fade in to logo
-		moveq	#signextendB(mus_SEGA),d0
+		moveq	#signextendB(cmd_SEGA),d0
 		bsr.w	Play_Music
 		move.w	#3*60,(Demo_timer).w		; Set to wait for 3 seconds
 
@@ -5296,7 +5305,7 @@ Wait_SegaS3K:
 		bne.s	Wait_SegaS3K
 
 loc_3FE4:
-		moveq	#signextendB(mus_StopSEGA),d0
+		moveq	#signextendB(cmd_StopSEGA),d0
 		bsr.w	Play_Music				; Stop SEGA sound
 		lea	(Pal_Title).l,a1
 
@@ -5438,7 +5447,7 @@ loc_41D4:
 		move.b	d0,(Continue_count).w
 		move.l	#5000,(Next_extra_life_score).w
 		move.l	#5000,(Next_extra_life_score_P2).w
-		moveq	#signextendB(mus_FadeOut),d0
+		moveq	#signextendB(cmd_FadeOut),d0
 		bsr.w	Play_SFX			; Fade out the title screen music
 		moveq	#0,d0
 		move.b	(Title_screen_option).w,d0		; Selection is stored here
@@ -5460,7 +5469,7 @@ loc_4270:
 ; ---------------------------------------------------------------------------
 
 loc_4278:
-		moveq	#signextendB(mus_FadeOut),d0
+		moveq	#signextendB(cmd_FadeOut),d0
 		bsr.w	Play_SFX			; Fade out music
 		move.w	(Next_demo_number).w,d0		; Get index of current demo to run
 		move.w	d0,(Demo_number).w
@@ -6099,6 +6108,7 @@ Ani_TitleTailsPlane:
 S3_Level_Select_Code:
 		rts
 ; ---------------------------------------------------------------------------
+		; unused
 		lea	(LSelect3CodeDat).l,a1
 		move.w	(Level_select_cheat_counter).w,d0
 		adda.w	d0,a1
@@ -6252,7 +6262,7 @@ loc_51F4:
 		ori.b	#$40,d0
 		move.w	d0,(VDP_control_port).l		; Turn the display on
 		bsr.w	Pal_FadeFromBlack		; Fade to Sega screen
-		moveq	#signextendB(mus_SEGA),d0			; SEGA sound
+		moveq	#signextendB(cmd_SEGA),d0			; SEGA sound
 		bsr.w	Play_Music
 
 loc_520C:
@@ -6269,7 +6279,7 @@ loc_520C:
 		bne.s	loc_520C			; Otherwise, wait for vsync timer to run out
 
 loc_523A:
-		moveq	#signextendB(mus_StopSEGA),d0
+		moveq	#signextendB(cmd_StopSEGA),d0
 		bsr.w	Play_Music			; Stop the SEGA sound if necessary
 		lea	(Pal_SKTitle_Sonic).l,a0
 		lea	(Target_palette).w,a1
@@ -6387,7 +6397,7 @@ loc_539A:
 		move.b	d0,(Continue_count).w
 		move.l	#5000,(Next_extra_life_score).w
 		move.l	#5000,(Next_extra_life_score_P2).w
-		moveq	#signextendB(mus_FadeOut),d0
+		moveq	#signextendB(cmd_FadeOut),d0
 		bsr.w	Play_SFX
 		moveq	#0,d0
 		move.b	(Title_screen_option).w,d0
@@ -6420,7 +6430,7 @@ locret_546A:
 ; ---------------------------------------------------------------------------
 
 loc_546C:
-		moveq	#signextendB(mus_FadeOut),d0		; Start demo by fading out music
+		moveq	#signextendB(cmd_FadeOut),d0		; Start demo by fading out music
 		bsr.w	Play_SFX
 		move.w	(Next_demo_number).w,d0	; Get demo number
 		cmpi.w	#3,d0
@@ -7304,7 +7314,7 @@ Level:
 		bset	#7,(Game_mode).w		; Set bit 7 of F600 is indicate that we're loading the level
 		tst.w	(Demo_mode_flag).w
 		bmi.s	loc_5FC4
-		moveq	#signextendB(mus_FadeOut),d0		; If a demo
+		moveq	#signextendB(cmd_FadeOut),d0		; If a demo
 		bsr.w	Play_SFX
 
 loc_5FC4:
@@ -8320,6 +8330,7 @@ loc_6C9C:
 ; End of function Handle_Onscreen_Water_Height
 
 ; ---------------------------------------------------------------------------
+		; unused
 		clr.b	(Water_full_screen_flag).w
 		move.w	(Mean_water_level).w,(Water_level).w
 		move.l	#HInt3,(H_int_addr).w
@@ -10028,7 +10039,7 @@ LevelSelect_StartZone:
 		move.w	d0,(Demo_mode_flag).w
 		move.l	#5000,(Next_extra_life_score).w
 		move.l	#5000,(Next_extra_life_score_P2).w
-		moveq	#signextendB(mus_FadeOut),d0
+		moveq	#signextendB(cmd_FadeOut),d0
 		jsr	(Play_SFX).l
 		moveq	#0,d0
 		move.w	d0,(Competition_settings).w
@@ -10112,7 +10123,7 @@ loc_7EE4:
 loc_7EF8:
 		btst	#button_B,d1
 		beq.s	locret_7F06
-		moveq	#signextendB(mus_MutePSG),d0
+		moveq	#signextendB(cmd_MutePSG),d0
 		jsr	(Play_Music).l
 
 locret_7F06:
@@ -10130,6 +10141,7 @@ LevSelControls_SwitchSide:
 loc_7F1E:
 		bra.s	LevelSelect_PickCharacterNumber
 ; ---------------------------------------------------------------------------
+		; unused
 		rts
 ; ---------------------------------------------------------------------------
 LevelSelect_SwitchTable:
@@ -10371,7 +10383,7 @@ AniPLC_SONICMILES: zoneanimstart
 ; ---------------------------------------------------------------------------
 
 SpecialStage:
-		moveq	#signextendB(mus_Stop),d0
+		moveq	#signextendB(cmd_Stop),d0
 		bsr.w	Play_Music
 		clr.w	(Kos_decomp_queue_count).w
 		clearRAM	Kos_decomp_stored_registers,$6C
@@ -12598,9 +12610,9 @@ Touch_SSSprites_BlueSphere:
 		movea.l	4(a0),a1
 		cmpi.b	#2,(a1)
 		bne.s	loc_9E62
-		bsr.w	sub_9E88
+		bsr.w	Decrement_BlueSphere_Count
 		move.b	#$A,(a1)
-		bsr.s	sub_9EBC
+		bsr.s	Sphere_To_Rings
 		beq.s	locret_9E60
 		move.b	#4,(a1)
 		clr.l	(a0)
@@ -12630,17 +12642,17 @@ locret_9E86:
 ; =============== S U B R O U T I N E =======================================
 
 
-sub_9E88:
+Decrement_BlueSphere_Count:
 		move.w	d0,-(sp)
-		move.b	#-1,(Special_stage_sphere_HUD_flag).w
-		subq.w	#1,(Special_stage_spheres_left).w
-		bne.s	loc_9E9C
-		move.b	#1,(Special_stage_clear_routine).w
+		move.b	#-1,(Special_stage_sphere_HUD_flag).w	; Set flag to update HUD
+		subq.w	#1,(Special_stage_spheres_left).w	; Decrement Count
+		bne.s	loc_9E9C				; If Count is 0
+		move.b	#1,(Special_stage_clear_routine).w	; Set flag to clear special stage
 
 loc_9E9C:
 		move.w	(sp)+,d0
 		rts
-; End of function sub_9E88
+; End of function Decrement_BlueSphere_Count
 
 
 ; =============== S U B R O U T I N E =======================================
@@ -12665,262 +12677,343 @@ loc_9EB2:
 
 ; =============== S U B R O U T I N E =======================================
 
-
-sub_9EBC:
+; Arguments
+;	a1: Address of Position in Map
+; Mutates:
+;	d0-d6/a2-a5
+; Returns:
+;	d1/CCR: 1 is transformed. 0 otherwise
+;
+; First Calls Find_Red_Sphere_Loop to:
+;	Check if there are and loops of red spheres
+;	Turn 1 blue sphere per loop to a ring
+;	Add the position of those rings to the ring queue
+;
+; If the queue is empty, return 0
+;
+; The use a breath first seach algorithm to using the queue
+; to fill out each area of blue spheres, turning them into
+; rings and adding them to the queue, and updating the HUD.
+;
+; Lastly check all neighbors of the queue for red spheres
+; that can be turning into rings, and do so.
+;
+; Play the sfx_RingLoss sfx and return 1.
+Sphere_To_Rings:
 		lea	(SStage_layout_buffer+$100).w,a2
 		move.l	a1,d5
-		sub.l	a2,d5
-		bsr.s	sub_9F44
+		sub.l	a2,d5						; position index = position address - start address
+		bsr.s	Find_Red_Sphere_Loop				; returns ring queue end in a5
 		moveq	#0,d6
-		move.l	a5,d1
-		lea	(SStage_unkA500).w,a4
-		sub.l	a4,d1
-		beq.s	locret_9F42
+		move.l	a5,d1						; ring queue end (from Find_Red_Sphere_Loop)
+		lea	(SStage_blue_sphere_to_ring_queue).w,a4		; ring queue start
+		sub.l	a4,d1						; remaining entries count = end - start
+		beq.s	locret_9F42					; if empty queue, return 0
 
-loc_9ED2:
-		move.w	(a4)+,d5
-		lea	(word_A0CA).l,a3
+; For each ring in the queue, find its blue sphere neighbors, then
+; turn those blue spheres into rings, and add those positions
+; to the queue
+Blue_To_Ring_Next_Ring_B:
+		move.w	(a4)+,d5					; read ring from queue
+		lea	(SStage_8_Directions).l,a3			; load directions table
 		move.w	#8-1,d0
 
-loc_9EDE:
-		move.w	(a3)+,d2
-		add.w	d5,d2
-		andi.w	#$3FF,d2
-		cmpi.b	#2,(a2,d2.w)
-		bne.s	loc_9EFC
-		bsr.w	sub_9E88
-		move.b	#4,(a2,d2.w)
-		move.w	d2,(a5)+
-		addq.w	#2,d1
+Blue_To_Ring_Next_Direction_B:						; Loop[neighbors of ring]
+		move.w	(a3)+,d2					; 	get next direction
+		add.w	d5,d2						; 	neighbor = ring + direction
+		andi.w	#$3FF,d2					; 	truncate to map size
+		cmpi.b	#2,(a2,d2.w)					; 	If the neighbor is Blue
+		bne.s	Blue_To_Ring_Continue_B
+		bsr.w	Decrement_BlueSphere_Count
+		move.b	#4,(a2,d2.w)					;		Change to ring
+		move.w	d2,(a5)+					; 		Add to queue
+		addq.w	#2,d1						; 		increment remaining entries count
 
-loc_9EFC:
-		dbf	d0,loc_9EDE
-		subq.w	#2,d1
-		bne.s	loc_9ED2
-		move.l	a5,d1
-		lea	(SStage_unkA500).w,a4
-		sub.l	a4,d1
-		beq.s	locret_9F42
+Blue_To_Ring_Continue_B:
+		dbf	d0,Blue_To_Ring_Next_Direction_B		; Loop[neighbors of ring]:end
+		subq.w	#2,d1						; decrement remaining entries count
+		bne.s	Blue_To_Ring_Next_Ring_B			; If more rings in queue, get next ring
+		move.l	a5,d1						; reset queue end
+		lea	(SStage_blue_sphere_to_ring_queue).w,a4		; reset queue start
+		sub.l	a4,d1						; reset remaining entries count
+		beq.s	locret_9F42					; if empty queue (how?), return 0
 
-loc_9F0E:
-		move.w	(a4)+,d5
-		lea	(word_A0CA).l,a3
+; For each ring in the queue, find its red sphere neighbors, then
+; turn those red spheres into rings
+Blue_To_Ring_Next_Ring_R:
+		move.w	(a4)+,d5					; read ring from queue
+		lea	(SStage_8_Directions).l,a3			; load directions table
 		move.w	#8-1,d0
 
-loc_9F1A:
-		move.w	(a3)+,d2
-		add.w	d5,d2
-		andi.w	#$3FF,d2
-		cmpi.b	#1,(a2,d2.w)
-		bne.s	loc_9F30
-		move.b	#4,(a2,d2.w)
+Blue_To_Ring_Next_Direction_R:						; Loop[neighbors of ring]
+		move.w	(a3)+,d2					; 	get next direction
+		add.w	d5,d2						; 	neighbor = ring + direction
+		andi.w	#$3FF,d2					; 	truncate to map size
+		cmpi.b	#1,(a2,d2.w)					; 	If the current neighbor is Red
+		bne.s	Blue_To_Ring_Continue_R
+		move.b	#4,(a2,d2.w)					; 		Change to ring
 
-loc_9F30:
-		dbf	d0,loc_9F1A
-		subq.w	#2,d1
-		bne.s	loc_9F0E
-		moveq	#signextendB(sfx_RingLoss),d0
+Blue_To_Ring_Continue_R:
+		dbf	d0,Blue_To_Ring_Next_Direction_R		; Loop[neighbors or ring]:end
+		subq.w	#2,d1						; decrement remaining entries count
+		bne.s	Blue_To_Ring_Next_Ring_R
+		moveq	#signextendB(sfx_RingLoss),d0			; load and play Ring Loss SFX
 		jsr	(Play_SFX).l
-		moveq	#1,d1
+		moveq	#1,d1						; Return 1
 
 locret_9F42:
 		rts
-; End of function sub_9EBC
+; End of function Sphere_To_Rings
 
 
 ; =============== S U B R O U T I N E =======================================
 
-
-sub_9F44:
-		lea	(SStage_unkA500).w,a5
-		lea	(word_A0CA).l,a3
-		moveq	#0,d2
+; Arguments
+;	d5: Index in Map Of Touched Sphere
+;	a2: Address of the Special Stage Map
+; Mutates
+;	d0-d4/d6/a3-a5
+; Returns:
+;	a5: 1 past the end of ring queue
+;
+; First checks if the touched sphere has any blue sphere neighbours,
+; while also turning any touched neighbours into red spheres.
+; If there are none, return early
+;
+; Next check if the contiguous vertical and horizontal span
+; of spheres and rings starting from the touched sphere is
+; at least 3 spheres long each.
+; Otherwise, return early
+;
+; Then use a depth first search traversal algorithm to walk
+; a path of red spheres to find valid loops. For each loop
+; try to find an enclosed blue sphere. If one is found,
+; turn it into a ring, and add its index to the ring queue
+; and incrememnt the queue pointer.
+Find_Red_Sphere_Loop:
+		lea	(SStage_blue_sphere_to_ring_queue).w,a5		; Load special stage map pointer
+		lea	(SStage_8_Directions).l,a3			; Load directions pointer
+		moveq	#0,d2						; Blue sphere counter
 		move.w	#8-1,d0
 
-loc_9F54:
-		move.w	(a3)+,d1
-		add.w	d5,d1
-		andi.w	#$3FF,d1
-		cmpi.b	#$A,(a2,d1.w)
+Red_Loop_Check_Neighbors:						; Loop[neighbors of touched]
+		move.w	(a3)+,d1					; 	get next direction
+		add.w	d5,d1						; 	neighbor = touched + direction
+		andi.w	#$3FF,d1					; 	truncate to map size
+		cmpi.b	#$A,(a2,d1.w)					; 	If neighbour is $A (TOUCHED)
 		bne.s	loc_9F6A
-		move.b	#1,(a2,d1.w)
+		move.b	#1,(a2,d1.w)					;		change to RedSphere
 
 loc_9F6A:
-		cmpi.b	#2,(a2,d1.w)
+		cmpi.b	#2,(a2,d1.w)					; 	If neighbour is Blue
 		bne.s	loc_9F74
-		addq.w	#1,d2
+		addq.w	#1,d2						;		increment count
 
 loc_9F74:
-		dbf	d0,loc_9F54
-		tst.w	d2
-		beq.w	locret_A076
-		moveq	#0,d2
-		move.w	d5,d1
+		dbf	d0,Red_Loop_Check_Neighbors			; Loop[neighbors of touched]:end
+		tst.w	d2						; If there are no blue sphere neighbors
+		beq.w	locret_A076					;	return
+		moveq	#0,d2						; Horizontal span length
+		move.w	d5,d1						; scanning index
 		moveq	#$10-1,d3
 
-loc_9F84:
-		addq.w	#1,d2
-		addi.w	#-1,d1
-		tst.b	(a2,d1.w)
-		beq.s	loc_9F94
-		dbf	d3,loc_9F84
+Red_Loop_Count_Horizontal_Left:						; Loop[left until empty (max 16)]
+		addq.w	#1,d2						;	increment horizontal span length
+		addi.w	#-1,d1						;	move index left
+		tst.b	(a2,d1.w)					;	If index is empty (map[index] == 0)
+		beq.s	loc_9F94					;		break
+		dbf	d3,Red_Loop_Count_Horizontal_Left		; Loop[left until empty (max 16)]:end
 
 loc_9F94:
-		move.w	d5,d1
+		move.w	d5,d1						; scanning index
 		moveq	#$10-1,d3
 
-loc_9F98:
-		addq.w	#1,d2
-		addi.w	#1,d1
-		tst.b	(a2,d1.w)
-		beq.s	loc_9FA8
-		dbf	d3,loc_9F98
+Red_Loop_Count_Horizontal_Right:					; Loop[right until empty (max 16)]
+		addq.w	#1,d2						;	increment horizontal span length
+		addi.w	#1,d1						;	move index right
+		tst.b	(a2,d1.w)					;	If index is empty (map[index] == 0)
+		beq.s	loc_9FA8					;		break
+		dbf	d3,Red_Loop_Count_Horizontal_Right		; Loop[right until empty (max 16)]:end
 
 loc_9FA8:
-		cmpi.w	#4,d2
-		blo.w	locret_A076
-		moveq	#0,d2
-		move.w	d5,d1
+		cmpi.w	#4,d2						; If horizontal span is less than 3 (< 4 because touched is double counted)
+		blo.w	locret_A076					; 	then return
+		moveq	#0,d2						; Vertical span length
+		move.w	d5,d1						; scanning index
 		moveq	#$10-1,d3
 
-loc_9FB6:
-		addq.w	#1,d2
-		addi.w	#$FFE0,d1
-		tst.b	(a2,d1.w)
-		beq.s	loc_9FC6
-		dbf	d3,loc_9FB6
+Red_Loop_Count_Vertically_Up:						; Loop[up until empty (max 16)]
+		addq.w	#1,d2						;	increment vertical span length
+		addi.w	#$FFE0,d1					;	move index up
+		tst.b	(a2,d1.w)					;	If index is empty (map[index] == 0)
+		beq.s	loc_9FC6					;		break
+		dbf	d3,Red_Loop_Count_Vertically_Up			; Loop[up until empty (max 16)]:end
 
 loc_9FC6:
-		move.w	d5,d1
+		move.w	d5,d1						; scanning index
 		moveq	#$10-1,d3
 
-loc_9FCA:
-		addq.w	#1,d2
-		addi.w	#$20,d1
-		tst.b	(a2,d1.w)
-		beq.s	loc_9FDA
-		dbf	d3,loc_9FCA
+Red_Loop_Count_Vertically_Down:						; Loop[down until empty (max 16)]
+		addq.w	#1,d2						;	increment vertical span length
+		addi.w	#$20,d1						;	move index up
+		tst.b	(a2,d1.w)					;	If index is empty (map[index] == 0)
+		beq.s	loc_9FDA					;		break
+		dbf	d3,Red_Loop_Count_Vertically_Down		; Loop[down until empty (max 16)]:end
 
 loc_9FDA:
-		cmpi.w	#4,d2
-		blo.w	locret_A076
-		lea	(SStage_unkA600).w,a4
-		lea	(word_A0DA).l,a3
-		moveq	#0,d6
-		moveq	#0,d3
-		moveq	#6,d4
+		cmpi.w	#4,d2						; If vertical span is less than 3 (< 4 because touched is double counted)
+		blo.w	locret_A076					; 	then return
+		lea	(SStage_red_sphere_dfs_walk_stack).w,a4
+		lea	(SStage_4_Directions).l,a3			; Load Directions Pointer
+		moveq	#0,d6						; Walk Stack Size
+		moveq	#0,d3						; Direction Index Lower Bound
+		moveq	#6,d4						; Direction Index
 		add.w	d3,d4
-		move.w	d5,d0
+		move.w	d5,d0						; Current Walk Position
 
-loc_9FF6:
-		move.w	(a3,d4.w),d1
-		add.w	d0,d1
-		andi.w	#$3FF,d1
-		move.b	(a2,d1.w),d2
-		cmpi.b	#$8A,d2
-		beq.s	loc_A078
-		cmpi.b	#1,d2
-		bne.s	loc_A054
-		cmpi.w	#2,d6
-		blo.s	loc_A034
+Red_Loop_Find_Next:
+		move.w	(a3,d4.w),d1					; Next Direction = directions[direction index]
+		add.w	d0,d1						; Next Candidate = current position + next direction
+		andi.w	#$3FF,d1					; truncate to map size
+		move.b	(a2,d1.w),d2					; load map entry at candidate position
+		cmpi.b	#$8A,d2						; If candidate sphere is $8A (Processed + Touched)
+		beq.s	Red_Loop_Processes_Loop				; 	Loop found. Process Loop
+		cmpi.b	#1,d2						; If candidate is not a Red Sphere
+		bne.s	Red_Loop_Decrement				; 	Decrement direction Index
+		cmpi.w	#2,d6						; If walk stack size < 2
+		blo.s	Red_Loop_Push_Stack				; 	Push current state to walk stack
 		move.w	d1,d2
-		sub.w	-6(a4),d2
-		cmpi.w	#-1,d2
-		beq.s	loc_A054
-		cmpi.w	#1,d2
-		beq.s	loc_A054
-		cmpi.w	#$20,d2
-		beq.s	loc_A054
-		cmpi.w	#-$20,d2
-		beq.s	loc_A054
+		sub.w	-6(a4),d2					; Difference between canidate position and position at walk_stack[-2]
+		cmpi.w	#-1,d2						; If the difference is one square away in any direction
+		beq.s	Red_Loop_Decrement				;	Canidate is not part of the loop. Decrement direction Index
+		cmpi.w	#1,d2						; Else Push current state to walk stack
+		beq.s	Red_Loop_Decrement
+		cmpi.w	#$20,d2						; [S-1] -> [Current]
+		beq.s	Red_Loop_Decrement				;   ^          V
+		cmpi.w	#-$20,d2					; [S-2]	   [Candidate]
+		beq.s	Red_Loop_Decrement
 
-loc_A034:
-		ori.b	#$80,(a2,d0.w)
-		move.b	d3,(a4)+
-		move.b	d4,(a4)+
-		move.w	d0,(a4)+
-		addq.w	#1,d6
+Red_Loop_Push_Stack:
+		ori.b	#$80,(a2,d0.w)					; Mark current position as being processed
+		move.b	d3,(a4)+					; Push direction index to walk stack
+		move.b	d4,(a4)+					; Push direction index lower bound to walk stack
+		move.w	d0,(a4)+					; Push current position to walk stack
+		addq.w	#1,d6						; Increment walk stack size
+
+		; For subsequent steps of a walk, you don't want the next position to consider making a complete
+		; 180 degree turn. The following code is used to limit the new position's range of movement directions.
+		; It's done by defining the lower bound index as one less than the current direction (looping to index 3 if -1),
+		; 	and by defining the upper bound index as two more than the new lower bound,
+		;
+		; As an example, given that the 4-way direction table is [L, U, R, D, L, U],
+		; let's say the direction from current to candidate is Right (index 2).
+		; Then the new lower bound index would be 1, and the new upper bound would be 3
+		; which is the range [U, R, D], which excludes going LEFT i.e. turning 180 degrees
+		;
+		; These offsets are multiplied by 2 as each direction is 2 bytes long
 		move.w	d4,d3
 		subq.w	#2,d3
-		andi.w	#6,d3
+		andi.w	#6,d3						; lower_bound = (index - 2) & 6
 		move.w	#4,d4
-		add.w	d3,d4
-		move.w	d1,d0
-		bra.s	loc_9FF6
+		add.w	d3,d4						; index = 4 + lower_bound
+		move.w	d1,d0						; current position = candidate position
+		bra.s	Red_Loop_Find_Next
 ; ---------------------------------------------------------------------------
 
-loc_A054:
-		subq.w	#2,d4
-		cmp.w	d3,d4
-		bge.s	loc_9FF6
+Red_Loop_Decrement:
+		subq.w	#2,d4						; Decrement direction index
+		cmp.w	d3,d4						; If index >= lower bound,
+		bge.s	Red_Loop_Find_Next				; 	check next candidate
+									; Else this position is done, pop the stack to get previous
 
-loc_A05A:
+Red_Loop_Pop_Stack:
 		moveq	#0,d3
 		moveq	#0,d4
-		move.w	-(a4),d0
-		move.b	-(a4),d4
-		move.b	-(a4),d3
-		subq.w	#1,d6
-		bcs.s	locret_A076
-		andi.b	#$7F,(a2,d0.w)
-		subq.w	#2,d4
-		cmp.w	d3,d4
-		bge.s	loc_9FF6
-		bra.s	loc_A05A
+		move.w	-(a4),d0					; Pop current position from walk stack
+		move.b	-(a4),d4					; Pop direction index from walk stack
+		move.b	-(a4),d3					; Pop direction index lower bound from walk stack
+		subq.w	#1,d6						; Decrement walk stack size
+		bcs.s	locret_A076					; If walk stack was empty,
+									; 	No more loops to find. Return
+		andi.b	#$7F,(a2,d0.w)					; Unmark current position as being processed
+		subq.w	#2,d4						; Decrement direction index
+		cmp.w	d3,d4						; If index >= lower bound,
+		bge.s	Red_Loop_Find_Next				; 	check next candidate
+		bra.s	Red_Loop_Pop_Stack				; Else this position is done, pop the stack to get previous
 ; ---------------------------------------------------------------------------
 
 locret_A076:
 		rts
 ; ---------------------------------------------------------------------------
 
-loc_A078:
+; Once a loop has been detected, this code finds which direction
+; is "inside" the loop, and checks if there is a blue sphere
+; which would then be turned into a ring, and whose position
+; is added to the ring queue.
+
+; To find the "inside" direction, rewalk the red sphere path
+; keeping track of the direction of each step.
+; Once you find a direction that is different from the initial direction,
+; then apply that directional offset to either the touched
+; sphere, or the first step of the walk, depending on if the
+; touched sphere is at a corner.
+
+;	[R] [R] [R]	[T]<[R] [R]
+;	 		 V
+;	[T]>[B] [R]	[R]>[B] [R]
+;	 V		 V
+;	[R] [B] [R]	[R] [B] [R]
+;	 V		 V
+;	[R]>[R] [R]	[R]>[R] [R]
+Red_Loop_Processes_Loop:
 		movem.l	d0/d3-d4/d6/a4,-(sp)
-		sub.w	d5,d0
+		sub.w	d5,d0						; Direction (start -> last walk)
 		move.w	d0,d4
-		neg.w	d4
-		lea	(SStage_unkA600+6).w,a4
-		move.w	(a4),d2
-		sub.w	d5,d2
-		move.w	d5,d3
+		neg.w	d4						; Final Direction of loop (last walk -> start)
+		lea	(SStage_red_sphere_dfs_walk_stack+6).w,a4	; &WalkPath[1].position
+		move.w	(a4),d2						; Second Position of Path
+		sub.w	d5,d2						; Initial direction
+		move.w	d5,d3						; Walk position head (starts at touched)
 
-loc_A08C:
-		move.w	(a4)+,d0
+Red_Loop_Walk_Forward:
+		move.w	(a4)+,d0					; Next step of walk (starts at second)
 		addq.w	#2,a4
-		sub.w	d3,d0
-		cmp.w	d2,d0
-		bne.s	loc_A09A
-		add.w	d0,d3
-		bra.s	loc_A08C
+		sub.w	d3,d0						; Direction from walk position to next step
+		cmp.w	d2,d0						; If next direction != initial direction
+		bne.s	Red_Loop_Direction_Changed			; 	break
+		add.w	d0,d3						; Otherwise move walk position forward
+		bra.s	Red_Loop_Walk_Forward
 ; ---------------------------------------------------------------------------
 
-loc_A09A:
-		cmp.w	d4,d0
-		beq.s	loc_A0A4
-		cmp.w	d4,d2
-		beq.s	loc_A0A4
-		add.w	d2,d0
+Red_Loop_Direction_Changed:
+									; Corner Check
+		cmp.w	d4,d0						; If new direction != final direction
+		beq.s	Red_Loop_Blue_Check
+		cmp.w	d4,d2						; and initial direction != final direction
+		beq.s	Red_Loop_Blue_Check
+		add.w	d2,d0						; add initial direction to new direction
 
-loc_A0A4:
-		add.w	d5,d0
-		cmpi.b	#2,(a2,d0.w)
-		beq.s	loc_A0B8
-		cmpi.b	#4,(a2,d0.w)
-		beq.s	loc_A0C4
-		bra.s	loc_A0C4
+Red_Loop_Blue_Check:
+		add.w	d5,d0						; Sphere to check (touched position + new direction)
+		cmpi.b	#2,(a2,d0.w)					; If checked sphere is Blue
+		beq.s	Red_Loop_Blue_To_Ring				;	Turn into ring
+		cmpi.b	#4,(a2,d0.w)					; Else return to DFS walk
+		beq.s	Red_Loop_Return_To_DFS
+		bra.s	Red_Loop_Return_To_DFS
 ; ---------------------------------------------------------------------------
 
-loc_A0B8:
-		bsr.w	sub_9E88
-		move.b	#4,(a2,d0.w)
-		move.w	d0,(a5)+
+Red_Loop_Blue_To_Ring:
+		bsr.w	Decrement_BlueSphere_Count
+		move.b	#4,(a2,d0.w)					; Turn blue sphere into a ring
+		move.w	d0,(a5)+					; and add ring position to ring queue
 
-loc_A0C4:
+Red_Loop_Return_To_DFS:
 		movem.l	(sp)+,d0/d3-d4/d6/a4
-		bra.s	loc_A054
-; End of function sub_9F44
+		bra.s	Red_Loop_Decrement
+; End of function Find_Red_Sphere_Loop
 
 ; ---------------------------------------------------------------------------
-word_A0CA:
+SStage_8_Directions:
 		dc.w   -$21
 		dc.w   -$20
 		dc.w   -$1F
@@ -12929,7 +13022,7 @@ word_A0CA:
 		dc.w    $1F
 		dc.w    $20
 		dc.w    $21
-word_A0DA:
+SStage_4_Directions:
 		dc.w     -1
 		dc.w   -$20
 		dc.w      1
@@ -12943,14 +13036,14 @@ word_A0DA:
 Load_SSSprite_Mappings:
 		lea	(SStage_extra_sprites).w,a1
 		lea	(MapPtr_A10A).l,a0
-		moveq	#$E-1,d1
+		moveq	#bytesToXcnt($70,8),d1
 
 loc_A0F2:
 		move.l	(a0)+,(a1)+
 		move.l	(a0)+,(a1)+
 		dbf	d1,loc_A0F2
 		lea	(SStage_collision_response_list).w,a1
-		move.w	#$40-1,d1
+		move.w	#bytesToLcnt($100),d1
 
 loc_A102:
 		clr.l	(a1)+
@@ -12989,6 +13082,7 @@ MapPtr_A10A:
 		dc.l Map_SStageSuperEmerald
 		dc.w make_art_tile($5A7,3,1), $0000
 ; ---------------------------------------------------------------------------
+		; unused
 		ext.l	d1
 		lsl.l	#8,d1
 		divs.w	d0,d1
@@ -13790,6 +13884,7 @@ sub_B006:
 		addi.w	#$600,d0
 		jmp	sub_C04C(pc)
 ; ---------------------------------------------------------------------------
+		; unused
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -15247,8 +15342,8 @@ SRAM_Load:
 		tst.w	(SK_alone_flag).w
 		bne.w	locret_C260		; Don't bother if we're playing only Sonic and Knuckles
 		clr.w	(SRAM_mask_interrupts_flag).w	; No interrupt shenanigans needed
-		lea	($200011).l,a0
-		lea	($2000BD).l,a1
+		lea	(SRAM_competition).l,a0
+		lea	(SRAM_competition_backup).l,a1
 		lea	(Competition_saved_data).w,a2
 		moveq	#$29,d0
 		move.w	#$4C44,d1		; RAM integrity value
@@ -15256,7 +15351,7 @@ SRAM_Load:
 		beq.s	loc_C190		; If the data read was successful, branch
 		lea	SaveData_GeneralDefault(pc),a0
 		lea	(Competition_saved_data).w,a1
-		moveq	#$29-1,d0
+		moveq	#bytesToWcnt($52),d0
 
 loc_C186:
 		move.w	(a0)+,(a1)+		; Reset the general save data to the default
@@ -15264,8 +15359,8 @@ loc_C186:
 		jsr	Write_SaveGeneral2(pc)	; Write default data back to SRAM
 
 loc_C190:
-		lea	($200281).l,a0
-		lea	($20032D).l,a1
+		lea	(SRAM_SKgame).l,a0
+		lea	(SRAM_SKgame_backup).l,a1
 		lea	(Saved_data).w,a2
 		moveq	#$29,d0
 		move.w	#$4244,d1		; RAM integrity value for save game data
@@ -15288,8 +15383,8 @@ loc_C1C0:
 loc_C1CA:
 		move.w	(a0)+,(a1)+
 		dbf	d0,loc_C1CA			; Write default game data
-		lea	($200169).l,a0
-		lea	($2001F5).l,a1
+		lea	(SRAM_S3game).l,a0
+		lea	(SRAM_S3game_backup).l,a1
 		lea	($FF0000).l,a2		; Attempt to see if there's any existing S3 save data
 		moveq	#$19,d0
 		move.w	#$4244,d1
@@ -15498,8 +15593,8 @@ Write_SaveGeneral:
 Write_SaveGeneral2:
 		move.l	a0,-(sp)
 		move.w	d7,-(sp)
-		lea	($200011).l,a0		; Save general SRAM
-		lea	($2000BD).l,a1		; Save general Backup SRAM
+		lea	(SRAM_competition).l,a0		; Save general SRAM
+		lea	(SRAM_competition_backup).l,a1		; Save general Backup SRAM
 		lea	(Competition_saved_data).w,a2	; Save general RAM
 		moveq	#$2A-1,d0
 		bsr.s	Write_SRAM
@@ -15515,8 +15610,8 @@ Write_SaveGeneral2:
 Write_SaveGame:
 		move.l	a0,-(sp)
 		move.w	d7,-(sp)
-		lea	($200281).l,a0		; Save game SRAM
-		lea	($20032D).l,a1		; Save game backup SRAM
+		lea	(SRAM_SKgame).l,a0		; Save game SRAM
+		lea	(SRAM_SKgame_backup).l,a1		; Save game backup SRAM
 		lea	(Saved_data).w,a2	; Save game RAM
 		moveq	#$2A-1,d0
 		jsr	Write_SRAM(pc)
@@ -15818,7 +15913,7 @@ loc_C72C:
 		jsr	(Render_Sprites).l
 		lea	(Normal_palette_line_4).w,a0
 		lea	(Target_palette_line_4).w,a1
-		moveq	#8-1,d0
+		moveq	#bytesToLcnt($20),d0
 
 loc_C77A:
 		move.l	(a0),(a1)+
@@ -15829,7 +15924,7 @@ loc_C77A:
 		jsr	(Kos_Decomp).l
 		lea	(RAM_start+$2BC0).l,a0
 		lea	(RAM_start+$2300).l,a1
-		move.w	#$230-1,d0
+		move.w	#bytesToXcnt($1180,8),d0
 
 loc_C7A4:
 		move.l	(a0)+,(a1)+
@@ -15840,7 +15935,7 @@ loc_C7A4:
 		lea	(ArtKos_SaveScreenPortrait).l,a0
 		jsr	(Kos_Decomp).l
 		lea	-$8C0(a1),a0
-		move.w	#$150-1,d0
+		move.w	#bytesToLcnt($540),d0
 
 loc_C7CC:
 		move.l	(a0)+,(a1)+
@@ -17623,6 +17718,7 @@ loc_DF36:
 ; End of function sub_DF1C
 
 ; ---------------------------------------------------------------------------
+		; unused
 		lea	(Level_layout_header).w,a1
 		move.w	(Player_1+x_pos).w,d3
 		move.w	(Player_1+y_pos).w,d2
@@ -17696,6 +17792,8 @@ loc_DFDC:
 ; End of function DrawSixDigitNumber
 
 ; ---------------------------------------------------------------------------
+		; unused leftover from Sonic 2
+;ContScrCounter:
 		move.l	#vdpComm(tiles_to_bytes($6FC),VRAM,WRITE),(VDP_control_port).l
 		lea	(VDP_data_port).l,a6
 		lea	(dword_E050).l,a2
@@ -17782,6 +17880,8 @@ loc_E086:
 ; End of function DrawTwoDigitNumber
 
 ; ---------------------------------------------------------------------------
+		; unused leftover from Sonic 2
+;Hud_TimeRingBonus:
 		lea	(dword_E048).l,a2
 		moveq	#4-1,d6
 		moveq	#0,d4
@@ -18289,7 +18389,7 @@ loc_EB70:
 
 loc_EB7A:
 		move.w	d5,(Perfect_rings_left).w
-		move.w	#0,(_unkFF06).w
+		move.w	#0,(Perfect_rings_flag).w
 		rts
 ; End of function sub_EB1A
 
@@ -34992,6 +35092,7 @@ Obj_SuperTailsBirds_FindTarget:
 Map_SuperTails_Birds:
 		include "General/Sprites/Tails/Map - Super Tails birds.asm"
 ; ---------------------------------------------------------------------------
+		; unused
 		dc.l byte_189ED
 		dc.b    0,  $B
 		dc.l byte_18A02
@@ -35117,6 +35218,7 @@ loc_1A5D8:
 JmpTo_Play_SFX:
 		jmp	(Play_SFX).l
 ; ---------------------------------------------------------------------------
+		; unused
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -37357,6 +37459,7 @@ loc_1B9FA:
 		move.w	d6,(Camera_Y_pos_coarse).w
 		rts
 ; ---------------------------------------------------------------------------
+		; unused
 		bset	#7,(a3)
 		beq.s	sub_1BA0C
 		addq.w	#6,a0
@@ -40565,6 +40668,7 @@ Monitor_Give_SuperSonic:
 		moveq	#signextendB(mus_Invincibility),d0		; play invincibility theme
 		jmp	(Play_Music).l
 ; ---------------------------------------------------------------------------
+		; unused
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -40726,6 +40830,8 @@ loc_1DD5C:
 ; End of function sub_1DD24
 
 ; ---------------------------------------------------------------------------
+		; unused leftover from Sonic 2
+;DoubleSlopedSolid:
 		lea	(Player_1).w,a1
 		moveq	#p1_standing_bit,d6
 		movem.l	d1-d4,-(sp)
@@ -41496,6 +41602,7 @@ loc_1E3A4:
 ; End of function SolidObjectTopSloped_1P
 
 ; ---------------------------------------------------------------------------
+		; unused
 		lea	(Player_1).w,a1
 		moveq	#p1_standing_bit,d6
 		movem.l	d1-d4,-(sp)
@@ -43348,6 +43455,7 @@ loc_1F8FE:
 ; End of function sub_1F7CE
 
 ; ---------------------------------------------------------------------------
+		; unused
 		bra.w	loc_1F88C
 
 ; =============== S U B R O U T I N E =======================================
@@ -48973,7 +49081,7 @@ Init_ArtScaling:
 		movea.w	d1,a4
 		movea.w	d1,a5
 		lea	(H_scroll_buffer).w,a6
-		move.w	#($1000/$100)-1,d1
+		move.w	#bytesToXcnt($1000,$100),d1
 
 .loop:
 	rept 10
@@ -49049,6 +49157,7 @@ loc_2469A:
 		add.w	d1,(_unkF740).w
 		rts
 ; ---------------------------------------------------------------------------
+		; unused
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -50720,6 +50829,7 @@ locret_259C2:
 Map_LRZSolidMovingPlatforms:
 		include "Levels/LRZ/Misc Object Data/Map - Solid Moving Platforms.asm"
 ; ---------------------------------------------------------------------------
+		; unused
 		dc.b  $20, $10,   0
 		even
 ; ---------------------------------------------------------------------------
@@ -53368,6 +53478,7 @@ Animate_Tiles:
 ; End of function Animate_Tiles
 
 ; ---------------------------------------------------------------------------
+		; unused
 		rts
 ; ---------------------------------------------------------------------------
 Offs_AniFunc:	dc.w AnimateTiles_AIZ1-Offs_AniFunc
@@ -54069,6 +54180,7 @@ loc_27DF8:
 		addq.w	#2,a3
 		bra.w	loc_286E8
 ; ---------------------------------------------------------------------------
+		; unused
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -54764,7 +54876,7 @@ word_28446:
 loc_28466:
 		moveq	#0,d1
 		move.w	(Events_bg+$12).w,d1
-		sub.w	(_unkEE70).w,d1
+		sub.w	(Camera_X_pos_P2_BG_copy).w,d1
 		andi.w	#$3F,d1
 		cmp.b	1(a3),d1
 		beq.s	loc_284C2
@@ -57227,6 +57339,7 @@ loc_29B2A:
 loc_29B36:
 		jmp	(Delete_Sprite_If_Not_In_Range).l
 ; ---------------------------------------------------------------------------
+		; unused
 		move.l	#Map_TunnelExhaust,mappings(a0)
 		move.w	#make_art_tile($2EA,2,0),art_tile(a0)
 		move.b	#$10,width_pixels(a0)
@@ -57504,7 +57617,7 @@ loc_29E88:
 		move.w	#8,d2
 		move.w	#$20,d3
 		move.w	x_pos(a0),d4
-		jsr	SolidObjectFull_Offset
+		jsr	(SolidObjectFull_Offset).l
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -62045,7 +62158,7 @@ LevelResults_Index:
 ; ---------------------------------------------------------------------------
 
 Obj_LevelResultsInit:
-		moveq	#signextendB(mus_FadeOut),d0
+		moveq	#signextendB(cmd_FadeOut),d0
 		jsr	(Play_Music).l				; Fade music
 		lea	(ArtKosM_ResultsGeneral).l,a1
 		move.w	#tiles_to_bytes($520),d2
@@ -62543,7 +62656,7 @@ locret_2DF62:
 ; ---------------------------------------------------------------------------
 
 SpecialStage_Results:
-		moveq	#signextendB(mus_FadeOut),d0
+		moveq	#signextendB(cmd_FadeOut),d0
 		jsr	(Play_Music).l
 		move.b	(Current_special_stage).w,d0
 		move.b	d0,(Current_special_stage_2).w
@@ -64510,9 +64623,9 @@ loc_300C8:
 		tst.b	render_flags(a0)
 		bmi.s	loc_30100
 		clr.b	(Palette_cycle_counters+$00).w
-		move.w	#signextendB(mus_MutePSG),d0
+		move.w	#signextendB(cmd_MutePSG),d0
 		jsr	(Play_SFX).l
-		move.w	#signextendB(mus_StopSFX),d0
+		move.w	#signextendB(cmd_StopSFX),d0
 		jsr	(Play_SFX).l
 		move.w	#150,$30(a0)
 		move.l	#loc_30106,(a0)
@@ -64817,11 +64930,11 @@ loc_30524:
 loc_3052A:
 		tst.b	render_flags(a0)
 		bmi.s	loc_3056E
-		move.w	#signextendB(mus_StopSFX),d0
+		move.w	#signextendB(cmd_StopSFX),d0
 		jsr	(Play_SFX).l
-		move.w	#signextendB(mus_MutePSG),d0
+		move.w	#signextendB(cmd_MutePSG),d0
 		jsr	(Play_SFX).l		; this will actually never play... Why is any of this here?
-		move.w	#signextendB(mus_StopSFX),d0
+		move.w	#signextendB(cmd_StopSFX),d0
 		jsr	(Play_SFX).l
 		move.b	#0,(Palette_cycle_counters+$00).w
 		move.w	respawn_addr(a0),d0
@@ -66318,7 +66431,7 @@ loc_31776:
 	else
 		; Bug: probably meant to be routine(a0), and at some point the animation terminated
 		; with code $FC (increment routine counter) rather than $FB (move offscreen)
-		tst.b	5
+		tst.b	routine
 	endif
 		beq.s	loc_3178E
 		move.w	#$7F00,x_pos(a0)
@@ -69575,6 +69688,7 @@ loc_33AA4:
 		move.b	mapping_frame(a1),d0
 		jmp	(Perform_Player_DPLC).l
 ; ---------------------------------------------------------------------------
+		; unused
 		rts
 ; ---------------------------------------------------------------------------
 RawAni_33AC6:
@@ -69682,6 +69796,7 @@ loc_33BF4:
 ; End of function sub_338C4
 
 ; ---------------------------------------------------------------------------
+		; unused
 		rts
 ; ---------------------------------------------------------------------------
 RawAni_33C1C:
@@ -69980,6 +70095,7 @@ loc_33F4A:
 ; End of function sub_33CAC
 
 ; ---------------------------------------------------------------------------
+		; unused
 		rts
 ; ---------------------------------------------------------------------------
 byte_33F6C:
@@ -71530,6 +71646,7 @@ loc_35180:
 locret_3518E:
 		rts
 ; ---------------------------------------------------------------------------
+		; unused
 		clr.w	x_vel(a0)
 		clr.w	y_vel(a0)
 		rts
@@ -74471,6 +74588,7 @@ loc_37F60:
 Map_2PItemIcon:
 		include "General/2P Zone/Map - Item Icon.asm"
 ; ---------------------------------------------------------------------------
+		; unused
 		move.l	#Map_2PPosition,mappings(a0)
 		move.w	#make_art_tile($75E,0,1),art_tile(a0)
 		move.w	#0,priority(a0)
@@ -79861,6 +79979,7 @@ loc_3C756:
 		jsr	(Add_SpriteToCollisionResponseList).l
 		jmp	(Draw_Sprite).l
 ; ---------------------------------------------------------------------------
+		; unused
 		jmp	(Delete_Current_Sprite).l
 ; ---------------------------------------------------------------------------
 
@@ -91045,7 +91164,7 @@ loc_45B94:
 		bhs.s	locret_45BF2
 		cmpi.w	#$B00,(Player_1+x_pos).w
 		blo.s	locret_45BF2
-		moveq	#signextendB(mus_FadeOut),d0
+		moveq	#signextendB(cmd_FadeOut),d0
 		jsr	(Play_Music).l
 		st	(SRAM_mask_interrupts_flag).w
 		jsr	(SaveGame).l
@@ -91239,7 +91358,7 @@ loc_45D84:
 loc_45D8A:
 		subq.b	#1,2(a4)
 		bne.s	locret_45DAC
-		moveq	#signextendB(mus_FadeOut),d0
+		moveq	#signextendB(cmd_FadeOut),d0
 		jsr	(Play_Music).l
 		st	(SRAM_mask_interrupts_flag).w
 		jsr	(SaveGame).l
@@ -97885,6 +98004,7 @@ loc_4B548:
 ; End of function sub_4B4C4
 
 ; ---------------------------------------------------------------------------
+		; unused
 		subq.b	#1,(Ring_spill_anim_counter).w
 		bpl.s	loc_4B566
 		move.b	#4,(Ring_spill_anim_counter).w
@@ -98112,7 +98232,7 @@ loc_4B6EE:
 		move.w	(a0)+,(a1)+
 		dbf	d1,loc_4B6EE
 		lea	(Chunk_table+$7400).l,a1
-		move.w	#$40-1,d1
+		move.w	#bytesToLcnt($100),d1
 
 loc_4B70A:
 		clr.l	(a1)+
@@ -99762,7 +99882,7 @@ sub_4C8E4:
 ; ---------------------------------------------------------------------------
 
 BlueSpheresTitle:
-		moveq	#signextendB(mus_FadeOut),d0
+		moveq	#signextendB(cmd_FadeOut),d0
 		jsr	(Play_Music).l
 		jsr	(Pal_FadeToBlack).l
 		bsr.w	sub_4C8E4
@@ -99953,9 +100073,9 @@ sub_4CD18:
 
 loc_4CD20:
 		move.b	(a1),d0
-		subi.b	#$30,d0
+		subi.b	#'0',d0
 		beq.s	loc_4CD2E
-		cmpi.b	#$A,d0
+		cmpi.b	#10,d0
 		blo.s	loc_4CD34
 
 loc_4CD2E:
@@ -101098,7 +101218,7 @@ Map_BlueSpheresCopyright:
 ; ---------------------------------------------------------------------------
 
 BlueSpheresResults:
-		moveq	#signextendB(mus_FadeOut),d0
+		moveq	#signextendB(cmd_FadeOut),d0
 		jsr	(Play_Music).l
 		bsr.w	sub_4C8E4
 		lea	(Pal_SphereResults_012).l,a1
@@ -101193,7 +101313,7 @@ locret_4DC18:
 ; ---------------------------------------------------------------------------
 
 loc_4DC1A:
-		moveq	#signextendB(mus_FadeOut),d0
+		moveq	#signextendB(cmd_FadeOut),d0
 		jsr	(Play_Music).l
 		jsr	(Pal_FadeToBlack).l
 		bsr.w	sub_4C8E4
@@ -103602,7 +103722,7 @@ Update_VScrollValueP2:
 		move.w	(Camera_Y_pos_P2_copy).w,d0
 		subi.w	#$70,d0
 		move.w	d0,(V_scroll_value_P2).w
-		move.w	(_unkEE74).w,d0
+		move.w	(Camera_Y_pos_P2_BG_copy).w,d0
 		subi.w	#$70,d0
 		move.w	d0,(V_scroll_value_BG_P2).w
 		rts
@@ -107662,7 +107782,7 @@ loc_523CA:
 		subi.w	#$10,(Camera_Y_pos).w
 		cmpi.w	#$780,(Camera_Y_pos).w
 		bhs.s	locret_523EA
-		moveq	#signextendB(mus_FadeOut),d0
+		moveq	#signextendB(cmd_FadeOut),d0
 		jsr	(Play_Music).l
 		move.w	#$500,d0		; Start Ice Cap
 		jmp	(StartNewLevel).l
@@ -116810,7 +116930,7 @@ loc_581D2:
 		bne.s	locret_581F0
 		subq.w	#1,4(a2)
 		bne.s	locret_581F0
-		moveq	#signextendB(mus_FadeOut),d0
+		moveq	#signextendB(cmd_FadeOut),d0
 		jsr	(Play_Music).l
 		move.w	#$B00,d0
 		jmp	(StartNewLevel).l
@@ -122375,6 +122495,11 @@ ContinueScreen:
 		clr.b	(Level_started_flag).w
 		clr.b	(_unkFAA9).w
 		clr.b	(_unkFA88).w
+	if FixBugs
+		; The game leaves this flag set after a Game Over, which causes
+		; Sonic to animate incorrectly.
+		clr.b	(Super_Sonic_Knux_flag).w
+	endif
 		clearRAM	Player_1,(Kos_decomp_buffer-Player_1)
 		moveq	#0,d0
 		move.l	d0,(LRZ_rocks_addr_front).w
@@ -123589,7 +123714,7 @@ loc_5DE36:
 		blo.w	locret_5FF1A
 
 loc_5DE46:
-		moveq	#signextendB(mus_FadeOut),d0
+		moveq	#signextendB(cmd_FadeOut),d0
 		jsr	(Play_Music).l
 		clr.b	(_unkFAC1).w
 		clr.b	(_unkFAB8).w
@@ -126597,6 +126722,7 @@ byte_60072:
 		dc.b    2,   3,   4,   5,   4,   3
 		even
 ; ---------------------------------------------------------------------------
+		; unused
 		move.l	d0,(_unkFA82).w
 		add.l	d0,(_unkEE98).w
 		move.l	d1,(_unkFA84).w
@@ -127921,6 +128047,7 @@ SSEntryFlash_GoSS:
 		bne.s	loc_61892			; or if Chaos Emeralds aren't collected
 		bra.w	loc_618AC			; When conditions are met, go to HPZ
 ; ---------------------------------------------------------------------------
+		; unused
 		moveq	#1,d0
 
 loc_61892:
@@ -129953,6 +130080,7 @@ loc_632AE:
 		bpl.w	loc_62422
 		bra.w	sub_65EB4
 ; ---------------------------------------------------------------------------
+		; unused
 		lea	(Pal_MHZ2).l,a1
 		jsr	(PalLoad_Line1).l
 		bra.w	loc_62422
@@ -130389,7 +130517,7 @@ loc_637EC:
 		blt.s	loc_63840
 		move.l	#loc_63846,(a0)
 		move.w	#(2*60)-1,$2E(a0)
-		moveq	#signextendB(mus_FadeOut),d0
+		moveq	#signextendB(cmd_FadeOut),d0
 		jsr	(Play_Music).l
 
 loc_63840:
@@ -131638,6 +131766,7 @@ loc_646F6:
 locret_64710:
 		rts
 ; ---------------------------------------------------------------------------
+		; unused
 		dc.w   -$20,   $40,  -$20,   $40
 ; ---------------------------------------------------------------------------
 
@@ -132957,6 +133086,7 @@ loc_655CE:
 loc_655F4:
 		jmp	(Draw_Sprite).l
 ; ---------------------------------------------------------------------------
+		; unused
 		dc.w   -$18,   $30,  -$20,   $40
 ; ---------------------------------------------------------------------------
 
@@ -133988,6 +134118,7 @@ loc_6612A:
 		movea.l	(a3),a4
 		jmp	(a4)
 ; ---------------------------------------------------------------------------
+		; unused
 		movea.l	4(a3),a4
 		jmp	(a4)
 ; ---------------------------------------------------------------------------
@@ -134002,6 +134133,7 @@ loc_66146:
 		movea.l	8(a3),a4
 		jmp	(a4)
 ; ---------------------------------------------------------------------------
+		; unused
 		movea.l	$C(a3),a4
 		jmp	(a4)
 ; End of function sub_660E2
@@ -136293,7 +136425,7 @@ loc_68556:
 		move.w	#3*60,$2E(a0)
 		move.w	d5,(Camera_min_X_pos).w
 		move.w	d5,(Camera_max_X_pos).w
-		moveq	#signextendB(mus_FadeOut),d0
+		moveq	#signextendB(cmd_FadeOut),d0
 		jsr	(Play_Music).l
 
 locret_68572:
@@ -136358,6 +136490,7 @@ loc_685FC:
 		jsr	(Swing_UpAndDown).l
 		jmp	(MoveWaitTouch).l
 ; ---------------------------------------------------------------------------
+		; unused
 		subq.b	#1,$39(a0)
 		bpl.s	loc_68616
 		move.l	#loc_6862E,$34(a0)
@@ -136382,7 +136515,7 @@ loc_68646:
 		lea	Pal_AIZMiniboss(pc),a1
 		jsr	(PalLoad_Line1).l
 		move.b	#$F,collision_flags(a0)
-		moveq	#signextendB(mus_FadeOut),d0
+		moveq	#signextendB(cmd_FadeOut),d0
 		jsr	(Play_Music).l
 		move.w	#$400,x_vel(a0)
 		clr.w	y_vel(a0)
@@ -136647,6 +136780,7 @@ loc_68928:
 		move.w	d1,$2E(a0)
 		rts
 ; ---------------------------------------------------------------------------
+		; unused
 		jmp	(Obj_Wait).l
 ; ---------------------------------------------------------------------------
 
@@ -137535,7 +137669,7 @@ loc_691D4:
 		move.l	#Obj_Wait,(a0)			; Set up object to wait $78 frames
 		move.w	#2*60,$2E(a0)
 		move.l	#Obj_AIZEndBossMusic,$34(a0)
-		moveq	#signextendB(mus_FadeOut),d0
+		moveq	#signextendB(cmd_FadeOut),d0
 		jsr	(Play_Music).l
 		move.b	#1,(Boss_flag).w		; Lock the screen
 		clr.b	(_unkFAA2).w
@@ -138783,7 +138917,7 @@ loc_69F2C:
 		move.l	#Obj_Wait,(a0)
 		move.w	#2*60,$2E(a0)
 		move.l	#loc_69F64,$34(a0)
-		moveq	#signextendB(mus_FadeOut),d0
+		moveq	#signextendB(cmd_FadeOut),d0
 		jsr	(Play_Music).l
 		bset	#3,$38(a0)
 		lea	Pal_HCZMiniboss(pc),a1
@@ -139763,6 +139897,7 @@ locret_6AA22:
 ; End of function sub_6AA00
 
 ; ---------------------------------------------------------------------------
+		; unused
 		dc.w Player_1
 		dc.w 0
 		dc.w Player_2
@@ -140678,6 +140813,7 @@ loc_6B34A:
 locret_6B374:
 		rts
 ; ---------------------------------------------------------------------------
+		; unused
 		bra.w	sub_6BC8A
 ; ---------------------------------------------------------------------------
 
@@ -141897,7 +142033,7 @@ Obj_MGZ2DrillingRobotnik:
 		move.w	#2*60,$2E(a0)
 		move.l	#Obj_MGZ2DrillingRobotnikGo,$34(a0)
 		clr.b	subtype(a0)
-		moveq	#signextendB(mus_FadeOut),d0
+		moveq	#signextendB(cmd_FadeOut),d0
 		jsr	(Play_Music).l
 		lea	(ArtKosM_MGZEndBoss).l,a1
 		move.w	#tiles_to_bytes($33F),d2
@@ -142259,7 +142395,7 @@ loc_6C354:
 		move.b	#1,(Boss_flag).w
 		move.b	#$1C,y_radius(a0)
 		move.w	#$C,angle(a0)
-		moveq	#signextendB(mus_FadeOut),d0
+		moveq	#signextendB(cmd_FadeOut),d0
 		jsr	(Play_Music).l
 		move.w	#2*60,$2E(a0)
 		move.l	#loc_6C3EC,$34(a0)
@@ -143937,7 +144073,7 @@ loc_6D644:
 		moveq	#0,d0
 		btst	#0,$20(a0)
 		bne.s	loc_6D652
-		addi.w	#6,d0
+		addi.w	#2*3,d0
 
 loc_6D652:
 		bsr.w	MGZ2_BossPalAdjust
@@ -144337,7 +144473,7 @@ loc_6D9A8:
 		move.l	#Obj_Wait,(a0)
 		move.w	#2*60,$2E(a0)			; Wait for 2 seconds
 		move.l	#Obj_CNZMinibossGo,$34(a0)
-		moveq	#signextendB(mus_FadeOut),d0
+		moveq	#signextendB(cmd_FadeOut),d0
 		jsr	(Play_Music).l				; Fade out music
 		move.b	#1,(Boss_flag).w		; Lock screen
 		moveq	#$5D,d0
@@ -144488,6 +144624,7 @@ Obj_CNZMinibossEnd:
 		lea	Child6_CNZMinibossMakeDebris(pc),a2
 		jmp	(CreateChild6_Simple).l
 ; ---------------------------------------------------------------------------
+		; unused
 		jmp	(Obj_Wait).l
 ; ---------------------------------------------------------------------------
 
@@ -145901,6 +146038,7 @@ loc_6EB34:
 		or.b	d0,render_flags(a0)
 		rts
 ; ---------------------------------------------------------------------------
+		; unused
 		lea	ObjDat3_6EDC0(pc),a1
 		jsr	(SetUp_ObjAttributes).l
 		bset	#5,shield_reaction(a0)
@@ -146322,7 +146460,7 @@ loc_6EF3C:
 		move.b	#6,routine(a0)
 		move.l	#loc_6EF60,$34(a0)
 		move.w	#2*60,$2E(a0)
-		moveq	#signextendB(mus_FadeOut),d0
+		moveq	#signextendB(cmd_FadeOut),d0
 		jsr	(Play_Music).l
 
 locret_6EF58:
@@ -148184,7 +148322,7 @@ Obj_FBZEndBoss:
 		move.b	#1,(Boss_flag).w
 		move.w	#(2*60)-1,$2E(a0)
 		move.l	#loc_70632,$34(a0)
-		moveq	#signextendB(mus_FadeOut),d0
+		moveq	#signextendB(cmd_FadeOut),d0
 		jsr	(Play_Music).l
 		jsr	(AllocateObject).l
 		bne.s	loc_70620
@@ -149285,6 +149423,7 @@ loc_71318:
 		move.l	#loc_7133A,$34(a0)
 		rts
 ; ---------------------------------------------------------------------------
+		; unused
 		jsr	(Run_PalRotationScript).l
 		jmp	(Obj_Wait).l
 ; ---------------------------------------------------------------------------
@@ -150183,6 +150322,7 @@ loc_71D46:
 		move.l	#loc_71D1E,$34(a0)
 		rts
 ; ---------------------------------------------------------------------------
+		; unused
 		bclr	#2,$38(a0)
 		rts
 ; ---------------------------------------------------------------------------
@@ -150430,6 +150570,7 @@ loc_71FEA:
 		add.b	d0,$43(a0)
 		jmp	(Obj_Wait).l
 ; ---------------------------------------------------------------------------
+		; unused
 		move.b	#2,routine(a0)
 		move.b	$38(a4),$3A(a0)
 		rts
@@ -152160,6 +152301,7 @@ loc_731F4:
 		moveq	#4,d0
 		jmp	(Child_Draw_Sprite_FlickerMove).l
 ; ---------------------------------------------------------------------------
+		; unused
 		movea.w	$44(a0),a1
 		btst	#6,status(a1)
 		bne.s	loc_73212
@@ -154773,6 +154915,7 @@ locret_74ED4:
 ; End of function sub_74EBC
 
 ; ---------------------------------------------------------------------------
+		; unused
 		movea.w	$44(a0),a1
 		movea.w	parent3(a0),a2
 		move.w	x_pos(a1),d0
@@ -157295,7 +157438,7 @@ loc_76A42:
 		dbf	d6,loc_76A42
 		move.l	#loc_76A8A,$34(a0)
 		move.w	#2*60,$2E(a0)
-		moveq	#signextendB(mus_FadeOut),d0
+		moveq	#signextendB(cmd_FadeOut),d0
 		jsr	(Play_Music).l
 		lea	(ArtKosM_SOZMiniboss).l,a1
 		move.w	#tiles_to_bytes($3B5),d2
@@ -158304,7 +158447,7 @@ loc_776EA:
 		bhs.s	locret_7770E
 		move.b	#4,routine(a0)
 		move.w	#60-1,$2E(a0)
-		moveq	#signextendB(mus_FadeOut),d0
+		moveq	#signextendB(cmd_FadeOut),d0
 		jsr	(Play_Music).l
 
 locret_7770E:
@@ -161035,12 +161178,8 @@ byte_796B9:
 		dc.b   $B,   5
 		dc.b  $F4
 		even
-		dc.w      0,  $EEE,  $CEE,  $CEE,  $CEE,  $CEE,  $CEE,  $EEE
-		dc.w   $EEE,  $8EE,  $CEE,  $EEE,  $EEE,  $EEE,  $EEE,  $EEE
-		dc.w      0,  $EEE,  $CEE,  $8EE,  $8EE,  $CEE,  $EEE,  $CEE
-		dc.w   $8EE,  $EEE,  $EEE,  $EEE,  $CEE,  $8EE,  $4EE,  $0EE
-		dc.w      0,  $EEE,  $EEE,  $EEE,  $EEE,  $EEE,  $EEE,  $EEE
-		dc.w   $EEE,  $EEE,  $EEE,  $CEE,  $8EE,  $4EE,  $0EE,  $0AE
+		binclude "Levels/LRZ/Palettes/Boss Act Fire (Unused).bin"
+		even
 Pal_LRZBossFire:
 		binclude "Levels/LRZ/Palettes/Boss Act Fire.bin"
 		even
@@ -161629,6 +161768,7 @@ loc_79DFC:
 		bsr.w	sub_79F30
 		jmp	(Sprite_CheckDelete).l
 ; ---------------------------------------------------------------------------
+		; unused
 		move.l	#loc_79E34,(a0)
 		move.w	#$80,x_vel(a0)
 		move.w	#$40,d0
@@ -162058,7 +162198,7 @@ Obj_SSZGHZBoss:
 		move.b	#1,(Boss_flag).w
 		move.w	#$1F,$2E(a0)
 		move.l	#loc_7A294,$34(a0)
-		moveq	#signextendB(mus_FadeOut),d0
+		moveq	#signextendB(cmd_FadeOut),d0
 		jsr	(Play_Music).l
 		jsr	(AllocateObject).l
 		bne.s	loc_7A244
@@ -162505,7 +162645,7 @@ Obj_SSZMTZBoss:
 		move.b	#1,(Boss_flag).w
 		move.w	#$1F,$2E(a0)
 		move.l	#loc_7A712,$34(a0)
-		moveq	#signextendB(mus_FadeOut),d0
+		moveq	#signextendB(cmd_FadeOut),d0
 		jsr	(Play_Music).l
 		jsr	(AllocateObject).l
 		bne.s	loc_7A6DC
@@ -163062,6 +163202,7 @@ loc_7ACC0:
 		jsr	(Load_PLC).l
 		jmp	(Go_Delete_Sprite).l
 ; ---------------------------------------------------------------------------
+		; unused
 		move.b	$1D(a0),d0
 		jsr	(GetSineCosine).l
 		asr.w	#6,d0
@@ -163378,6 +163519,7 @@ loc_7AFFC:
 		jsr	(Add_SpriteToCollisionResponseList).l
 		jmp	(Draw_Sprite).l
 ; ---------------------------------------------------------------------------
+		; unused
 		tst.b	collision_property(a0)
 		beq.s	locret_7B028
 		move.b	#$E,mapping_frame(a0)
@@ -163515,6 +163657,7 @@ Boss_MoveObject:
 ; End of function Boss_MoveObject
 
 ; ---------------------------------------------------------------------------
+		; unused
 		moveq	#0,d6
 		movea.l	a1,a4
 		lea	(_unkFA82).w,a2
@@ -164178,7 +164321,7 @@ loc_7B8E6:
 		move.b	#8,routine(a0)
 		move.w	#$BF,$2E(a0)
 		move.l	#loc_7B996,$34(a0)
-		moveq	#signextendB(mus_FadeOut),d0
+		moveq	#signextendB(cmd_FadeOut),d0
 		jsr	(Play_Music).l
 		st	(Ctrl_2_locked).w
 		rts
@@ -164201,6 +164344,7 @@ loc_7B93E:
 		jsr	(Run_PalRotationScript).l
 		jmp	(Animate_RawMultiDelay).l
 ; ---------------------------------------------------------------------------
+		; unused
 		jsr	(ObjCheckFloorDist).l
 		tst.w	d1
 		bmi.w	locret_7B448
@@ -164440,7 +164584,7 @@ loc_7BC3E:
 		move.w	#$1F,$2E(a0)
 		move.l	#loc_7BC70,$34(a0)
 		bclr	#7,render_flags(a0)
-		moveq	#signextendB(mus_FadeOut),d0
+		moveq	#signextendB(cmd_FadeOut),d0
 		jsr	(Play_Music).l
 		addi.w	#$20,y_pos(a0)
 		lea	ChildObjDat_7D4CA(pc),a2
@@ -168623,6 +168767,7 @@ locret_7ECB0:
 ; End of function sub_7EC84
 
 ; ---------------------------------------------------------------------------
+		; unused
 		move.w	x_pos(a0),d0
 		tst.w	x_vel(a0)
 		beq.s	loc_7ECD2
@@ -169184,7 +169329,7 @@ loc_7F234:
 		jsr	CreateChild6_Simple(pc)
 		lea	(Child6_CreateBossExplosion).l,a2
 		jsr	(CreateChild6_Simple).l
-		moveq	#signextendB(mus_FadeOut),d0
+		moveq	#signextendB(cmd_FadeOut),d0
 		jsr	(Play_Music).l
 		rts
 ; ---------------------------------------------------------------------------
@@ -178475,6 +178620,7 @@ Remove_From_TrackingSlot:
 ; End of function Remove_From_TrackingSlot
 
 ; ---------------------------------------------------------------------------
+		; unused
 		move.w	x_pos(a0),d0
 		andi.w	#$FF80,d0
 		sub.w	(Camera_X_pos_coarse_back).w,d0
@@ -179003,6 +179149,8 @@ MoveSlowFall_AnimateRaw:
 		jsr	MoveSprite_LightGravity(pc)
 		jmp	Animate_Raw(pc)
 ; ---------------------------------------------------------------------------
+		; unused
+		jsr	Swing_UpAndDown(pc)
 
 Move_AnimateRaw_Wait:
 		jsr	(MoveSprite2).l
@@ -179069,6 +179217,8 @@ MoveChkDel:
 		jsr	(MoveSprite).l
 		jmp	Sprite_CheckDeleteXY(pc)
 ; ---------------------------------------------------------------------------
+		; unused
+		jsr	Animate_Raw(pc)
 
 MoveTouchChkDel:
 		jsr	(MoveSprite).l
@@ -179084,6 +179234,29 @@ Swing_MoveWaitNoFall:
 		jsr	Swing_UpAndDown(pc)
 		jsr	(MoveSprite2).l
 		jmp	Obj_Wait(pc)
+; ---------------------------------------------------------------------------
+		; unused
+		jsr	Animate_Raw(pc)
+		jmp	Draw_And_Touch_Sprite(pc)
+; ---------------------------------------------------------------------------
+		; unused
+		jsr	Animate_Raw(pc)
+		jmp	(Draw_Sprite).l
+; ---------------------------------------------------------------------------
+		; unused
+		jsr	(MoveSprite2).l
+		jsr	Animate_Raw(pc)
+		jmp	Obj_Wait(pc)
+; ---------------------------------------------------------------------------
+		; unused
+		jmp	(Draw_Sprite).l
+; ---------------------------------------------------------------------------
+		; unused
+		jsr	Animate_Raw(pc)
+		jmp	Obj_Wait(pc)
+; ---------------------------------------------------------------------------
+		; unused
+		jmp	Draw_And_Touch_Sprite(pc)
 
 ; =============== S U B R O U T I N E =======================================
 
@@ -179648,7 +179821,7 @@ Map_Offscreen:
 
 Obj_Song_Fade_ToLevelMusic:
 		move.w	#2*60,$2E(a0)
-		moveq	#signextendB(mus_FadeOut),d0
+		moveq	#signextendB(cmd_FadeOut),d0
 		jsr	(Play_Music).l
 		move.l	#loc_85B1E,(a0)
 
@@ -179661,7 +179834,7 @@ loc_85B1E:
 
 Obj_Song_Fade_Transition:
 		move.w	#90,$2E(a0)
-		moveq	#signextendB(mus_FadeOut),d0
+		moveq	#signextendB(cmd_FadeOut),d0
 		jsr	(Play_Music).l
 		move.l	#loc_85B44,(a0)
 
@@ -179760,6 +179933,10 @@ Obj_EndSignControlDoStart:
 		tst.b	(End_of_level_flag).w		; Wait for title card to finish
 		beq.w	locret_8405E
 		jsr	Change_Act2Sizes(pc)
+		jmp	(Delete_Current_Sprite).l
+; ---------------------------------------------------------------------------
+		; unused
+		jsr	Displace_PlayerOffObject(pc)
 		jmp	(Delete_Current_Sprite).l
 
 ; =============== S U B R O U T I N E =======================================
@@ -179892,7 +180069,7 @@ sub_85D6A:
 		move.b	#1,(Boss_flag).w
 
 loc_85D70:
-		moveq	#signextendB(mus_FadeOut),d0
+		moveq	#signextendB(cmd_FadeOut),d0
 		jsr	(Play_Music).l
 		move.w	#2*60,$2E(a0)
 
@@ -182391,6 +182568,7 @@ loc_874CA:
 loc_874D2:
 		jmp	(Sprite_CheckDeleteTouch3).l
 ; ---------------------------------------------------------------------------
+		; unused
 		movea.w	parent3(a0),a1
 		move.b	render_flags(a1),d0
 		btst	#3,$38(a0)
@@ -186861,6 +187039,7 @@ loc_8A0F4:
 		move.b	#$C,routine(a0)
 		rts
 ; ---------------------------------------------------------------------------
+		; unused
 		dc.w      0,     8,   $10,   $18,   $20,   $28,   $30,   $38
 		dc.w   -$38,  -$30,  -$28,  -$20,  -$18,  -$10,    -8,     0
 ; ---------------------------------------------------------------------------
@@ -187521,7 +187700,7 @@ loc_8A6C2:
 loc_8A6C6:
 		move.l	#loc_8A656,(a0)
 		bclr	#1,$38(a0)
-		moveq	#signextendB(mus_StopSFX),d0
+		moveq	#signextendB(cmd_StopSFX),d0
 		jsr	(Play_SFX).l
 		jmp	Sprite_CheckDeleteTouch(pc)
 ; ---------------------------------------------------------------------------
@@ -188022,6 +188201,7 @@ Obj_ICZSegmentColumn:
 loc_8AB6A:
 		jmp	CreateChild8_TreeListRepeated(pc)
 ; ---------------------------------------------------------------------------
+		; unused
 		move.w	x_pos(a0),d0
 		andi.w	#$FF80,d0
 		sub.w	(Camera_X_pos_coarse_back).w,d0
@@ -194035,6 +194215,7 @@ byte_8E992:
 		dc.b    0, $90, $A0, $B0, $B8, $C0
 		even
 ; ---------------------------------------------------------------------------
+		; unused
 		move.b	subtype(a0),d0
 		lsr.b	#1,d0
 		move.b	d0,$2E(a0)
@@ -199466,133 +199647,41 @@ sub_92C88:
 ; End of function sub_92C88
 
 ; ---------------------------------------------------------------------------
-DebugOffs:
-		include "Levels/Misc/Debug list pointers.asm"
+DebugOffs:		include "Levels/Misc/Debug list pointers.asm"
 
-Debug_AIZ1: dbglistheader
-		include "Levels/AIZ/Debug/Act 1.asm"
-Debug_AIZ1_End
+Debug_AIZ1:		dbglistinclude "Levels/AIZ/Debug/Act 1.asm"
+Debug_AIZ2:		dbglistinclude "Levels/AIZ/Debug/Act 2.asm"
+Debug_HCZ:		dbglistinclude "Levels/HCZ/Debug/Main.asm"
+Debug_MGZ:		dbglistinclude "Levels/MGZ/Debug/Main.asm"
+Debug_CNZ:		dbglistinclude "Levels/CNZ/Debug/Main.asm"
+Debug_FBZ1:		dbglistinclude "Levels/FBZ/Debug/Act 1.asm"
+Debug_FBZ2:		dbglistinclude "Levels/FBZ/Debug/Act 2.asm"
+Debug_ICZ1:		dbglistinclude "Levels/ICZ/Debug/Act 1.asm"
+Debug_ICZ2:		dbglistinclude "Levels/ICZ/Debug/Act 2.asm"
+Debug_LBZ1:		dbglistinclude "Levels/LBZ/Debug/Act 1.asm"
+Debug_LBZ2:		dbglistinclude "Levels/LBZ/Debug/Act 2.asm"
+Debug_MHZ:		dbglistinclude "Levels/MHZ/Debug/Main.asm"
+Debug_SOZ1:		dbglistinclude "Levels/SOZ/Debug/Act 1.asm"
+Debug_SOZ2:		dbglistinclude "Levels/SOZ/Debug/Act 2.asm"
+Debug_LRZ1:		dbglistinclude "Levels/LRZ/Debug/Act 1.asm"
+Debug_LRZ2:		dbglistinclude "Levels/LRZ/Debug/Act 2.asm"
+Debug_SSZ:		dbglistinclude "Levels/SSZ/Debug/Main.asm"
+Debug_DEZ1:		dbglistinclude "Levels/DEZ/Debug/Act 1.asm"
+Debug_DEZ2:		dbglistinclude "Levels/DEZ/Debug/Act 2.asm"
+Debug_DDZ1:		dbglistinclude "Levels/DDZ/Debug/Main.asm"
+Debug_DDZ2:		dbglistinclude "Levels/DEZ/Debug/Boss.asm"
+Debug_Ending:		dbglistinclude "Levels/SSZ/Debug/Ending.asm"
+Debug_ALZ:		dbglistinclude "Levels/ALZ/Debug/Main.asm"
+Debug_BPZ:		dbglistinclude "Levels/BPZ/Debug/Main.asm"
+Debug_DPZ:		dbglistinclude "Levels/DPZ/Debug/Main.asm"
+Debug_CGZ:		dbglistinclude "Levels/CGZ/Debug/Main.asm"
+Debug_EMZ:		dbglistinclude "Levels/EMZ/Debug/Main.asm"
+Debug_Pachinko_Special:	dbglistinclude "Levels/Pachinko/Debug/Main.asm"
+Debug_HPZ:		dbglistinclude "Levels/HPZ/Debug/Main.asm"
+Debug_Gumball_Special:	dbglistinclude "Levels/Gumball/Debug/Main.asm"
 
-Debug_AIZ2: dbglistheader
-		include "Levels/AIZ/Debug/Act 2.asm"
-Debug_AIZ2_End
-
-Debug_HCZ: dbglistheader
-		include "Levels/HCZ/Debug/Main.asm"
-Debug_HCZ_End
-
-Debug_MGZ: dbglistheader
-		include "Levels/MGZ/Debug/Main.asm"
-Debug_MGZ_End
-
-Debug_CNZ: dbglistheader
-		include "Levels/CNZ/Debug/Main.asm"
-Debug_CNZ_End
-
-Debug_FBZ1: dbglistheader
-		include "Levels/FBZ/Debug/Act 1.asm"
-Debug_FBZ1_End
-
-Debug_FBZ2: dbglistheader
-		include "Levels/FBZ/Debug/Act 2.asm"
-Debug_FBZ2_End
-
-Debug_ICZ1: dbglistheader
-		include "Levels/ICZ/Debug/Act 1.asm"
-Debug_ICZ1_End
-
-Debug_ICZ2: dbglistheader
-		include "Levels/ICZ/Debug/Act 2.asm"
-Debug_ICZ2_End
-
-Debug_LBZ1: dbglistheader
-		include "Levels/LBZ/Debug/Act 1.asm"
-Debug_LBZ1_End
-
-Debug_LBZ2: dbglistheader
-		include "Levels/LBZ/Debug/Act 2.asm"
-Debug_LBZ2_End
-
-Debug_MHZ: dbglistheader
-		include "Levels/MHZ/Debug/Main.asm"
-Debug_MHZ_End
-
-Debug_SOZ1: dbglistheader
-		include "Levels/SOZ/Debug/Act 1.asm"
-Debug_SOZ1_End
-
-Debug_SOZ2: dbglistheader
-		include "Levels/SOZ/Debug/Act 2.asm"
-Debug_SOZ2_End
-
-Debug_LRZ1: dbglistheader
-		include "Levels/LRZ/Debug/Act 1.asm"
-Debug_LRZ1_End
-
-Debug_LRZ2: dbglistheader
-		include "Levels/LRZ/Debug/Act 2.asm"
-Debug_LRZ2_End
-
-Debug_SSZ: dbglistheader
-		include "Levels/SSZ/Debug/Main.asm"
-Debug_SSZ_End
-
-Debug_DEZ1: dbglistheader
-		include "Levels/DEZ/Debug/Act 1.asm"
-Debug_DEZ1_End
-
-Debug_DEZ2: dbglistheader
-		include "Levels/DEZ/Debug/Act 2.asm"
-Debug_DEZ2_End
-
-Debug_DDZ1: dbglistheader
-		include "Levels/DDZ/Debug/Main.asm"
-Debug_DDZ1_End
-
-Debug_DDZ2: dbglistheader
-		include "Levels/DEZ/Debug/Boss.asm"
-Debug_DDZ2_End
-
-Debug_Ending: dbglistheader
-		include "Levels/SSZ/Debug/Ending.asm"
-Debug_Ending_End
-
-Debug_ALZ: dbglistheader
-		include "Levels/ALZ/Debug/Main.asm"
-Debug_ALZ_End
-
-Debug_BPZ: dbglistheader
-		include "Levels/BPZ/Debug/Main.asm"
-Debug_BPZ_End
-
-Debug_DPZ: dbglistheader
-		include "Levels/DPZ/Debug/Main.asm"
-Debug_DPZ_End
-
-Debug_CGZ: dbglistheader
-		include "Levels/CGZ/Debug/Main.asm"
-Debug_CGZ_End
-
-Debug_EMZ: dbglistheader
-		include "Levels/EMZ/Debug/Main.asm"
-Debug_EMZ_End
-
-Debug_Pachinko_Special: dbglistheader
-		include "Levels/Pachinko/Debug/Main.asm"
-Debug_Pachinko_Special_End
-
-Debug_HPZ: dbglistheader
-		include "Levels/HPZ/Debug/Main.asm"
-Debug_HPZ_End
-
-Debug_Gumball_Special: dbglistheader
-		include "Levels/Gumball/Debug/Main.asm"
-Debug_Gumball_Special_End
-
-Sprite_Listing3:
-		include "Levels/Misc/Object pointers - SK Set 1.asm"
-Sprite_ListingK:
-		include "Levels/Misc/Object pointers - SK Set 2.asm"
+Sprite_Listing3:	include "Levels/Misc/Object pointers - SK Set 1.asm"
+Sprite_ListingK:	include "Levels/Misc/Object pointers - SK Set 2.asm"
 
 	if ~~strip_padding
 		align $1000
@@ -200482,166 +200571,23 @@ Snd_Emerald:		include	"Sound/Music/Chaos Emerald.asm"
 ; ===========================================================================
 ; DAC Bank 1
 ; ---------------------------------------------------------------------------
-DacBank1:			startBank
+DacBank1:		startDACBank
 
-DAC_Offsets:
-		offsetBankTableEntry.w	DAC_81_Setup
-		offsetBankTableEntry.w	DAC_82_Setup
-		offsetBankTableEntry.w	DAC_83_Setup
-		offsetBankTableEntry.w	DAC_84_Setup
-		offsetBankTableEntry.w	DAC_85_Setup
-		offsetBankTableEntry.w	DAC_86_Setup
-		offsetBankTableEntry.w	DAC_87_Setup
-		offsetBankTableEntry.w	DAC_88_Setup
-		offsetBankTableEntry.w	DAC_89_Setup
-		offsetBankTableEntry.w	DAC_8A_Setup
-		offsetBankTableEntry.w	DAC_8B_Setup
-		offsetBankTableEntry.w	DAC_8C_Setup
-		offsetBankTableEntry.w	DAC_8D_Setup
-		offsetBankTableEntry.w	DAC_8E_Setup
-		offsetBankTableEntry.w	DAC_8F_Setup
-
-		offsetBankTableEntry.w	DAC_90_Setup
-		offsetBankTableEntry.w	DAC_91_Setup
-		offsetBankTableEntry.w	DAC_92_Setup
-		offsetBankTableEntry.w	DAC_93_Setup
-		offsetBankTableEntry.w	DAC_94_Setup
-		offsetBankTableEntry.w	DAC_95_Setup
-		offsetBankTableEntry.w	DAC_96_Setup
-		offsetBankTableEntry.w	DAC_97_Setup
-		offsetBankTableEntry.w	DAC_98_Setup
-		offsetBankTableEntry.w	DAC_99_Setup
-		offsetBankTableEntry.w	DAC_9A_Setup
-		offsetBankTableEntry.w	DAC_9B_Setup
-		offsetBankTableEntry.w	DAC_9C_Setup
-		offsetBankTableEntry.w	DAC_9D_Setup
-		offsetBankTableEntry.w	DAC_9E_Setup
-		offsetBankTableEntry.w	DAC_9F_Setup
-
-		offsetBankTableEntry.w	DAC_A0_Setup
-		offsetBankTableEntry.w	DAC_A1_Setup
-		offsetBankTableEntry.w	DAC_A2_Setup
-		offsetBankTableEntry.w	DAC_A3_Setup
-		offsetBankTableEntry.w	DAC_A4_Setup
-		offsetBankTableEntry.w	DAC_A5_Setup
-		offsetBankTableEntry.w	DAC_A6_Setup
-		offsetBankTableEntry.w	DAC_A7_Setup
-		offsetBankTableEntry.w	DAC_A8_Setup
-		offsetBankTableEntry.w	DAC_A9_Setup
-		offsetBankTableEntry.w	DAC_AA_Setup
-		offsetBankTableEntry.w	DAC_AB_Setup
-		offsetBankTableEntry.w	DAC_AC_Setup
-		offsetBankTableEntry.w	DAC_AD_Setup
-		offsetBankTableEntry.w	DAC_AE_Setup
-		offsetBankTableEntry.w	DAC_AF_Setup
-
-		offsetBankTableEntry.w	DAC_B0_Setup
-		offsetBankTableEntry.w	DAC_B1_Setup
-		offsetBankTableEntry.w	DAC_B2_Setup
-		offsetBankTableEntry.w	DAC_B3_Setup
-		offsetBankTableEntry.w	DAC_B4_Setup
-		offsetBankTableEntry.w	DAC_B5_Setup
-		offsetBankTableEntry.w	DAC_B6_Setup
-		offsetBankTableEntry.w	DAC_B7_Setup
-		offsetBankTableEntry.w	DAC_B8_B9_Setup
-		offsetBankTableEntry.w	DAC_B8_B9_Setup
-		offsetBankTableEntry.w	DAC_BA_Setup
-		offsetBankTableEntry.w	DAC_BB_Setup
-		offsetBankTableEntry.w	DAC_BC_Setup
-		offsetBankTableEntry.w	DAC_BD_Setup
-		offsetBankTableEntry.w	DAC_BE_Setup
-		offsetBankTableEntry.w	DAC_BF_Setup
-
-		offsetBankTableEntry.w	DAC_C0_Setup
-		offsetBankTableEntry.w	DAC_C1_Setup
-		offsetBankTableEntry.w	DAC_C2_Setup
-		offsetBankTableEntry.w	DAC_C3_Setup
-		offsetBankTableEntry.w	DAC_C4_Setup
-
-DAC_81_Setup:			DAC_Setup 19000,DAC_81_Data
-DAC_82_Setup:			DAC_Setup 11500,DAC_82_83_84_85_Data
-DAC_83_Setup:			DAC_Setup 9000,DAC_82_83_84_85_Data
-DAC_84_Setup:			DAC_Setup 7500,DAC_82_83_84_85_Data
-DAC_85_Setup:			DAC_Setup 6500,DAC_82_83_84_85_Data
-DAC_86_Setup:			DAC_Setup 19000,DAC_86_Data
-DAC_87_Setup:			DAC_Setup 19000,DAC_87_Data
-DAC_88_Setup:			DAC_Setup 17000,DAC_88_Data
-DAC_89_Setup:			DAC_Setup 13500,DAC_89_Data
-DAC_8A_Setup:			DAC_Setup 9000,DAC_8A_8B_Data
-DAC_8B_Setup:			DAC_Setup 7375,DAC_8A_8B_Data
-DAC_8C_Setup:			DAC_Setup 15000,DAC_8C_Data
-DAC_8D_Setup:			DAC_Setup 13000,DAC_8D_8E_Data
-DAC_8E_Setup:			DAC_Setup 10000,DAC_8D_8E_Data
-DAC_8F_Setup:			DAC_Setup 15000,DAC_8F_Data
-DAC_90_Setup:			DAC_Setup 20500,DAC_90_91_92_93_Data
-DAC_91_Setup:			DAC_Setup 16000,DAC_90_91_92_93_Data
-DAC_92_Setup:			DAC_Setup 13500,DAC_90_91_92_93_Data
-DAC_93_Setup:			DAC_Setup 11500,DAC_90_91_92_93_Data
-DAC_94_Setup:			DAC_Setup 17000,DAC_94_95_96_97_Data
-DAC_95_Setup:			DAC_Setup 13500,DAC_94_95_96_97_Data
-DAC_96_Setup:			DAC_Setup 12000,DAC_94_95_96_97_Data
-DAC_97_Setup:			DAC_Setup 9750,DAC_94_95_96_97_Data
-DAC_98_Setup:			DAC_Setup 13000,DAC_98_99_9A_Data
-DAC_99_Setup:			DAC_Setup 9250,DAC_98_99_9A_Data
-DAC_9A_Setup:			DAC_Setup 8500,DAC_98_99_9A_Data
-DAC_9B_Setup:			DAC_Setup 12500,DAC_9B_Data
-DAC_A2_Setup:			DAC_Setup 13500,DAC_A2_Data
-DAC_A3_Setup:			DAC_Setup 8000,DAC_A3_Data
-DAC_A4_Setup:			DAC_Setup 8000,DAC_A4_Data
-DAC_A5_Setup:			DAC_Setup 12500,DAC_A5_Data
-DAC_A6_Setup:			DAC_Setup 14000,DAC_A6_Data
-DAC_A7_Setup:			DAC_Setup 8000,DAC_A7_Data
-DAC_A8_Setup:			DAC_Setup 8000,DAC_A8_Data
-DAC_A9_Setup:			DAC_Setup 12500,DAC_A9_Data
-DAC_AA_Setup:			DAC_Setup 13500,DAC_AA_Data
-DAC_AB_Setup:			DAC_Setup 12000,DAC_AB_Data
-DAC_AC_Setup:			DAC_Setup 17000,DAC_AC_Data
-DAC_AD_Setup:			DAC_Setup 10500,DAC_AD_AE_Data
-DAC_AE_Setup:			DAC_Setup 8000,DAC_AD_AE_Data
-DAC_AF_Setup:			DAC_Setup 14000,DAC_AF_B0_Data
-DAC_B0_Setup:			DAC_Setup 9750,DAC_AF_B0_Data
-DAC_B1_Setup:			DAC_Setup 8000,DAC_B1_Data
-DAC_B2_Setup:			DAC_Setup 8500,DAC_B2_B3_Data
-DAC_B3_Setup:			DAC_Setup 6500,DAC_B2_B3_Data
-DAC_B4_Setup:			DAC_Setup 12500,DAC_B4_C1_C2_C3_C4_Data
-DAC_B5_Setup:			DAC_Setup 12500,DAC_B5_Data
-DAC_B6_Setup:			DAC_Setup 12500,DAC_B6_Data
-DAC_B7_Setup:			DAC_Setup 8000,DAC_B7_Data
-DAC_B8_B9_Setup:		DAC_Setup 12500,DAC_B8_B9_Data
-DAC_BA_Setup:			DAC_Setup 8000,DAC_BA_Data
-DAC_BB_Setup:			DAC_Setup 8000,DAC_BB_Data
-DAC_BC_Setup:			DAC_Setup 8000,DAC_BC_Data
-DAC_BD_Setup:			DAC_Setup 12500,DAC_BD_Data
-DAC_BE_Setup:			DAC_Setup 12500,DAC_BE_Data
-DAC_BF_Setup:			DAC_Setup 7250,DAC_BF_Data
-DAC_C0_Setup:			DAC_Setup 13000,DAC_C0_Data
-DAC_C1_Setup:			DAC_Setup 11000,DAC_B4_C1_C2_C3_C4_Data
-DAC_C2_Setup:			DAC_Setup 10000,DAC_B4_C1_C2_C3_C4_Data
-DAC_C3_Setup:			DAC_Setup 9750,DAC_B4_C1_C2_C3_C4_Data
-DAC_C4_Setup:			DAC_Setup 13000,DAC_B4_C1_C2_C3_C4_Data
-DAC_9C_Setup:			DAC_Setup 13500,DAC_9C_Data
-DAC_9D_Setup:			DAC_Setup 8000,DAC_9D_Data
-DAC_9E_Setup:			DAC_Setup 8000,DAC_9E_Data
-DAC_9F_Setup:			DAC_Setup 12500,DAC_9F_Data
-DAC_A0_Setup:			DAC_Setup 12500,DAC_A0_Data
-DAC_A1_Setup:			DAC_Setup 13500,DAC_A1_Data
-; ---------------------------------------------------------------------------
-
-DAC_86_Data:		DACBINCLUDE "Sound/DAC/86.bin"
-DAC_81_Data:		DACBINCLUDE "Sound/DAC/81.bin"
-DAC_82_83_84_85_Data:	DACBINCLUDE "Sound/DAC/82-85.bin"
-DAC_94_95_96_97_Data:	DACBINCLUDE "Sound/DAC/94-97.bin"
-DAC_90_91_92_93_Data:	DACBINCLUDE "Sound/DAC/90-93.bin"
-DAC_88_Data:		DACBINCLUDE "Sound/DAC/88.bin"
-DAC_8A_8B_Data:		DACBINCLUDE "Sound/DAC/8A-8B.bin"
-DAC_8C_Data:		DACBINCLUDE "Sound/DAC/8C.bin"
-DAC_8D_8E_Data:		DACBINCLUDE "Sound/DAC/8D-8E.bin"
-DAC_87_Data:		DACBINCLUDE "Sound/DAC/87.bin"
-DAC_8F_Data:		DACBINCLUDE "Sound/DAC/8F.bin"
-DAC_89_Data:		DACBINCLUDE "Sound/DAC/89.bin"
-DAC_98_99_9A_Data:	DACBINCLUDE "Sound/DAC/98-9A.bin"
-DAC_9B_Data:		DACBINCLUDE "Sound/DAC/9B.bin"
-DAC_B2_B3_Data:		DACBINCLUDE "Sound/DAC/B2-B3 (Sonic & Knuckles).bin"
+DAC_86_Data:		include "Sound/DAC/generated/86.inc"
+DAC_81_Data:		include "Sound/DAC/generated/81.inc"
+DAC_82_83_84_85_Data:	include "Sound/DAC/generated/82-85.inc"
+DAC_94_95_96_97_Data:	include "Sound/DAC/generated/94-97.inc"
+DAC_90_91_92_93_Data:	include "Sound/DAC/generated/90-93.inc"
+DAC_88_Data:		include "Sound/DAC/generated/88.inc"
+DAC_8A_8B_Data:		include "Sound/DAC/generated/8A-8B.inc"
+DAC_8C_Data:		include "Sound/DAC/generated/8C.inc"
+DAC_8D_8E_Data:		include "Sound/DAC/generated/8D-8E.inc"
+DAC_87_Data:		include "Sound/DAC/generated/87.inc"
+DAC_8F_Data:		include "Sound/DAC/generated/8F.inc"
+DAC_89_Data:		include "Sound/DAC/generated/89.inc"
+DAC_98_99_9A_Data:	include "Sound/DAC/generated/98-9A.inc"
+DAC_9B_Data:		include "Sound/DAC/generated/9B.inc"
+DAC_B2_B3_Data:		include "Sound/DAC/generated/B2-B3 (Sonic & Knuckles).inc"
 
 	finishBank
 
@@ -200654,8 +200600,8 @@ DAC_B2_B3_Data:		DACBINCLUDE "Sound/DAC/B2-B3 (Sonic & Knuckles).bin"
 ; ===========================================================================
 SndBank:			startBank
 
-SEGA_PCM:	binclude "Sound/Sega PCM.bin"
-SEGA_PCM_End
+SEGA_PCM:	include "Sound/PCM/generated/Sega.inc"
+
 		align 2
 Sound_33:	include "Sound/SFX/33 - Ring (Right).asm"
 Sound_34:	include "Sound/SFX/34 - Ring (Left).asm"
@@ -200843,10 +200789,12 @@ ArtUnc_Sonic_Extra:
 ArtUnc_Tails_Extra:
 		binclude "General/Sprites/Tails/Art/Tails Extra.bin"
 		even
+; [FixBugs]: These two files contain some bugs. Read their contents for details.
 Map_Sonic:
 		include "General/Sprites/Sonic/Map - Sonic.asm"
 PLC_Sonic:
 		include "General/Sprites/Sonic/DPLC - Sonic.asm"
+
 Map_Tails:
 		include "General/Sprites/Tails/Map - Tails.asm"
 PLC_Tails:
