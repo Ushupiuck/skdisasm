@@ -105,7 +105,21 @@ Comp_BackgroundInit:
 ALZ_BackgroundEvent:
 		jsr	ALZ_Deformation(pc)
 		lea	ALZ_BGDeformArray(pc),a4
-		bra.s	loc_23A764
+		lea	(H_scroll_buffer).w,a1
+		movea.l a4,a6
+		lea	(HScroll_table).w,a5
+		move.w	(Camera_Y_pos_BG_copy).w,d0
+		move.w	(Camera_X_pos_copy).w,d3
+		moveq	#$6C-1,d1
+		jsr	(ApplyDeformation2).l
+		movea.l a6,a4
+		lea	(HScroll_table+$100).w,a5
+		move.w	(Camera_Y_pos_P2_BG_copy).w,d0
+		subq.w	#4,d0
+		move.w	(Camera_X_pos_P2_copy).w,d3
+		moveq	#$74-1,d1
+		jsr	(ApplyDeformation2).l
+		jmp	(Update_VScrollValueP2).l
 ; ---------------------------------------------------------------------------
 
 BPZ_BackgroundEvent:
