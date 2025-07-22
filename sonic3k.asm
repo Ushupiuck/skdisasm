@@ -199453,38 +199453,37 @@ loc_92AB0:
 		lea	(DebugOffs).l,a2
 		adda.w	(a2,d0.w),a2
 		move.w	(a2)+,d6
-		bsr.w	sub_92AD4
+		bsr.w	Debug_Control
 		jmp	(Draw_Sprite).l
 
 ; =============== S U B R O U T I N E =======================================
 
 
-sub_92AD4:
+Debug_Control:
 		moveq	#0,d4
-		move.w	#1,d1
+		moveq	#1,d1
 		move.b	(Ctrl_1_pressed).w,d4
 		andi.w	#button_up_mask|button_down_mask|button_left_mask|button_right_mask,d4
-		bne.s	loc_92B16
+		bne.s	.dirpressed
 		move.b	(Ctrl_1_held).w,d0
 		andi.w	#button_up_mask|button_down_mask|button_left_mask|button_right_mask,d0
 		bne.s	loc_92AFE
 		move.b	#$C,(Debug_camera_delay).w
 		move.b	#$F,(Debug_camera_speed).w
-		bra.w	loc_92B7A
+		bra.w	Debug_ControlObjects
 ; ---------------------------------------------------------------------------
 
 loc_92AFE:
 		subq.b	#1,(Debug_camera_delay).w
-		bne.s	loc_92B1A
+		bne.s	Debug_TimerNotOver
 		move.b	#1,(Debug_camera_delay).w
 		addq.b	#1,(Debug_camera_speed).w
-		bne.s	loc_92B16
+		bne.s	.dirpressed
 		move.b	#255,(Debug_camera_speed).w
-
-loc_92B16:
+.dirpressed:
 		move.b	(Ctrl_1_held).w,d4
 
-loc_92B1A:
+Debug_TimerNotOver:
 		moveq	#0,d1
 		move.b	(Debug_camera_speed).w,d1
 		addq.w	#1,d1
@@ -199492,49 +199491,58 @@ loc_92B1A:
 		asr.l	#4,d1
 		move.l	y_pos(a0),d2
 		move.l	x_pos(a0),d3
+
+		; move up
 		btst	#button_up,d4
-		beq.s	loc_92B44
+		beq.s	.upNotHeld
 		sub.l	d1,d2
 		moveq	#0,d0
 		move.w	(Camera_min_Y_pos).w,d0
 		swap	d0
 		cmp.l	d0,d2
-		bge.s	loc_92B44
+		bge.s	.minYPosNotReached
 		move.l	d0,d2
+.minYPosNotReached:
 
-loc_92B44:
+.upNotHeld:
+		; move down
 		btst	#button_down,d4
-		beq.s	loc_92B5E
+		beq.s	.downNotHeld
 		add.l	d1,d2
 		moveq	#0,d0
 		move.w	(Camera_target_max_Y_pos).w,d0
 		addi.w	#$DF,d0
 		swap	d0
 		cmp.l	d0,d2
-		blt.s	loc_92B5E
+		blt.s	.maxYPosNotReached
 		move.l	d0,d2
+.maxYPosNotReached:
 
-loc_92B5E:
+.downNotHeld:
+		; move left
 		btst	#button_left,d4
-		beq.s	loc_92B6A
+		beq.s	.leftNotHeld
 		sub.l	d1,d3
-		bcc.s	loc_92B6A
+		bcc.s	.minXPosNotReached
 		moveq	#0,d3
+.minXPosNotReached:
 
 loc_92B6A:
+		; move right
 		btst	#button_right,d4
-		beq.s	loc_92B72
+		beq.s	.rightNotHeld
 		add.l	d1,d3
 
-loc_92B72:
+.rightNotHeld:
 		move.l	d2,y_pos(a0)
 		move.l	d3,x_pos(a0)
 
-loc_92B7A:
+Debug_ControlObjects:
 		btst	#button_A,(Ctrl_1_held).w
 		beq.s	loc_92BB2
 		btst	#button_C,(Ctrl_1_pressed).w
 		beq.s	loc_92B96
+		; Cycle backwards though object list
 		subq.b	#1,(Debug_object).w
 		bcc.s	loc_92BAE
 		add.b	d6,(Debug_object).w
@@ -199556,11 +199564,13 @@ loc_92BAE:
 loc_92BB2:
 		btst	#button_C,(Ctrl_1_pressed).w
 		beq.s	loc_92C0C
+		; spawn object
 		jsr	(AllocateObject).l
 		bne.s	loc_92C0C
 		move.w	x_pos(a0),x_pos(a1)
 		move.w	y_pos(a0),y_pos(a1)
 		move.b	render_flags(a0),render_flags(a1)
+		andi.b	#$7F,render_flags(a1)
 		move.b	render_flags(a0),status(a1)
 		andi.b	#$7F,status(a1)
 		moveq	#0,d0
@@ -199583,6 +199593,7 @@ locret_92C0A:
 loc_92C0C:
 		btst	#button_B,(Ctrl_1_pressed).w
 		beq.s	locret_92C52
+		; exit Debug Mode
 		moveq	#0,d0
 		move.w	d0,(Debug_placement_mode).w
 		move	#$2700,sr
@@ -199593,19 +199604,19 @@ loc_92C0C:
 		lea	(Player_1).w,a1
 		move.l	(Debug_saved_mappings).w,mappings(a1)
 		move.w	(Debug_saved_art_tile).w,art_tile(a1)
-		bsr.s	sub_92C54
+		bsr.s	Debug_ResetPlayerStats
 		move.b	#$13,y_radius(a1)
 		move.b	#9,x_radius(a1)
 
 locret_92C52:
 		rts
-; End of function sub_92AD4
+; End of function Debug_Control
 
 
 ; =============== S U B R O U T I N E =======================================
 
 
-sub_92C54:
+Debug_ResetPlayerStats:
 	if FixBugs
 		; Clear the entirety of d0, which results in the variables below being cleared.
 		moveq	#0,d0
@@ -199627,7 +199638,7 @@ sub_92C54:
 		ori.b	#1<<Status_InAir,status(a1)
 		move.b	#2,routine(a1)
 		rts
-; End of function sub_92C54
+; End of function Debug_ResetPlayerStats
 
 
 ; =============== S U B R O U T I N E =======================================
