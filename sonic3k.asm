@@ -37984,7 +37984,7 @@ loc_1BFB8:
 		beq.s	loc_1BFF0
 		move.b	#0,(Scroll_force_positions).w
 		move.w	#0,(H_scroll_frame_offset).w
-		lea	(Palette_frame_Tails).w,a0
+		lea	(Scroll_forced_X_pos-x_pos).w,a0				; is now a player address
 
 loc_1BFF0:
 		lea	(Camera_X_pos).w,a1
@@ -43544,11 +43544,11 @@ Obj_AIZLRZEMZRock:
 		ori.b	#4,render_flags(a0)
 		move.w	#$200,priority(a0)
 		move.w	x_pos(a0),$2E(a0)
-		move.w	#$40,$42(a0)
+		move.w	#$40,child_dx(a0)
 		cmpi.w	#1,(Current_zone_and_act).w
 		bne.s	loc_1FA42
 		move.l	#Map_AIZRock2,mappings(a0)
-		move.w	#make_art_tile($2E9,2,0),art_tile(a0)
+		move.w	#make_art_tile(ArtTile_ArtNem_AIZMisc2,2,0),art_tile(a0)
 
 loc_1FA42:
 		cmpi.w	#$1200,(Current_zone_and_act).w
@@ -43601,7 +43601,7 @@ loc_1FACA:
 		sub.w	d0,x_pos(a0)
 		neg.w	d0
 		addi.w	#$40,d0
-		move.w	d0,$42(a0)
+		move.w	d0,child_dx(a0)
 		jsr	(ObjCheckFloorDist).l
 		add.w	d1,y_pos(a0)
 
@@ -45488,7 +45488,7 @@ BreakObjectToPieces_Loop:
 
 ; loc_216EC:
 BreakObjectToPieces_InitObject:
-		move.l	d4,(a1)	; get object pointer (in Sonic 1 and 2, this copies the object ID)
+		move.l	d4,code(a1)	; get object pointer (in Sonic 1 and 2, this copies the object ID)
 		move.l	a3,mappings(a1)	; get mappings pointer
 		move.b	d5,render_flags(a1)	; get render flags
 		move.w	x_pos(a0),x_pos(a1)
@@ -45873,7 +45873,7 @@ loc_21D4C:
 		move.w	#$800,x_vel(a0)
 		move.w	#$200,y_vel(a0)
 		move.l	#Map_AnimatedStillSprites,mappings(a0)
-		move.w	#make_art_tile($2E9,3,0),art_tile(a0)
+		move.w	#make_art_tile(ArtTile_ArtNem_AIZMisc2,3,0),art_tile(a0)
 		move.b	#8,width_pixels(a0)
 		move.b	#$C,height_pixels(a0)
 		move.b	#0,mapping_frame(a0)
@@ -50118,7 +50118,7 @@ Platform_Rising:
 		andi.b	#standing_mask,d0
 		beq.s	locret_25200
 		move.b	#1,$3C(a0)
-		move.b	#$C,$1E(a0)
+		move.b	#$C,y_radius(a0)
 
 locret_25200:
 		rts
@@ -56655,7 +56655,7 @@ sub_293D0:
 		move.w	#make_art_tile($2EA,2,0),art_tile(a1)
 		move.b	#$1C,width_pixels(a1)
 		move.b	#4,height_pixels(a1)
-		move.b	4(a0),render_flags(a1)
+		move.b	render_flags(a0),render_flags(a1)
 		move.b	#1,mapping_frame(a1)
 		move.w	#$180,priority(a1)
 		rts
@@ -57986,7 +57986,7 @@ loc_2A26C:
 		lsl.w	d2,d1
 		move.w	d1,$34(a0)
 		move.l	#Map_AIZDisappearingFloor,mappings(a0)
-		move.w	#make_art_tile($2E9,2,0),art_tile(a0)
+		move.w	#make_art_tile(ArtTile_ArtNem_AIZMisc2,2,0),art_tile(a0)
 		move.w	#make_art_tile($001,2,0),art_tile(a0)
 		move.b	#$20,width_pixels(a0)
 		move.b	#$18,height_pixels(a0)
@@ -58523,7 +58523,7 @@ Map_FBZCorkFloor:
 
 Obj_AIZFlippingBridge:
 		move.l	#Map_AIZFlippingBridge,mappings(a0)
-		move.w	#make_art_tile($2E9,2,0),art_tile(a0)
+		move.w	#make_art_tile(ArtTile_ArtNem_AIZMisc2,2,0),art_tile(a0)
 		move.b	#$80,width_pixels(a0)
 		move.b	#4,height_pixels(a0)
 		move.b	#4,render_flags(a0)
@@ -58554,7 +58554,7 @@ loc_2A9B6:
 		bne.w	loc_2AA50
 		move.l	#loc_2AA78,(a1)
 		move.l	#Map_AIZFlippingBridge,mappings(a1)
-		move.w	#make_art_tile($2E9,2,0),art_tile(a1)
+		move.w	#make_art_tile(ArtTile_ArtNem_AIZMisc2,2,0),art_tile(a1)
 		move.b	#4,render_flags(a1)
 		move.b	#$80,width_pixels(a1)
 		move.b	#$40,height_pixels(a1)
@@ -58850,16 +58850,16 @@ Obj_AIZCollapsingLogBridge:
 		move.b	d0,$35(a0)
 		move.b	#8,$37(a0)
 		move.l	#Map_AIZCollapsingLogBridge,mappings(a0)
-		move.w	#make_art_tile($2E9,2,0),art_tile(a0)
+		move.w	#make_art_tile(ArtTile_ArtNem_AIZMisc2,2,0),art_tile(a0)
 		move.b	#$5A,width_pixels(a0)
 		move.b	#8,height_pixels(a0)
-		move.b	#4,render_flags(a0)
+		move.b	#4,render_flags(a0)	; oddly, this is not an ori like the child sprites, however it doesn't matter in normal gameplay as this object only faces one direction
 		move.w	#$200,priority(a0)
 		jsr	(AllocateObjectAfterCurrent).l
 		bne.w	loc_2AD9E
 		move.l	#loc_2AEB4,(a1)
 		move.l	#Map_AIZCollapsingLogBridge,mappings(a1)
-		move.w	#make_art_tile($2E9,2,0),art_tile(a1)
+		move.w	#make_art_tile(ArtTile_ArtNem_AIZMisc2,2,0),art_tile(a1)
 		ori.b	#4,render_flags(a1)
 		move.b	#$5A,width_pixels(a1)
 		move.b	#8,height_pixels(a1)
@@ -58897,16 +58897,16 @@ loc_2ADA8:
 		move.b	d0,$35(a0)
 		move.b	#8,$37(a0)
 		move.l	#Map_AIZDrawBridgeFire,mappings(a0)
-		move.w	#make_art_tile($2E9,2,1),art_tile(a0)
+		move.w	#make_art_tile(ArtTile_ArtNem_AIZMisc2,2,1),art_tile(a0)
 		move.b	#$60,width_pixels(a0)
 		move.b	#8,height_pixels(a0)
-		move.b	#4,render_flags(a0)
+		move.b	#4,render_flags(a0)	; oddly, this is not an ori like the child sprites, however it doesn't matter in normal gameplay as this object only faces one direction
 		move.w	#$200,priority(a0)
 		jsr	(AllocateObjectAfterCurrent).l
 		bne.w	loc_2AE66
 		move.l	#loc_2AEB4,(a1)
 		move.l	#Map_AIZDrawBridgeFire,mappings(a1)
-		move.w	#make_art_tile($2E9,2,1),art_tile(a1)
+		move.w	#make_art_tile(ArtTile_ArtNem_AIZMisc2,2,1),art_tile(a1)
 		ori.b	#4,render_flags(a1)
 		move.b	#$60,width_pixels(a1)
 		move.b	#8,height_pixels(a1)
@@ -59141,7 +59141,7 @@ Map_AIZDrawBridgeFire:
 
 Obj_AIZDrawBridge:
 		move.l	#Map_AIZDrawBridge,mappings(a0)
-		move.w	#make_art_tile($2E9,2,1),art_tile(a0)
+		move.w	#make_art_tile(ArtTile_ArtNem_AIZMisc2,2,1),art_tile(a0)
 		move.b	#4,render_flags(a0)
 		move.w	#$280,priority(a0)
 		move.b	#8,width_pixels(a0)
@@ -59578,7 +59578,7 @@ loc_2B5D4:
 		move.w	x_pos(a0),x_pos(a1)
 		move.w	y_pos(a0),y_pos(a1)
 		move.l	#Map_AIZFallingLog2,mappings(a1)
-		move.w	#make_art_tile($2E9,2,0),art_tile(a1)
+		move.w	#make_art_tile(ArtTile_ArtNem_AIZMisc2,2,0),art_tile(a1)
 		tst.b	(Current_act).w
 		bne.s	loc_2B622
 		move.l	#Map_AIZFallingLog,mappings(a1)
@@ -59596,7 +59596,7 @@ loc_2B622:
 		move.w	x_pos(a0),x_pos(a1)
 		move.w	y_pos(a0),y_pos(a1)
 		move.l	#Map_AIZFallingLogSplash2,mappings(a1)
-		move.w	#make_art_tile($2E9,3,0),art_tile(a1)
+		move.w	#make_art_tile(ArtTile_ArtNem_AIZMisc2,3,0),art_tile(a1)
 		tst.b	(Current_act).w
 		bne.s	loc_2B67A
 		move.l	#Map_AIZFallingLogSplash,mappings(a1)
@@ -59689,7 +59689,7 @@ loc_2B752:
 
 Obj_AIZSpikedLog:
 		move.l	#Map_AIZSpikedLog,mappings(a0)
-		move.w	#make_art_tile($2E9,2,0),art_tile(a0)
+		move.w	#make_art_tile(ArtTile_ArtNem_AIZMisc2,2,0),art_tile(a0)
 		move.b	#$18,width_pixels(a0)
 		move.b	#8,height_pixels(a0)
 		move.b	#4,render_flags(a0)
@@ -59869,13 +59869,13 @@ loc_2B962:
 		jmp	(Sprite_OnScreen_Test).l
 ; ---------------------------------------------------------------------------
 word_2B968:
-		dc.w make_art_tile($2E9,2,0)	; 0 AIZ2 Bridge Post
+		dc.w make_art_tile(ArtTile_ArtNem_AIZMisc2,2,0)	; 0 AIZ2 Bridge Post
 		dc.w   $300
 		dc.b   $C,  $C
-		dc.w make_art_tile($2E9,2,0)	; 1 AIZ2 Large Rope Twist Tie
+		dc.w make_art_tile(ArtTile_ArtNem_AIZMisc2,2,0)	; 1 AIZ2 Large Rope Twist Tie
 		dc.w   $300
 		dc.b  $10,   8
-		dc.w make_art_tile($2E9,2,0)	; 2 AIZ2 Rope Twist tie
+		dc.w make_art_tile(ArtTile_ArtNem_AIZMisc2,2,0)	; 2 AIZ2 Rope Twist tie
 		dc.w   $300
 		dc.b    8,   4
 		dc.w make_art_tile($001,2,0)	; 3 AIZ2 Tie Top Sprite
@@ -59884,7 +59884,7 @@ word_2B968:
 		dc.w make_art_tile($001,3,0)	; 4 AIZ2 Waterfall sprite
 		dc.w   $300
 		dc.b    8, $20
-		dc.w make_art_tile($2E9,2,1)	; 5 AIZ2 Bridge Post (Different Palette)
+		dc.w make_art_tile(ArtTile_ArtNem_AIZMisc2,2,1)	; 5 AIZ2 Bridge Post (Different Palette)
 		dc.w   $300
 		dc.b   $C,  $C
 		dc.w make_art_tile($001,2,1)	; 6 128x128 HCZ Waterfall
@@ -60049,10 +60049,10 @@ loc_2BF5A:
 		jmp	(Sprite_OnScreen_Test).l
 ; ---------------------------------------------------------------------------
 word_2BF6C:
-		dc.w make_art_tile($2E9,3,0)
+		dc.w make_art_tile(ArtTile_ArtNem_AIZMisc2,3,0)
 		dc.w   $300
 		dc.b    8,  $C
-		dc.w make_art_tile($2E9,3,0)
+		dc.w make_art_tile(ArtTile_ArtNem_AIZMisc2,3,0)
 		dc.w   $300
 		dc.b    8,  $C
 		dc.w make_art_tile($0D3,2,1)
@@ -64244,7 +64244,7 @@ loc_2FABA:
 		moveq	#0,d0
 		move.b	$34(a0),d0
 		movea.l	$3C(a0),a2
-		move.b	(a2,d0.w),$2C(a1)
+		move.b	(a2,d0.w),subtype(a1)
 		btst	#7,$36(a0)
 		beq.s	loc_2FB34
 		jsr	(Random_Number).l
@@ -79837,7 +79837,7 @@ loc_3C552:
 		move.b	#2,mapping_frame(a1)
 		move.w	#-$600,y_vel(a1)
 		addi.w	#6,y_pos(a1)
-		move.b	subtype(a0),$2C(a1)
+		move.b	subtype(a0),subtype(a1)
 		move.w	a0,$3C(a1)
 		moveq	#0,d0
 		move.b	anim_frame(a0),d0
@@ -89624,7 +89624,7 @@ Obj_SSZFloatingPlatform:
 		move.w	#make_art_tile($2D4,2,0),art_tile(a0)
 		move.l	#Map_SSZFloatingPlatform,mappings(a0)
 		move.b	#1,mapping_frame(a0)
-		move.w	y_pos(a0),$1A(a0)
+		move.w	y_pos(a0),y_vel(a0)
 
 loc_44AA0:
 		move.w	$2E(a0),d0
@@ -89664,7 +89664,7 @@ Obj_SSZCollapsingColumn:
 		move.w	#make_art_tile($2E4,3,1),art_tile(a0)
 		move.l	#Map_SSZFloatingPlatform,mappings(a0)
 		move.b	#2,mapping_frame(a0)
-		move.w	y_pos(a0),$1A(a0)
+		move.w	y_pos(a0),y_vel(a0)
 		jsr	(Random_Number).l
 		andi.w	#$1FFF,d0
 		addi.w	#$800,d0
@@ -90177,7 +90177,7 @@ Obj_SSZBouncyCloud:
 		move.w	#make_art_tile($3D6,3,1),art_tile(a0)
 		move.l	#Map_SSZBouncyCloud,mappings(a0)
 		clr.b	$2D(a0)
-		move.w	y_pos(a0),$1A(a0)
+		move.w	y_pos(a0),y_vel(a0)
 		jsr	(Random_Number).l
 		andi.w	#$FFF,d0
 		addi.w	#$C00,d0
@@ -90448,7 +90448,7 @@ Obj_SSZElevatorBar:
 		move.w	#$180,priority(a0)
 		move.w	#make_art_tile($348,2,0),art_tile(a0)
 		move.l	#Map_SSZElevatorBar,mappings(a0)
-		move.w	y_pos(a0),$1A(a0)
+		move.w	y_pos(a0),y_vel(a0)
 
 loc_4539E:
 		move.l	#$18000,d0
@@ -90595,7 +90595,7 @@ Obj_SSZHPZTeleporter:
 loc_4556A:
 		tst.b	(a1)
 		bmi.s	loc_45574
-		move.w	#$20,$1A(a0)
+		move.w	#$20,y_vel(a0)
 
 loc_45574:
 		cmpi.w	#$1701,(Current_zone_and_act).w
@@ -90681,7 +90681,7 @@ loc_45640:
 		move.w	(Level_frame_counter).w,d0
 		andi.w	#3,d0
 		bne.w	loc_456EE
-		subq.w	#1,$1A(a0)
+		subq.w	#1,y_vel(a0)
 		bra.w	loc_456EE
 ; ---------------------------------------------------------------------------
 
@@ -91280,7 +91280,7 @@ loc_45CA2:
 loc_45CC0:
 		subq.b	#1,d0
 		bne.s	loc_45CE4
-		btst	#1,$2A(a1)
+		btst	#1,status(a1)
 		bne.w	locret_45DAC
 		move.b	#-$60,2(a4)
 		tst.w	d6
@@ -94470,7 +94470,7 @@ loc_48AD6:
 		move.l	#loc_48B7E,(a0)
 		move.w	#3,$30(a0)
 		moveq	#8,d0
-		btst	#1,4(a0)
+		btst	#1,render_flags(a0)
 		beq.s	loc_48B16
 		neg.w	d0
 
@@ -113772,8 +113772,8 @@ loc_55FDA:
 		move.w	#$380,priority(a0)
 		move.w	#make_art_tile($029,2,1),art_tile(a0)
 		move.l	#Map_SOZ1EndDoor,mappings(a0)
-		move.w	#$439C,$18(a0)
-		move.w	#$9D4,$1A(a0)
+		move.w	#$439C,x_vel(a0)
+		move.w	#$9D4,y_vel(a0)
 		move.b	#1,mapping_frame(a0)
 
 loc_56012:
@@ -128715,7 +128715,7 @@ loc_622E4:
 		move.l	#byte_666BF,$30(a0)
 		move.l	#loc_6233E,$34(a0)
 		lea	word_62296(pc),a1
-		move.b	#mus_Knuckles,$26(a0)
+		move.b	#mus_Knuckles,boss_saved_mus(a0)
 		jsr	(loc_85D70).l
 		lea	(Normal_palette_line_2).w,a1
 		lea	(Target_palette_line_2).w,a2
@@ -130932,7 +130932,7 @@ loc_63D1A:
 		bne.s	loc_63D5C
 		move.l	#loc_85CA4,(a1)
 		move.l	#loc_63DD4,$34(a1)
-		move.b	#mus_Knuckles,$26(a1)
+		move.b	#mus_Knuckles,boss_saved_mus(a1)
 		move.w	#2*60,$2E(a1)
 		move.b	$27(a0),$27(a1)
 
@@ -140433,7 +140433,7 @@ Obj_HCZEndBoss:
 
 loc_6AEC6:
 		jsr	(Check_CameraInRange).l
-		move.b	#mus_EndBoss,$26(a0)
+		move.b	#mus_EndBoss,boss_saved_mus(a0)
 		jsr	(sub_85D6A).l
 		move.l	#loc_6AEFE,(a0)
 		move.l	#loc_6AF04,$34(a0)
@@ -142643,7 +142643,7 @@ word_6C688:
 Obj_MGZEndBossKnux:
 		lea	word_6C688(pc),a1
 		jsr	(Check_CameraInRange).l
-		move.b	#mus_Miniboss,$26(a0)	; different song than other end bosses
+		move.b	#mus_Miniboss,boss_saved_mus(a0)	; different song than other end bosses
 		jsr	(sub_85D6A).l
 		move.l	#loc_6C6F4,(a0)
 		move.l	#loc_6C6FA,$34(a0)
@@ -143627,7 +143627,7 @@ loc_6D1FC:
 		neg.w	d0
 
 loc_6D21E:
-		move.w	d0,$1A(a0)
+		move.w	d0,y_vel(a0)
 
 locret_6D222:
 		rts
@@ -145438,7 +145438,7 @@ Obj_CNZEndBoss:
 		move.l	#loc_6E4B8,(a0)
 		move.l	#loc_6E4BE,$34(a0)
 		lea	word_6E476(pc),a1
-		move.b	#mus_EndBoss,$26(a0)
+		move.b	#mus_EndBoss,boss_saved_mus(a0)
 		jsr	(sub_85D6A).l
 		moveq	#$6E,d0
 		jsr	(Load_PLC).l
@@ -149279,7 +149279,7 @@ Obj_ICZMiniboss:
 
 loc_71178:
 		jsr	(Check_CameraInRange).l
-		move.b	#mus_Miniboss,$26(a0)
+		move.b	#mus_Miniboss,boss_saved_mus(a0)
 		jsr	(sub_85D6A).l
 		move.l	#loc_711B0,(a0)
 		move.l	#loc_711B6,$34(a0)
@@ -150207,7 +150207,7 @@ Obj_ICZEndBoss:
 		move.l	#loc_71C08,(a0)
 		move.l	#loc_71C0E,$34(a0)
 		lea	word_71BC6(pc),a1
-		move.b	#mus_EndBoss,$26(a0)
+		move.b	#mus_EndBoss,boss_saved_mus(a0)
 		jsr	(sub_85D6A).l
 		moveq	#$70,d0
 		jsr	(Load_PLC).l
@@ -152124,7 +152124,7 @@ word_72FEA:
 Obj_LBZFinalBossKnux:
 		lea	word_72FEA(pc),a1
 		jsr	(Check_CameraInRange).l
-		move.b	#mus_EndBoss,$26(a0)
+		move.b	#mus_EndBoss,boss_saved_mus(a0)
 		jsr	(sub_85D6A).l
 		move.l	#loc_73046,(a0)
 		move.l	#loc_7304C,$34(a0)
@@ -152995,7 +152995,7 @@ loc_73906:
 		move.b	#8,collision_property(a0)
 		move.l	#loc_73960,$34(a0)
 		lea	word_738CE(pc),a1
-		move.b	#mus_EndBoss,$26(a0)
+		move.b	#mus_EndBoss,boss_saved_mus(a0)
 		jsr	(sub_85D6A).l
 		lea	ChildObjDat_7414C(pc),a2
 		jsr	(CreateChild1_Normal).l
@@ -159628,7 +159628,7 @@ Obj_LRZMiniboss:
 		move.l	#loc_78522,(a0)
 		move.l	#loc_78528,$34(a0)
 		lea	word_784E8(pc),a1
-		move.b	#mus_Miniboss,$26(a0)
+		move.b	#mus_Miniboss,boss_saved_mus(a0)
 		jsr	(sub_85D6A).l
 		lea	Pal_LRZMiniboss1(pc),a1
 		jmp	(PalLoad_Line1).l
@@ -163117,7 +163117,7 @@ loc_7ABCE:
 		neg.w	d0
 
 loc_7ABE2:
-		move.w	d0,$18(a0)
+		move.w	d0,x_vel(a0)
 		moveq	#signextendB(sfx_Laser),d0
 		jsr	(Play_SFX).l
 
@@ -165257,7 +165257,7 @@ loc_7C430:
 loc_7C436:
 		move.b	#$32,routine(a0)
 		clr.b	y_vel(a0)
-		move.b	#$13,$1E(a0)
+		move.b	#$13,y_radius(a0)
 		move.l	#loc_7C46A,$34(a0)
 		move.l	#byte_7D519,$30(a0)
 		rts
@@ -167285,7 +167285,7 @@ word_7DDA4:
 Obj_DEZMiniboss:
 		lea	word_7DDA4(pc),a1
 		jsr	(Check_CameraInRange).l
-		move.b	#mus_Miniboss,$26(a0)
+		move.b	#mus_Miniboss,boss_saved_mus(a0)
 		jsr	(sub_85D6A).l
 		move.l	#loc_7DE28,(a0)
 		move.l	#loc_7DE2C,$34(a0)
@@ -169172,7 +169172,7 @@ Obj_DEZEndBoss:
 		move.l	#loc_7F0CE,(a0)
 		move.l	#loc_7F0D2,$34(a0)
 		lea	word_7F0C6(pc),a1
-		move.b	#mus_EndBoss,$26(a0)
+		move.b	#mus_EndBoss,boss_saved_mus(a0)
 		jsr	sub_85D6A(pc)
 		clr.b	(_unkFAB8).w
 		moveq	#$76,d0
@@ -173118,7 +173118,7 @@ loc_818B4:
 		movea.w	d0,a1
 		btst	#7,status(a1)
 		beq.s	locret_81912
-		move.b	#6,5(a0)
+		move.b	#6,routine(a0)
 		bset	#7,status(a0)
 		move.w	#(5*60)-1,$2E(a0)
 		move.l	#-$20,(_unkFA8A).w
@@ -173744,7 +173744,7 @@ loc_81FB0:
 
 loc_81FDA:
 		movea.w	parent3(a0),a1
-		btst	#7,$2A(a1)
+		btst	#7,status(a1)
 		beq.w	locret_82ABA
 		jmp	(Go_Delete_Sprite).l
 ; ---------------------------------------------------------------------------
@@ -176231,7 +176231,7 @@ AfterBoss_None:
 ; ---------------------------------------------------------------------------
 PLC_AfterMiniboss_AIZ: plrlistheader
 		plreq ArtTile_Monitors, ArtNem_Monitors
-		plreq $2E9, ArtNem_AIZMisc2
+		plreq ArtTile_ArtNem_AIZMisc2, ArtNem_AIZMisc2
 		plreq $41B, ArtNem_AIZSwingVine
 		plreq $438, ArtNem_AIZBackgroundTree
 		plreq $45C, ArtNem_Bubbles
@@ -180002,7 +180002,7 @@ loc_85CA4:
 		bne.s	loc_85CC6
 		subq.w	#1,$2E(a0)
 		bpl.s	loc_85CC6
-		move.b	$26(a0),d0
+		move.b	boss_saved_mus(a0),d0
 		move.b	d0,(Current_music+1).w
 		jsr	(Play_Music).l
 		bset	#0,$27(a0)
@@ -185007,7 +185007,7 @@ loc_88CB0:
 ; ---------------------------------------------------------------------------
 
 loc_88CBE:
-		move.b	#4,5(a0)
+		move.b	#4,routine(a0)
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -199046,7 +199046,7 @@ PLC_0B: plrlistheader
 PLC_0B_End
 
 PLC_0C_0D: plrlistheader
-		plreq $2E9, ArtNem_AIZMisc2
+		plreq ArtTile_ArtNem_AIZMisc2, ArtNem_AIZMisc2
 		plreq $41B, ArtNem_AIZSwingVine
 		plreq $438, ArtNem_AIZBackgroundTree
 		plreq $45C, ArtNem_Bubbles
