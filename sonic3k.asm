@@ -15856,7 +15856,7 @@ SaveScreen:
 		move.l	#vdpComm(tiles_to_bytes($562),VRAM,WRITE),(VDP_control_port).l
 		lea	(ArtNem_S22POptions).l,a0
 		jsr	(Nem_Decomp).l
-		lea	byte_DB1C(pc),a1
+		lea	NoSave_Delete_Text(pc),a1
 		move.w	#VRAM_Plane_A_Name_Table+$C06,d0
 		jsr	sub_D9F4(pc)
 		move.w	#VRAM_Plane_A_Name_Table+$C0C,d0
@@ -16067,10 +16067,10 @@ loc_C8E6:
 		jsr	sub_C87E(pc)
 		move.l	d0,VDP_control_port-VDP_data_port(a6)
 		move.w	#make_art_tile($2B1,0,1),(a6)
-		lea	byte_DB2B(pc),a1
+		lea	BlankSave_Text(pc),a1
 		tst.b	(a0)
 		bmi.s	loc_C946
-		lea	byte_DB36(pc),a1
+		lea	Clear_Text(pc),a1
 		move.b	objoff_3A(a3),d0
 		cmp.b	objoff_37(a3),d0
 		bne.s	loc_C912
@@ -16078,14 +16078,14 @@ loc_C8E6:
 		bne.s	loc_C946
 
 loc_C912:
-		lea	byte_DB31(pc),a1
+		lea	D_S_Zone_Text(pc),a1
 		move.w	d7,d0
 		subq.w	#2,d0
 		jsr	sub_D9F4(pc)
 		move.w	objoff_36(a3),d0
 		add.w	d0,d0
 		moveq	#0,d1
-		move.b	byte_C95E(pc,d0.w),d1
+		move.b	DataSelect_Zone_Nums(pc,d0.w),d1
 		bpl.s	loc_C932
 		move.w	#high_priority,d1
 		bra.s	loc_C936
@@ -16097,7 +16097,7 @@ loc_C932:
 loc_C936:
 		move.w	d1,(a6)
 		moveq	#0,d1
-		move.b	byte_C95E+1(pc,d0.w),d1
+		move.b	DataSelect_Zone_Nums+1(pc,d0.w),d1
 		addi.w	#make_art_tile($562,1,1),d1
 		move.w	d1,(a6)
 		bra.s	loc_C94C
@@ -16116,7 +16116,8 @@ loc_C94C:
 ; ---------------------------------------------------------------------------
 ; shows level number 1-14
 ; NOTE: $FF acts as zero
-byte_C95E:
+;byte_C95E
+DataSelect_Zone_Nums:
 		dc.b  $FF,   1	; 01
 		dc.b  $FF,   2	; 02
 		dc.b  $FF,   3	; 03
@@ -16134,7 +16135,7 @@ byte_C95E:
 ; ---------------------------------------------------------------------------
 
 loc_C97A:
-		lea	word_DA8A(pc),a2
+		lea	Map_DataSelect_Player_LivesContinues(pc),a2
 		lea	(Dynamic_object_RAM+object_size).w,a3
 		move.w	#VRAM_Plane_A_Name_Table+$1220,d7
 		lea	(Saved_data).w,a0
@@ -16214,17 +16215,18 @@ loc_CA16:
 		moveq	#$28,d1
 
 loc_CA2E:
-		move.w	word_CA4C(pc,d1.w),(a1)
-		move.w	word_CA4C+2(pc,d1.w),4(a1)
+		move.w	DataSelect_LifeContinue_Nums(pc,d1.w),(a1)
+		move.w	DataSelect_LifeContinue_Nums+2(pc,d1.w),4(a1)
 		andi.w	#$FF,d0
 		lsl.w	#2,d0
-		move.w	word_CA4C(pc,d0.w),2(a1)
-		move.w	word_CA4C+2(pc,d0.w),6(a1)
+		move.w	DataSelect_LifeContinue_Nums(pc,d0.w),2(a1)
+		move.w	DataSelect_LifeContinue_Nums+2(pc,d0.w),6(a1)
 		rts
 ; End of function sub_CA14
 
 ; ---------------------------------------------------------------------------
-word_CA4C:
+;word_CA4C
+DataSelect_LifeContinue_Nums:
 		dc.w make_art_tile($49A,1,1), make_art_tile($49B,1,1)	; 0
 		dc.w make_art_tile($49C,1,1), make_art_tile($49D,1,1)	; 1
 		dc.w make_art_tile($49E,1,1), make_art_tile($49F,1,1)	; 2
@@ -17313,24 +17315,29 @@ LevelList_DA6E:
 		dc.w   $A00
 		dc.w   $B00
 		dc.w   $C00
-word_DA8A:
+;word_DA8A
+Map_DataSelect_Player_LivesContinues:
+	;Blank File
 		dc.w make_art_tile($000,0,1), make_art_tile($000,0,1), make_art_tile($000,0,1)
 		dc.w make_art_tile($000,0,1), make_art_tile($000,0,1), make_art_tile($000,0,1)
 		dc.w make_art_tile($000,0,1), make_art_tile($000,0,1), make_art_tile($000,0,1)
 		dc.w make_art_tile($000,0,1), make_art_tile($000,0,1), make_art_tile($000,0,1)
 		dc.w make_art_tile($000,0,1), make_art_tile($000,0,1), make_art_tile($000,0,1)
+	;Sonic Lives and Continues
 		dc.w      0
 		dc.w make_art_tile($4C2,1,1), make_art_tile($4C4,1,1), make_art_tile($4AE,1,1)
 		dc.w make_art_tile($4C3,1,1), make_art_tile($4C5,1,1), make_art_tile($4AF,1,1)
 		dc.w make_art_tile($4B0,1,1), make_art_tile($4B3,1,1), make_art_tile($000,1,1)
 		dc.w make_art_tile($4B1,1,1), make_art_tile($4B4,1,1), make_art_tile($4AE,1,1)
 		dc.w make_art_tile($4B2,1,1), make_art_tile($4B5,1,1), make_art_tile($4AF,1,1)
+	;Tails Lives and Continues
 		dc.w      0
 		dc.w make_art_tile($4C6,1,1), make_art_tile($4C8,1,1), make_art_tile($4AE,1,1)
 		dc.w make_art_tile($4C7,1,1), make_art_tile($4C9,1,1), make_art_tile($4AF,1,1)
 		dc.w make_art_tile($4B6,1,1), make_art_tile($4B9,1,1), make_art_tile($000,1,1)
 		dc.w make_art_tile($4B7,1,1), make_art_tile($4BA,1,1), make_art_tile($4AE,1,1)
 		dc.w make_art_tile($4B8,1,1), make_art_tile($4BB,1,1), make_art_tile($4AF,1,1)
+	;Knuckles Lives and Continues
 		dc.w      0
 		dc.w make_art_tile($4CA,1,1), make_art_tile($4CC,1,1), make_art_tile($4AE,1,1)
 		dc.w make_art_tile($4CB,1,1), make_art_tile($4CD,1,1), make_art_tile($4AF,1,1)
@@ -17343,16 +17350,29 @@ word_DB08:
 		dc.w make_art_tile($000,0,1), make_art_tile($000,0,1)
 		dc.w make_art_tile($000,0,1), make_art_tile($000,0,1)
 		dc.w make_art_tile($000,0,1), make_art_tile($000,0,1)
-byte_DB1C:
-		dc.b  $2B, $2C, $FF, $30, $1E, $33, $22, $FF, $21, $22, $29, $22, $31, $22, $FF
-byte_DB2B:
-		dc.b    0,   0,   0,   0,   0, $FF
-byte_DB31:
-		dc.b  $37, $2C, $2B, $22, $FF
-byte_DB36:
-		dc.b  $20, $29, $22, $1E, $2F, $FF
+    charset '0','9',$10    ; Add character set for numbers
+    charset '*',$1A    ; Add character for star
+    charset '@',$1B ; Add character for copyright symbol
+    charset ':',$1C ; Add character for colon
+    charset '.',$1D ; Add character for period
+    charset 'A','Z',$1E ; Add character set for letters
+    charset ' ',$FF    ; Add character that marks the end of text
+    charset '#',0    ; Add character for displaying nothing...?
+;byte_DB1C
+NoSave_Delete_Text:
+		dc.b  "NO SAVE "
+		dc.b  "DELETE "
+;byte_DB2B
+BlankSave_Text:
+		dc.b  "##### "
+;byte_DB31
+D_S_Zone_Text:
+		dc.b  "ZONE "
+;byte_DB36
+Clear_Text:
+		dc.b  "CLEAR "
 		even
-
+		charset
 ; =============== S U B R O U T I N E =======================================
 
 
