@@ -199488,7 +199488,7 @@ Debug_Control:
 		moveq	#1,d1
 		move.b	(Ctrl_1_pressed).w,d4
 		andi.w	#button_up_mask|button_down_mask|button_left_mask|button_right_mask,d4
-		bne.s	.dirpressed
+		bne.s	loc_92AFE.dirpressed
 		move.b	(Ctrl_1_held).w,d0
 		andi.w	#button_up_mask|button_down_mask|button_left_mask|button_right_mask,d0
 		bne.s	loc_92AFE
@@ -199502,7 +199502,7 @@ loc_92AFE:
 		bne.s	Debug_TimerNotOver
 		move.b	#1,(Debug_camera_delay).w
 		addq.b	#1,(Debug_camera_speed).w
-		bne.s	.dirpressed
+		bne.s	loc_92AFE.dirpressed
 		move.b	#255,(Debug_camera_speed).w
 .dirpressed:
 		move.b	(Ctrl_1_held).w,d4
@@ -199551,7 +199551,7 @@ Debug_TimerNotOver:
 		moveq	#0,d3
 .minXPosNotReached:
 
-loc_92B6A:
+.leftNotHeld:
 		; move right
 		btst	#button_right,d4
 		beq.s	.rightNotHeld
