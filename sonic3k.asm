@@ -2818,8 +2818,8 @@ Random_Number:
 		asl.l	#3,d1
 		add.l	d0,d1
 		move.w	d1,d0
-		swap	d1
-		add.w	d1,d0
+		abcd	d0,d1
+		addx.w	d1,d0
 		move.w	d0,d1
 		swap	d1
 		move.l	d1,(RNG_seed).w
