@@ -24,7 +24,7 @@
 ; ---------------------------------------------------------------------------
 ; Include SMPS2ASM, for expressing SMPS bytecode in a portable and human-readable form.
 FixMusicAndSFXDataBugs = 0
-SonicDriverVer = 4 ; Tell SMPS2ASM that we are targetting Sonic & Knuckles' sound driver
+SonicDriverVer = 4 ; Tell SMPS2ASM that we are targeting Sonic & Knuckles' sound driver
 		include "Sound/_smps2asm_inc.asm"
 ; ---------------------------------------------------------------------------
 ; Assembly options:
@@ -567,7 +567,7 @@ VInt_8:
 
 -
 		move.w	d0,(a6)
-		dbf	d1,-	; fill remaining colours with white
+		dbf	d1,-	; fill remaining colors with white
 		bra.s	VInt_8_Cont
 ; ---------------------------------------------------------------------------
 
@@ -593,7 +593,7 @@ VInt_8_Cont:
 		move	#$2300,sr
 		tst.b	(Water_flag).w
 		beq.s	+
-		cmpi.b	#92,(H_int_counter).w	; is H-int occuring on or below line 92?
+		cmpi.b	#92,(H_int_counter).w	; is H-int occurring on or below line 92?
 		bhs.s	+	; if it is, branch
 		move.b	#1,(Do_Updates_in_H_int).w
 		jmp	(Set_Kos_Bookmark).l
@@ -777,7 +777,7 @@ HInt:
 
 -
 		move.w	(VDP_control_port).l,d0
-		andi.w	#4,d0	; is horizontal blanking occuring?
+		andi.w	#4,d0	; is horizontal blanking occurring?
 		beq.s	-	; if not, wait until it is
 
 		move.w	(VDP_reg_1_command).w,d0
@@ -807,7 +807,7 @@ HInt:
 
 -
 		move.w	(VDP_control_port).l,d0
-		andi.w	#4,d0	; is a horizontal blank occuring?
+		andi.w	#4,d0	; is a horizontal blank occurring?
 		beq.s	-	; if not, wait
 		move.w	(VDP_reg_1_command).w,d0
 		ori.b	#$40,d0
@@ -836,7 +836,7 @@ HInt3:
 		dbf	d0,*	; waste a few cycles here
 		move.w	(a2)+,d1
 		move.b	(H_int_counter).w,d0
-		subi.b	#200,d0	; is H-int occuring below line 200?
+		subi.b	#200,d0	; is H-int occurring below line 200?
 		bcs.s	$$transferColors	; if it is, branch
 		sub.b	d0,d1
 		bcs.s	$$skipTransfer
@@ -2055,7 +2055,7 @@ Process_Nem_Queue_ShiftUp:
 		; The above code does not properly 'pop' the 16th PLC entry.
 		; Because of this, occupying the 16th slot will cause it to
 		; be repeatedly decompressed infinitely.
-		; Granted, this could be considered more of an optimisation
+		; Granted, this could be considered more of an optimization
 		; than a bug: treating the 16th entry as a dummy that
 		; should never be occupied makes this code unnecessary.
 		; Still, the overhead of this code is minimal.
@@ -2627,7 +2627,7 @@ Queue_Kos:
 ; End of function Queue_Kos
 
 ; ---------------------------------------------------------------------------
-; Checks if V-int occured in the middle of Kosinski queue processing
+; Checks if V-int occurred in the middle of Kosinski queue processing
 ; and stores the location from which processing is to resume if it did
 ; ---------------------------------------------------------------------------
 
@@ -3458,7 +3458,7 @@ loc_276A:
 		; Set it to properly use the third and forth indices.
 		move.l	4(a0,d0.w),(Normal_palette_line_4+$1A).w
 	else
-		; Bug: This mistakenly use the same colours as the first and second indices, rather than the third and fourth.
+		; Bug: This mistakenly use the same colors as the first and second indices, rather than the third and fourth.
 		; This was fixed in Sonic Origins.
 		move.l	(a0,d0.w),(Normal_palette_line_4+$1A).w
 	endif
@@ -4507,7 +4507,7 @@ SuperHyper_PalCycle_RevertNotSonic:
 		cmpi.w	#3,(Player_mode).w			; If Knuckles, branch, making this code Tails-specific
 		bhs.s	SuperHyper_PalCycle_RevertKnuckles
 
-		lea	(PalCycle_SuperTails).l,a0		; Used here because the first set of colours is Tails' normal palette
+		lea	(PalCycle_SuperTails).l,a0		; Used here because the first set of colors is Tails' normal palette
 		bsr.w	SuperHyper_PalCycle_ApplyTails
 		lea	(PalCycle_SuperSonic).l,a0		; Why does Tails manipulate Sonic's palette? For his Super-form's Super Flickies
 		bra.w	SuperHyper_PalCycle_Apply
@@ -7244,7 +7244,7 @@ loc_5E52:
 loc_5E5C:
 		jsr	(Random_Number).l
 		addq.w	#8,(a1)			; On every other line, alternate between moving the line randomly to the left and randomly to the right
-		andi.w	#7,d0			; The result is a staticy phaseout effect of the SEGA logo
+		andi.w	#7,d0			; The result is a staticky phaseout effect of the SEGA logo
 		add.w	d0,(a1)
 		cmpi.w	#$FC,(a1)
 		blt.s	loc_5E74
@@ -7346,7 +7346,7 @@ loc_6000:
 		moveq	#0,d0
 		move.w	d0,(Level_frame_counter).w
 		tst.b	(Last_star_post_hit).w
-		beq.s	loc_6040				; If no lampost was set, branch
+		beq.s	loc_6040				; If no starpost was set, branch
 		tst.b	(Special_bonus_entry_flag).w
 		bne.s	loc_6034				; Otherwise, ensure that the proper level ID is set to account for levels that use multiple ones in an act
 		move.w	(Saved_zone_and_act).w,(Current_zone_and_act).w
@@ -12695,7 +12695,7 @@ loc_9EB2:
 ;
 ; If the queue is empty, return 0
 ;
-; The use a breath first seach algorithm to using the queue
+; The use a breath first search algorithm to using the queue
 ; to fill out each area of blue spheres, turning them into
 ; rings and adding them to the queue, and updating the HUD.
 ;
@@ -12780,8 +12780,8 @@ locret_9F42:
 ; Returns:
 ;	a5: 1 past the end of ring queue
 ;
-; First checks if the touched sphere has any blue sphere neighbours,
-; while also turning any touched neighbours into red spheres.
+; First checks if the touched sphere has any blue sphere neighbors,
+; while also turning any touched neighbors into red spheres.
 ; If there are none, return early
 ;
 ; Next check if the contiguous vertical and horizontal span
@@ -12793,7 +12793,7 @@ locret_9F42:
 ; a path of red spheres to find valid loops. For each loop
 ; try to find an enclosed blue sphere. If one is found,
 ; turn it into a ring, and add its index to the ring queue
-; and incrememnt the queue pointer.
+; and increment the queue pointer.
 Find_Red_Sphere_Loop:
 		lea	(SStage_blue_sphere_to_ring_queue).w,a5		; Load special stage map pointer
 		lea	(SStage_8_Directions).l,a3			; Load directions pointer
@@ -12804,12 +12804,12 @@ Red_Loop_Check_Neighbors:						; Loop[neighbors of touched]
 		move.w	(a3)+,d1					; 	get next direction
 		add.w	d5,d1						; 	neighbor = touched + direction
 		andi.w	#$3FF,d1					; 	truncate to map size
-		cmpi.b	#$A,(a2,d1.w)					; 	If neighbour is $A (TOUCHED)
+		cmpi.b	#$A,(a2,d1.w)					; 	If neighbor is $A (TOUCHED)
 		bne.s	loc_9F6A
 		move.b	#1,(a2,d1.w)					;		change to RedSphere
 
 loc_9F6A:
-		cmpi.b	#2,(a2,d1.w)					; 	If neighbour is Blue
+		cmpi.b	#2,(a2,d1.w)					; 	If neighbor is Blue
 		bne.s	loc_9F74
 		addq.w	#1,d2						;		increment count
 
@@ -12887,9 +12887,9 @@ Red_Loop_Find_Next:
 		cmpi.w	#2,d6						; If walk stack size < 2
 		blo.s	Red_Loop_Push_Stack				; 	Push current state to walk stack
 		move.w	d1,d2
-		sub.w	-6(a4),d2					; Difference between canidate position and position at walk_stack[-2]
+		sub.w	-6(a4),d2					; Difference between candidate position and position at walk_stack[-2]
 		cmpi.w	#-1,d2						; If the difference is one square away in any direction
-		beq.s	Red_Loop_Decrement				;	Canidate is not part of the loop. Decrement direction Index
+		beq.s	Red_Loop_Decrement				;	Candidate is not part of the loop. Decrement direction Index
 		cmpi.w	#1,d2						; Else Push current state to walk stack
 		beq.s	Red_Loop_Decrement
 		cmpi.w	#$20,d2						; [S-1] -> [Current]
@@ -15555,7 +15555,7 @@ Write_SRAM:
 		move.w	d7,(a6)
 		tst.w	(SRAM_mask_interrupts_flag).w
 		beq.s	loc_C38A
-		move	#$2700,sr		; If EF56 is set, disable interrupts while saving is occuring
+		move	#$2700,sr		; If EF56 is set, disable interrupts while saving is occurring
 
 loc_C38A:
 		move.b	#1,(SRAM_access_flag).l	; Send I/O signal to SRAM, mapping it to $200001
@@ -20400,7 +20400,7 @@ TouchResponse:
 		move.b	status_secondary(a0),d0
 		andi.b	#$73,d0					; Does the player have any shields or is invincible?
 		bne.s	Touch_NoInstaShield			; If so, branch
-		; By this point, we're focussing purely on the Insta-Shield
+		; By this point, we're focusing purely on the Insta-Shield
 		cmpi.b	#1,double_jump_flag(a0)			; Is the Insta-Shield currently in its 'attacking' mode?
 		bne.s	Touch_NoInstaShield			; If not, branch
 		move.b	status_secondary(a0),d0			; Get status_secondary...
@@ -20559,7 +20559,7 @@ Touch_ChkValue:
 		andi.b	#$C0,d1					; Get only collision type bits
 		beq.w	Touch_Enemy				; If 00, enemy, branch
 		cmpi.b	#$C0,d1
-		beq.w	Touch_Special				; If 11, "special thing for starpole", branch
+		beq.w	Touch_Special				; If 11, "special thing for starpost", branch
 		tst.b	d1
 		bmi.w	Touch_ChkHurt				; If 10, "harmful", branch
 		; If 01...
@@ -21124,7 +21124,7 @@ HyperTouch_ChkValue:
 		andi.b	#$C0,d0				; Get collision_flags type data
 		beq.s	HyperTouch_Enemy		; If 00, enemy, branch
 		cmpi.b	#$C0,d0
-		beq.w	HyperTouch_Special		; If 11, "special thing for starpole", branch
+		beq.w	HyperTouch_Special		; If 11, "special thing for starpost", branch
 		tst.b	d0
 		bmi.s	HyperTouch_Harmful		; If 10, "harmful", branch
 
@@ -22244,7 +22244,7 @@ Sonic_NotRight:
 		; Calculations to determine where on the object Sonic is, and make him balance accordingly
 		moveq	#0,d1			; Clear d1
 		move.b	width_pixels(a1),d1	; Load interacting object's width into d1
-		move.w	d1,d2			; Move to d2 for seperate calculations
+		move.w	d1,d2			; Move to d2 for separate calculations
 		add.w	d2,d2			; Double object width, converting it to X pos' units of measurement
 		subq.w	#2,d2			; Subtract 2: This is the margin for 'on edge'
 		add.w	x_pos(a0),d1		; Add Sonic's X position to object width
@@ -23310,7 +23310,7 @@ Sonic_HyperDash:
 		move.b	(Ctrl_1_logical).w,d0
 		andi.w	#button_up_mask|button_down_mask|button_left_mask|button_right_mask,d0	; Get D-pad input
 		beq.s	.noInput
-		; Any values totalling $B or above are produced by holding
+		; Any values totaling $B or above are produced by holding
 		; both opposing directions on the D-pad, which is invalid
 		cmpi.b	#$B,d0
 		bhs.s	.noInput
@@ -29790,7 +29790,7 @@ Obj_Tails_Tail:
 		move.l	#Obj_Tails_Tail_Main,(a0)
 
 Obj_Tails_Tail_Main:
-		; Here, several SSTs are inheritied from the parent, normally Tails
+		; Here, several SSTs are inherited from the parent, normally Tails
 		movea.w	$30(a0),a2	; Is Parent in S2
 		move.b	angle(a2),angle(a0)
 		move.b	status(a2),status(a0)
@@ -29819,7 +29819,7 @@ loc_16106:
 loc_1612C:
 		cmp.b	objoff_34(a0),d0	; Has the input parent anim changed since last check?
 		beq.s	loc_1613C		; If not, branch and skip setting a matching Tails' Tails anim
-		move.b	d0,objoff_34(a0)	; Store d0 for the above comparision
+		move.b	d0,objoff_34(a0)	; Store d0 for the above comparison
 		move.b	Obj_Tails_Tail_AniSelection(pc,d0.w),anim(a0)	; Load anim relative to parent's
 
 loc_1613C:
@@ -34566,7 +34566,7 @@ loc_197F2:
 		move.l	#$0EEE0EEE,(a1)+		; Overwrite palette entries with white
 		dbf	d0,loc_197F2			; Loop until entire thing is overwritten
 
-		move.w	#0,-$40(a1)			; Set the first colour in the third palette line to black
+		move.w	#0,-$40(a1)			; Set the first color in the third palette line to black
 		move.b	#3,anim_frame_timer(a0)
 		rts
 
@@ -41886,7 +41886,7 @@ loc_1E5F6:
 		move.l	#Obj_Animal,(a1)
 		move.w	x_pos(a0),x_pos(a1)
 		move.w	y_pos(a0),y_pos(a1)
-		move.w	$3E(a0),$3E(a1) ;$3E is copied all the way from touch response in here (value didnt change for the varable same as sonic 2)
+		move.w	$3E(a0),$3E(a1) ;$3E is copied all the way from touch response in here (value didn't change for the variable same as sonic 2)
 
 loc_1E61A:
 		moveq	#signextendB(sfx_Break),d0
@@ -44815,14 +44815,14 @@ loc_20904:
 		andi.w	#$F,d0	; read first digit
 		lsl.w	#4,d0	; multiply amount
 		addq.w	#8,d0	; add 8 to it
-		move.b	d0,$38(a0)	; copy the amount we got into $38 (custom varable)
+		move.b	d0,$38(a0)	; copy the amount we got into $38 (custom variable)
 		andi.w	#$70,d1
 		lsr.w	#2,d1
 		lea	byte_20952(pc,d1.w),a1
-		move.b	(a1)+,width_pixels(a0)  ; get wdith
+		move.b	(a1)+,width_pixels(a0)  ; get width
 		move.b	(a1)+,height_pixels(a0)
 		move.b	(a1)+,mapping_frame(a0)
-		add.w	d1,d1 ; multyply by 2
+		add.w	d1,d1 ; multiply by 2
 		lea	off_20956(pc,d1.w),a1
 		move.l	(a1)+,$30(a0)
 		move.l	(a1)+,$34(a0)
@@ -44852,7 +44852,7 @@ loc_2095E:
 
 loc_2098C:
 		cmp.w	x_pos(a0),d1	; compare object x pos with player's x pos (Sonic, Tails, Knuckles)
-		bhs.s	loc_209A0	; if it's higher whan player's x pos (x coordinates), then branch
+		bhs.s	loc_209A0	; if it's higher than player's x pos (x coordinates), then branch
 		movea.l	$34(a0),a4	; if it's less, get pointer to a4
 		bchg	#0,status(a0)	; reverse status (flipping for this case)
 		addq.b	#1,mapping_frame(a0)	; add 1 to mapping frame
@@ -65418,7 +65418,7 @@ Obj_HCZHandLauncher:
 		move.b	render_flags(a0),render_flags(a1)
 		move.b	#$20,width_pixels(a1)
 	if FixBugs
-		; This identifies the height without overwiting the width value.
+		; This identifies the height without overwriting the width value.
 		move.b	#$30,height_pixels(a1)
 	else
 		; Bug: This is missing the height, and it overwrites what the previous line did.
@@ -81814,7 +81814,7 @@ Obj_MHZMushroomCap:
 		andi.b	#1,d0			; If bit 0 set...
 		beq.s	.lightmushroom
 		move.w	#make_art_tile($399,2,1),art_tile(a0)	; Light-spotted mushroom
-		move.b	#$14,$36(a0)		; Change animation timing a little, so not all mushrooms are synchronised
+		move.b	#$14,$36(a0)		; Change animation timing a little, so not all mushrooms are synchronized
 
 	.lightmushroom:
 		add.b	d1,d1			; If bit 6 set...
@@ -81972,7 +81972,7 @@ MHZMushroomCap_BounceCharacter:
 	.bouncecharacter:
 		addi.w	#$20,d1
 		neg.w	d1
-		move.w	d1,y_vel(a1)		; Set caracter's y_vel, bouncing them
+		move.w	d1,y_vel(a1)		; Set character's y_vel, bouncing them
 		bset	#Status_InAir,status(a1)		; Set character's 'in air' bit
 		bclr	#Status_OnObj,status(a1)	; Clear character's 'on object' bit
 		clr.b	jumping(a1)
@@ -100084,7 +100084,7 @@ loc_4CCDC:
 
 ; ---------------------------------------------------------------------------
 BlueSpheresSerialsText:
-		dc.b "GM 00001009-0"
+		dc.b "GM 00001009-0"	; Sonic 1 REV00/1
 		dc.b "GM 00004049-0"
 		even
 
@@ -103973,7 +103973,7 @@ AIZ1_ScreenEvent:
 		jsr	DrawTilesAsYouMove(pc)
 		move.w	(Events_fg_4).w,d0
 		beq.w	locret_4F9BE
-		cmpi.w	#$2D30,(Camera_X_pos).w		; perform the tree tile manipulation routine when signalled.
+		cmpi.w	#$2D30,(Camera_X_pos).w		; perform the tree tile manipulation routine when signaled.
 		bhs.w	AIZ1SE_ChangeChunk1
 		cmpi.w	#$39,d0
 		bhs.w	AIZ1SE_ChangeChunk1
@@ -106151,7 +106151,7 @@ loc_51394:
 		move.w	d0,(a1)
 		addq.w	#4,a1
 		clr.l	(a5)+
-		clr.l	(a6)+				; Clear scroll values, etc
+		clr.l	(a6)+				; Clear scroll values, etc.
 		dbf	d1,loc_51394
 		jsr	(AllocateObject).l
 		bne.s	loc_513FA
@@ -106637,7 +106637,7 @@ loc_51818:
 		bset	#7,status(a0)		; Make it invisible
 		moveq	#$1B,d1
 		moveq	#$40,d2
-		moveq	#$40,d3			; Height, etc
+		moveq	#$40,d3			; Height, etc.
 		move.w	x_pos(a0),d4		; Position
 		jmp	(SolidObjectFull2).l
 ; ---------------------------------------------------------------------------
@@ -107037,7 +107037,7 @@ loc_51BAA:
 		add.w	d5,d6
 		movea.l	d6,a4
 		clr.l	(a4)
-		clr.l	$10(a4)		; Clear the neccesary parts of the chunks
+		clr.l	$10(a4)		; Clear the necessary parts of the chunks
 		asr.w	#2,d0
 		andi.w	#$78,d0
 		lsl.w	#4,d1
@@ -107194,7 +107194,7 @@ CNZ1BGE_AfterBoss:
 ; ---------------------------------------------------------------------------
 
 loc_51D6E:
-		clr.w	(Events_fg_5).w		; When signalled
+		clr.w	(Events_fg_5).w		; When signaled
 		move.w	#$2F0,(Draw_delayed_position).w	; Set refresh position
 		move.w	#$F,(Draw_delayed_rowcount).w	; Refresh number
 		addq.w	#4,(Events_routine_bg).w
@@ -107293,7 +107293,7 @@ CNZ1BGE_DoTransition:
 		jsr	Clear_Switches(pc)
 		jsr	(Load_Level).l
 		jsr	(LoadSolids).l
-		jsr	(CheckLevelForWater).l		; Level stuff, etc etc
+		jsr	(CheckLevelForWater).l		; Level stuff, etc.
 		cmpi.w	#3,(Player_mode).w
 		beq.s	loc_51EC0
 		move.w	#$8014,(VDP_control_port).l		; Turn HInt on for water only if not playing as Knuckles
@@ -107973,7 +107973,7 @@ loc_52512:
 ; ---------------------------------------------------------------------------
 
 FBZ1SE_LayoutMod2:
-		lea	8(a1),a1			; The following layout mods all basically work identically to the above with modifications in positioning, etc
+		lea	8(a1),a1			; The following layout mods all basically work identically to the above with modifications in positioning, etc.
 		jsr	FBZ1Screen_CheckInRange(pc)		; I'll leave it as an exercise to the reader to get the specifics of each routine :)
 		tst.w	(Events_bg+$02).w
 		bne.s	loc_5254A
@@ -109202,7 +109202,7 @@ loc_52FB6:
 ; ---------------------------------------------------------------------------
 
 loc_53002:
-		jsr	FBZ_Deform(pc)			; Nromal play
+		jsr	FBZ_Deform(pc)			; Normal play
 		jsr	Reset_TileOffsetPositionEff(pc)
 		moveq	#0,d1
 		jsr	Refresh_PlaneFull(pc)
@@ -109414,7 +109414,7 @@ loc_53202:
 		beq.s	loc_5322E
 		movea.w	d2,a6			; Load cloud address
 		move.w	$30(a6),d3		; Get Y position
-		add.w	d0,d3			; Add ofset
+		add.w	d0,d3			; Add offset
 		andi.w	#$FF,d3
 		addi.w	#$74,d3
 		move.w	d3,$14(a6)		; Load to actual Y
@@ -109725,7 +109725,7 @@ ICZ1_ScreenInit:
 		bne.s	loc_53648			; And we're Knuckles
 		jsr	(AllocateObject).l
 		bne.s	loc_53648
-		move.l	#Obj_ICZTeleporter,(a1)	; Make teleporter object, etc
+		move.l	#Obj_ICZTeleporter,(a1)	; Make teleporter object, etc.
 		move.w	#$3640,(Player_1+x_pos).w
 		move.w	#$660,(Player_1+y_pos).w
 		move.w	#$35A0,d0
@@ -111172,7 +111172,7 @@ loc_5451A:
 loc_5452E:
 		tst.w	(Events_fg_5).w
 		beq.w	loc_545DE
-		jsr	LBZ2_EndFallingAccel(pc)	; When signalled, start the falling of the death egg platform
+		jsr	LBZ2_EndFallingAccel(pc)	; When signaled, start the falling of the death egg platform
 		tst.w	(_unkEE9C).w
 		bpl.w	loc_545DE
 		clr.w	(Events_fg_5).w			; When movement starts going negative
@@ -111254,7 +111254,7 @@ loc_545DE:
 
 
 LBZ2_Deform:
-		move.w	(Camera_Y_pos_copy).w,d0			; Oh hey, it's more waterline fun, wasn't this just so interesting the first timeno
+		move.w	(Camera_Y_pos_copy).w,d0			; Oh hey, it's more waterline fun, wasn't this just so interesting the first time
 		move.w	(Screen_shake_offset).w,d3
 		sub.w	d3,d0
 		subi.w	#$5F0,d0
@@ -111384,7 +111384,7 @@ loc_546FA:
 		move.w	d1,-(a1)
 		swap	d1
 		lea	(LBZ2_BGUWDeformRange).l,a5	; This is an array of counters used for deformation sizes underwater.
-		sub.l	d3,d1					; Likely because the underwater wavy effect neccesitates specifying deformation line-by-line
+		sub.l	d3,d1					; Likely because the underwater wavy effect necessitates specifying deformation line-by-line
 		moveq	#4,d4
 
 loc_54726:
@@ -111419,7 +111419,7 @@ loc_54750:
 		dbf	d3,loc_5474E
 
 loc_54756:
-		lea	(HScroll_table).w,a1			; With that overwith, we can actually do some normal stuff
+		lea	(HScroll_table).w,a1			; With that over with, we can actually do some normal stuff
 		lea	(LBZ2_CloudDeformArray).l,a5
 		move.l	d0,d1
 		asr.l	#6,d1
@@ -127971,7 +127971,7 @@ loc_6173A:
 		lea	(Player_2).w,a1
 		move.b	#0,mapping_frame(a1)
 		move.b	#$1C,anim(a1)
-		move.b	#$53,object_control(a1)		; Lock both players, etc
+		move.b	#$53,object_control(a1)		; Lock both players, etc.
 
 loc_61778:
 		jsr	(AllocateObject).l
@@ -200453,7 +200453,7 @@ ArtNem_KnuxEndPose:
 
 	if Sonic3_Complete=0
 ; Some sprite pointers below point to S2 or S2K data, which we're not dealing with in this disassembly for the time being
-; As such, they are intentionally left unlabelled
+; As such, they are intentionally left unlabeled
 S2K_Sprite_Lists:
 		dc.l S2KSprite_EHZ1		; 0
 		dc.l S2KSprite_EHZ2		; 1
@@ -201325,7 +201325,7 @@ Map_DEZFinalBossDebris:
 ; rather than the uncompressed data ($C0). This causes only the first 3
 ; out of 6 tiles to be loaded from each file. This can be easily seen
 ; by pausing after activating a starpost, as the corner of the larger
-; star sprite will be the wrong colour due to using leftover tile data
+; star sprite will be the wrong color due to using leftover tile data
 ; in VRAM.
 ArtKosM_StarPost_Stars1:
 		binclude "General/Sprites/Starpost/Starpost Stars 1.bin"
