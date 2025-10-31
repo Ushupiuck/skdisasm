@@ -252,17 +252,23 @@ PSG_input =			$C00011
 	phase $200001
 SRAM_start	=		*
 	ds.b	$10	; unused
-SRAM_competition	ds.b $2A*4	; $A8 bytes
+SRAM_competition:
+	ds.b	$2A*4	; $A8 bytes
 	ds.b	4	; unused
-SRAM_competition_backup	ds.b	$2A*4	; $A8 bytes
+SRAM_competition_backup:
+	ds.b	$2A*4	; $A8 bytes
 	ds.b	4	; unused
-SRAM_S3game	ds.b	$1A*4	; $68 bytes
+SRAM_S3game:
+	ds.b	$1A*4	; $68 bytes
 	ds.b	$24	; unused
-SRAM_S3game_backup	ds.b	$1A*4	; $68 bytes
+SRAM_S3game_backup:
+	ds.b	$1A*4	; $68 bytes
 	ds.b	$24 ; unused
-SRAM_SKgame	ds.b	$2A*4	; $A8 bytes
+SRAM_SKgame:
+	ds.b	$2A*4	; $A8 bytes
 	ds.b	4	; unused
-SRAM_SKgame_backup	ds.b	$2A*4	; $A8 bytes
+SRAM_SKgame_backup:
+	ds.b	$2A*4	; $A8 bytes
 	ds.b	$2A	; unused
 SRAM_end	=		*
 	dephase
@@ -299,7 +305,7 @@ Reserved_object_3		ds.b object_size	; during a level, an object whose sole purpo
 Dynamic_object_RAM		ds.b object_size*90	; $1A04 bytes ; 90 objects
 Dynamic_object_RAM_end =	*
 Level_object_RAM =		Dynamic_object_RAM_end	; $4EA bytes ; various fixed in-level objects
-		ds.b object_size			; unknown
+				ds.b object_size	; unknown
 Breathing_bubbles		ds.b object_size	; for the main character
 Breathing_bubbles_P2		ds.b object_size	; for Tails in a Sonic and Tails game
 Super_stars =			*			; for Super Sonic and Super Knuckles
