@@ -20941,28 +20941,28 @@ loc_103B6:
 Touch_Special:
 		move.b	collision_flags(a1),d1	; Get collision_flags
 		andi.b	#$3F,d1			; Get only collision size (but that doesn't seems to be its use here)
-		cmpi.b	#7,d1
-		beq.s	loc_103FA
 		cmpi.b	#6,d1
-		beq.s	loc_103FA
+		beq.s	Touch_D7
+		cmpi.b	#7,d1
+		beq.s	Touch_D7
 		cmpi.b	#$A,d1
-		beq.s	loc_103FA
+		beq.s	Touch_D7
 		cmpi.b	#$C,d1
-		beq.s	loc_103FA
+		beq.s	Touch_D7
 		cmpi.b	#$15,d1
-		beq.s	loc_103FA
+		beq.s	Touch_D7
 		cmpi.b	#$16,d1
-		beq.s	loc_103FA
+		beq.s	Touch_D7
 		cmpi.b	#$17,d1
-		beq.s	loc_103FA
+		beq.s	Touch_D7
 		cmpi.b	#$18,d1
-		beq.s	loc_103FA
+		beq.s	Touch_D7
 		cmpi.b	#$21,d1
-		beq.s	loc_103FA
+		beq.s	Touch_D7
 		rts
 ; ---------------------------------------------------------------------------
 
-loc_103FA:
+Touch_D7:
 		move.w	a0,d1				; Get RAM address of what object hit this
 		subi.w	#Object_RAM,d1
 		beq.s	.ismaincharacter		; If the main character hit it, branch
