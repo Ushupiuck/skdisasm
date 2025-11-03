@@ -98594,7 +98594,7 @@ sub_4BBB2:
 		move.w	d0,y_vel(a0)
 		bset	#Status_InAir,status(a0)
 		moveq	#signextendB(sfx_Jump),d0
-		jsr	(Play_SFX).l
+		jmp	(Play_SFX).l
 
 locret_4BBF2:
 		rts
@@ -98914,8 +98914,7 @@ loc_4BED0:
 		bne.s	loc_4BEE4
 		addq.b	#2,routine(a0)
 		moveq	#signextendB(sfx_Goal),d0
-		jsr	(Play_SFX).l
-		rts
+		jmp	(Play_SFX).l
 ; ---------------------------------------------------------------------------
 
 loc_4BEE4:
@@ -99181,7 +99180,7 @@ loc_4C21C:
 		andi.w	#$F,d0
 		bne.s	locret_4C23C
 		moveq	#signextendB(sfx_SlotMachine),d0
-		jsr	(Play_SFX).l
+		jmp	(Play_SFX).l
 
 locret_4C23C:
 		rts
@@ -99670,8 +99669,7 @@ loc_4C766:
 		dbf	d1,loc_4C742
 		move.l	#$FF7C00,d1
 		move.w	#$100,d3
-		jsr	(Add_To_DMA_Queue).l
-		rts
+		jmp	(Add_To_DMA_Queue).l
 
 ; =============== S U B R O U T I N E =======================================
 
