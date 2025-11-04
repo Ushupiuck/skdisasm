@@ -104,6 +104,7 @@ KiS2ROMStartLoc2:	tribyte $300000
 KiS2ROMEndLoc2:		tribyte $33FFFF
 Country_Code:	dc.b "JUE             "
 ; ---------------------------------------------------------------------------
+; Unlike the games before this doesn't crash/freeze the 68000, instead it falls through into the EntryPoint which causes the game to soft-restart.
 
 ErrorTrap:
 		nop
