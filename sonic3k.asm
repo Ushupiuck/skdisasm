@@ -3298,15 +3298,22 @@ loc_256E:
 locret_257A:
 		rts
 ; ---------------------------------------------------------------------------
+		; unused
+	;	move.w	#900-1,(Palette_cycle_counter1).w
+	;	move.b	#0,(SOZ_darkness_level).w
+	;	move.w	(Palette_cycle_counters+$06).w,d0
+	;	neg.b	d0
+	;	move.b	d0,(Palette_cycle_counters+$00).w
+	;	move.w	#0,(Palette_cycle_counters+$08).w
 
 AnPal_SOZ2:
 		subq.w	#1,(Palette_cycle_counter1).w
 		bpl.s	loc_25C4
 		move.w	#900-1,(Palette_cycle_counter1).w
-		cmpi.b	#5,(_unkF7C3).w
+		cmpi.b	#5,(SOZ_darkness_level).w
 		bhs.s	loc_25C4
-		addq.b	#1,(_unkF7C3).w
-		btst	#0,(_unkF7C3).w
+		addq.b	#1,(SOZ_darkness_level).w
+		btst	#0,(SOZ_darkness_level).w
 		bne.s	loc_25C4
 		move.b	#2,(Palette_cycle_counters+$00).w
 		move.w	#0,(Palette_cycle_counters+$08).w
@@ -61930,7 +61937,7 @@ loc_2D86E:
 		bne.s	loc_2D88A
 		jsr	(AllocateObject).l
 		bne.s	loc_2D88A
-		move.l	#Obj_SOZGhosts,(a1)	; If new level is Sandopolis 2, then load the ghosts
+		move.l	#Hyudoro,(a1)	; If new level is Sandopolis 2, then load the ghosts
 
 loc_2D88A:
 		cmpi.b	#$16,(Current_zone).w
@@ -85680,7 +85687,7 @@ loc_40ED8:
 		cmp.w	$2E(a0),d2
 		bne.s	loc_40F14
 		move.w	#(15*60)-1,(Palette_cycle_counter1).w
-		move.b	#0,(_unkF7C3).w
+		move.b	#0,(SOZ_darkness_level).w
 		move.w	(Palette_cycle_counters+$06).w,d0
 		neg.b	d0
 		move.b	d0,(Palette_cycle_counters+$00).w
@@ -113708,7 +113715,7 @@ loc_55F20:
 		move.w	(a6),(a1)+
 		move.w	(a6)+,(a5)+
 		dbf	d0,loc_55F20
-		move.b	#5,(_unkF7C3).w
+		move.b	#5,(SOZ_darkness_level).w
 		move.w	#(30*60)-1,(Palette_cycle_counter1).w
 		move.b	#0,(Palette_cycle_counters+$00).w
 		move.w	#4,(Palette_cycle_counters+$06).w
@@ -114271,7 +114278,7 @@ loc_56550:
 		jsr	(Queue_Kos_Module).l
 		movem.l	(sp)+,d7-a0/a2-a3
 		move.w	#$7FFF,(Palette_cycle_counter1).w
-		move.b	#0,(_unkF7C3).w
+		move.b	#0,(SOZ_darkness_level).w
 		move.w	(Palette_cycle_counters+$06).w,d0
 		neg.b	d0
 		move.b	d0,(Palette_cycle_counters+$00).w
@@ -186718,7 +186725,7 @@ off_89DBC:
 		dc.w loc_89DC4-off_89DBC
 		dc.w loc_89DCC-off_89DBC
 		dc.w loc_89DDE-off_89DBC
-		dc.w loc_8F514-off_89DBC
+		dc.w set_Hyudoro-off_89DBC
 ; ---------------------------------------------------------------------------
 
 loc_89DC4:
@@ -189448,11 +189455,11 @@ loc_8B660:
 		subq.w	#1,$2E(a0)
 		bpl.s	locret_8B6A6
 		move.w	#8,$2E(a0)
-		move.b	(_unkFAAD).w,d0
+		move.b	(Hyudoro_count).w,d0
 		addq.b	#1,d0
 		cmpi.b	#$3C,d0
 		bhi.s	locret_8B6A6
-		move.b	d0,(_unkFAAD).w
+		move.b	d0,(Hyudoro_count).w
 		jsr	(AllocateObject).l
 		bne.s	locret_8B6A6
 		move.l	#loc_8B6AE,(a1)
@@ -189528,10 +189535,10 @@ loc_8B73A:
 ; ---------------------------------------------------------------------------
 
 loc_8B756:
-		move.b	(_unkFAAD).w,d0
+		move.b	(Hyudoro_count).w,d0
 		subq.b	#1,d0
 		bmi.s	loc_8B762
-		move.b	d0,(_unkFAAD).w
+		move.b	d0,(Hyudoro_count).w
 
 loc_8B762:
 		jmp	(Delete_Current_Sprite).l
@@ -194957,234 +194964,279 @@ Map_Rockn:
 ;     my screen to be filled with pink
 ; ---------------------------------------------------------------------------
 
-Obj_SOZGhosts:
-		move.l	#loc_8F0CA,(a0)
+; original label: gost08
+; Obj_SOZGhosts:
+Hyudoro:
+		move.l	#Hyudoro_ctr,(a0)
 		move.w	#$120,x_pos(a0)
 		move.w	#$A0,y_pos(a0)
 
-loc_8F0CA:
-		cmpi.b	#2,(Player_1+character_id).w
-		beq.s	loc_8F0DA
+; loc_8F0CA:
+Hyudoro_ctr:
+		cmpi.b	#2,(Player_1+character_id).w ; Is the player character Knuckles?
+		beq.s	._100
 		tst.b	(Last_star_post_hit).w
-		beq.w	locret_8F436
+		beq.w	return
 
-loc_8F0DA:
+; loc_8F0DA:
+._100:
 		moveq	#0,d0
-		move.b	(_unkF7C3).w,d0
-		beq.s	loc_8F112
-		move.b	byte_8F118(pc,d0.w),d0
-		move.b	(_unkFAAD).w,d1
+		move.b	(SOZ_darkness_level).w,d0
+		beq.s	.clr_ret
+		move.b	.cnt_tbl(pc,d0.w),d0
+		move.b	(Hyudoro_count).w,d1
 		cmp.b	d0,d1
-		bhs.w	locret_8F436
+		bhs.w	return
 		subq.w	#1,$3A(a0)
-		bpl.w	locret_8F436
+		bpl.w	return
 		addq.b	#1,d1
-		move.b	d1,(_unkFAAD).w
+		move.b	d1,(Hyudoro_count).w
 		cmp.b	d0,d1
-		bhs.s	loc_8F108
+		bhs.s	._200
 		move.w	#$3F,$3A(a0)
 
-loc_8F108:
-		lea	ChildObjDat_8F674(pc),a2
+; loc_8F108:
+._200:
+		lea	Hyudoro_body_set_tbl(pc),a2
 		jmp	(CreateChild6_Simple).l
 ; ---------------------------------------------------------------------------
 
-loc_8F112:
-		clr.b	(_unkFAAD).w
+; loc_8F112:
+.clr_ret:
+		clr.b	(Hyudoro_count).w
 		rts
 ; ---------------------------------------------------------------------------
-byte_8F118:
+
+; byte_8F118:
+.cnt_tbl:
 		dc.b    0,   1,   2,   2,   3,   3
 		even
 ; ---------------------------------------------------------------------------
 
-loc_8F11E:
+; loc_8F11E:
+Hyudoro_body:
 		moveq	#0,d0
 		move.b	routine(a0),d0
-		move.w	off_8F19A(pc,d0.w),d1
-		jsr	off_8F19A(pc,d1.w)
-		lea	DPLCPtr_SOZGhosts(pc),a2
+		move.w	.act_tbl(pc,d0.w),d1
+		jsr	.act_tbl(pc,d1.w)
+		lea	Hyudoro_DPLC_tbl(pc),a2
 		jsr	(Perform_DPLC).l
 		tst.b	render_flags(a0)
-		bpl.s	loc_8F16A
-		tst.b	(_unkF7C3).w
-		beq.s	loc_8F174
+		bpl.s	.fout0
+		tst.b	(SOZ_darkness_level).w
+		beq.s	.fout1
 		jsr	(Check_PlayerCollision).l
-		beq.s	loc_8F15E
+		beq.s	._100
 		jsr	(Check_PlayerAttack).l
-		bne.s	loc_8F174
+		bne.s	.fout1
 		tst.b	invulnerability_timer(a1)
-		bne.s	loc_8F15E
+		bne.s	._100
 		jsr	(HurtCharacter_Directly).l
 
-loc_8F15E:
+; loc_8F15E:
+._100:
 		jsr	(Add_SpriteToCollisionResponseList).l
 		jmp	(Draw_Sprite).l
 ; ---------------------------------------------------------------------------
 
-loc_8F16A:
-		subq.b	#1,(_unkFAAD).w
+; loc_8F16A:
+.fout0:
+		subq.b	#1,(Hyudoro_count).w
 		jmp	(Go_Delete_SpriteSlotted2).l
 ; ---------------------------------------------------------------------------
 
-loc_8F174:
-		move.l	#loc_8F37A,(a0)
-		move.l	#loc_8F16A,$34(a0)
-		lea	byte_8F6BF(pc),a1
+; loc_8F174:
+.fout1:
+		move.l	#Hyudoro_body_fout0,(a0)
+		move.l	#.fout0,$34(a0)
+		lea	Hyudoro_away_pg00(pc),a1
 		jsr	(Set_Raw_Animation).l
 		moveq	#signextendB(sfx_Bouncy),d0
 		jsr	(Play_SFX).l
 		jmp	(Draw_Sprite).l
 ; ---------------------------------------------------------------------------
-off_8F19A:
-		dc.w loc_8F1AC-off_8F19A
-		dc.w loc_8F1DA-off_8F19A
-		dc.w loc_8F1FE-off_8F19A
-		dc.w loc_8F226-off_8F19A
-		dc.w loc_8F26E-off_8F19A
-		dc.w loc_8F2BE-off_8F19A
-		dc.w loc_8F2E0-off_8F19A
-		dc.w loc_8F322-off_8F19A
-		dc.w loc_8F36E-off_8F19A
+
+; off_8F19A:
+.act_tbl:
+		dc.w Hyudoro_init-.act_tbl
+		dc.w Hyudoro_wait0-.act_tbl
+		dc.w Hyudoro_move0-.act_tbl
+		dc.w Hyudoro_chg0-.act_tbl
+		dc.w Hyudoro_chg1-.act_tbl
+		dc.w Hyudoro_chg2-.act_tbl
+		dc.w Hyudoro_atak0-.act_tbl
+		dc.w Hyudoro_atak1-.act_tbl
+		dc.w Hyudoro_atak2-.act_tbl
 ; ---------------------------------------------------------------------------
 
-loc_8F1AC:
-		lea	ObjSlot_SOZGhosts(pc),a1
+; loc_8F1AC:
+Hyudoro_init:
+		lea	Hyudoro_init_tbl(pc),a1
 		jsr	(SetUp_ObjAttributesSlotted).l
 		bclr	#2,render_flags(a0)
 		bset	#7,render_flags(a0)
-		move.b	(_unkF7C3).w,child_dx(a0)
-		move.b	(_unkFAAD).w,child_dy(a0)
-		bsr.w	sub_8F538
+		move.b	(SOZ_darkness_level).w,child_dx(a0)
+		move.b	(Hyudoro_count).w,child_dy(a0)
+		bsr.w	set_Hyudoro_body_init
 		moveq	#signextendB(sfx_GhostAppear),d0
 		jsr	(Play_SFX).l
 
-loc_8F1DA:
+; loc_8F1DA:
+Hyudoro_wait0:
 		jsr	(Animate_RawMultiDelay).l
 		tst.w	d2
-		beq.s	locret_8F1F2
-		cmpi.b	#5,(_unkF7C3).w
-		beq.s	loc_8F1F4
+		beq.s	.ret
+		cmpi.b	#5,(SOZ_darkness_level).w
+		beq.s	Hyudoro_atak_init
 		move.b	#4,routine(a0)
 
-locret_8F1F2:
+; locret_8F1F2:
+.ret:
 		rts
 ; ---------------------------------------------------------------------------
 
-loc_8F1F4:
+; loc_8F1F4:
+Hyudoro_atak_init:
 		move.b	#$C,routine(a0)
-		bra.w	loc_8F58E
+		bra.w	set_puka_init
 ; ---------------------------------------------------------------------------
 
-loc_8F1FE:
+; loc_8F1FE:
+Hyudoro_move0:
 		jsr	(Animate_RawMultiDelay).l
 		jsr	(Swing_UpAndDown).l
 		jsr	(MoveSprite2).l
-		bsr.w	sub_8F4F0
-		move.b	(_unkF7C3).w,d0
+		bsr.w	chk_Hyudoro_limit
+		move.b	(SOZ_darkness_level).w,d0
 		cmp.b	child_dx(a0),d0
-		beq.s	locret_8F224
+		beq.s	.ret
+
+.next:
 		move.b	#6,routine(a0)
 
-locret_8F224:
+; locret_8F224:
+.ret:
 		rts
 ; ---------------------------------------------------------------------------
 
-loc_8F226:
+; loc_8F226:
+Hyudoro_chg0:
 		jsr	(Animate_RawMultiDelay).l
 		jsr	(Swing_UpAndDown).l
 		tst.w	d3
-		bne.s	loc_8F240
+		bne.s	.next
 		jsr	(MoveSprite2).l
-		bra.w	sub_8F4F0
+		bra.w	chk_Hyudoro_limit
 ; ---------------------------------------------------------------------------
 
-loc_8F240:
+; loc_8F240:
+.next:
 		move.b	#8,routine(a0)
 		moveq	#0,d0
-		move.b	(_unkF7C3).w,d0
-		move.b	byte_8F268(pc,d0.w),d1
-		beq.w	locret_8F436
+		move.b	(SOZ_darkness_level).w,d0
+		move.b	.chk_puka_tbl(pc,d0.w),d1
+		beq.w	return
 		move.b	d0,child_dx(a0)
 		cmpi.b	#5,d0
-		beq.s	loc_8F1F4
+		beq.s	Hyudoro_atak_init
 		move.b	#4,routine(a0)
-		bra.w	loc_8F58E
+		bra.w	set_puka_init
 ; ---------------------------------------------------------------------------
-byte_8F268:
+
+; byte_8F268:
+.chk_puka_tbl:
 		dc.b    0,   0,   0,   1,   0,   1
 		even
 ; ---------------------------------------------------------------------------
 
-loc_8F26E:
+; loc_8F26E:
+Hyudoro_chg1:
 		jsr	(Swing_UpAndDown).l
 		jsr	(MoveSprite2).l
-		bsr.w	sub_8F4F0
+		bsr.w	chk_Hyudoro_limit
 		jsr	(Animate_RawMultiDelay).l
-		beq.s	locret_8F2B0
+		beq.s	.ret
 		cmpi.b	#2,anim_frame(a0)
-		bne.s	locret_8F2B0
+		bne.s	.ret
+
+.next:
 		move.b	#$A,routine(a0)
-		move.b	(_unkF7C3).w,d0
+		move.b	(SOZ_darkness_level).w,d0
 		move.b	d0,child_dx(a0)
 		add.w	d0,d0
 		andi.w	#$C,d0
-		movea.l	off_8F2B2(pc,d0.w),a1
+		movea.l	.pg_tbl(pc,d0.w),a1
 		move.b	(a1),mapping_frame(a0)
 		jsr	(Set_Raw_Animation).l
 
-locret_8F2B0:
+; locret_8F2B0:
+.ret:
 		rts
 ; ---------------------------------------------------------------------------
-off_8F2B2:
-		dc.l byte_8F6CC
-		dc.l byte_8F6CC
-		dc.l byte_8F6D4
+
+; off_8F2B2:
+.pg_tbl:
+		dc.l Hyudoro_chg_pg00
+		dc.l Hyudoro_chg_pg00
+		dc.l Hyudoro_chg_pg01
 ; ---------------------------------------------------------------------------
 
-loc_8F2BE:
+; loc_8F2BE:
+Hyudoro_chg2:
 		jsr	(Swing_UpAndDown).l
 		jsr	(MoveSprite2).l
-		bsr.w	sub_8F4F0
+		bsr.w	chk_Hyudoro_limit
 		jsr	(Animate_RawMultiDelay).l
 		tst.w	d2
-		beq.s	locret_8F2DE
+		beq.s	.ret
+
+.next:
 		move.b	#4,routine(a0)
 
-locret_8F2DE:
+; locret_8F2DE:
+.ret:
 		rts
 ; ---------------------------------------------------------------------------
 
-loc_8F2E0:
+; loc_8F2E0:
+Hyudoro_atak0:
 		jsr	(Animate_RawMultiDelay).l
 		jsr	(Swing_UpAndDown).l
 		jsr	(MoveSprite2).l
 		move.w	x_pos(a0),d0
 		tst.w	x_vel(a0)
-		bmi.s	loc_8F304
+		bmi.s	.chk_l
+
+.chk_r:
 		cmpi.w	#$1A0,d0
-		bhi.s	loc_8F30A
+		bhi.s	.neg
 		rts
 ; ---------------------------------------------------------------------------
 
-loc_8F304:
+; loc_8F304:
+.chk_l:
 		cmpi.w	#$A0,d0
-		bhs.s	locret_8F320
+		bhs.s	.ret
 
-loc_8F30A:
+; loc_8F30A:
+.neg:
 		move.b	#$E,routine(a0)
 		bchg	#0,render_flags(a0)
 		neg.w	x_vel(a0)
 		move.w	#60-1,$2E(a0)
 
-locret_8F320:
+; locret_8F320:
+.ret:
 		rts
 ; ---------------------------------------------------------------------------
 
-loc_8F322:
+; loc_8F322:
+Hyudoro_atak1:
 		jsr	(Animate_RawMultiDelay).l
 		subq.w	#1,$2E(a0)
-		bpl.w	locret_8F436
+		bpl.w	return
+
+.next:
 		move.b	#$10,routine(a0)
 		move.b	#$D7,collision_flags(a0)
 		bset	#2,render_flags(a0)
@@ -195199,135 +195251,167 @@ loc_8F322:
 		add.w	d1,d0
 		move.w	d0,y_pos(a0)
 		move.w	#$100,y_vel(a0)
+
+.ret:
 		rts
 ; ---------------------------------------------------------------------------
 
-loc_8F36E:
+; loc_8F36E:
+Hyudoro_atak2:
 		jsr	(Animate_RawMultiDelay).l
 		jmp	(MoveSprite2).l
 ; ---------------------------------------------------------------------------
 
-loc_8F37A:
+; loc_8F37A:
+Hyudoro_body_fout0:
 		jsr	(Animate_RawMultiDelay).l
-		lea	DPLCPtr_SOZGhosts(pc),a2
+		lea	Hyudoro_DPLC_tbl(pc),a2
 		jsr	(Perform_DPLC).l
 		jmp	(Draw_Sprite).l
 ; ---------------------------------------------------------------------------
 
-Obj_SOZGhostCapsuleLoadArt:
+; Obj_SOZGhostCapsuleLoadArt:
+set_SOZ_capsule_Hyudoro_cg:
 		moveq	#0,d0
 		move.b	subtype(a0),d0
-		movea.l	off_8F3BE(pc,d0.w),a1
+		movea.l	.col_tbl(pc,d0.w),a1
 		jsr	(Check_PlayerInRange).l
 		tst.l	d0
-		beq.w	locret_8F436
+		beq.w	return
 		tst.w	d0
-		beq.w	locret_8F436
+		beq.w	return
 		moveq	#0,d0
 		move.b	subtype(a0),d0
-		movea.l	off_8F3C6(pc,d0.w),a1
+		movea.l	.jmp_tbl(pc,d0.w),a1
 		jsr	(a1)
 		jmp	(Delete_Current_Sprite).l
 ; ---------------------------------------------------------------------------
-off_8F3BE:
-		dc.l word_8F3CE
-		dc.l word_8F3D6
-off_8F3C6:
-		dc.l loc_8F3DE
-		dc.l loc_8F3F0
-word_8F3CE:
+
+; off_8F3BE:
+.col_tbl:
+		dc.l col_tbl_00
+		dc.l col_tbl_04
+
+; off_8F3C6:
+.jmp_tbl:
+		dc.l set_soz_capsule_cg
+		dc.l set_soz_enemy_cg
+
+; word_8F3CE:
+col_tbl_00:
 		dc.w   -$10,   $20,  -$40,   $80
-word_8F3D6:
+
+; word_8F3D6:
+col_tbl_04:
 		dc.w   -$10,   $20,  -$80,  $100
 ; ---------------------------------------------------------------------------
 
-loc_8F3DE:
+; original label: set_openbox_cg
+; loc_8F3DE:
+set_soz_capsule_cg:
 		lea	PLC_SOZGhostCapsule(pc),a1
 		jmp	(Load_PLC_Raw).l
 ; ---------------------------------------------------------------------------
+
 PLC_SOZGhostCapsule: plrlistheader
 		plreq ArtTile_SOZGhostCapsule, ArtNem_EggCapsule
 PLC_SOZGhostCapsule_End
 ; ---------------------------------------------------------------------------
 
-loc_8F3F0:
+; original label: set_emy08_cg
+; loc_8F3F0:
+set_soz_enemy_cg:
 		jmp	(LoadEnemyArt).l
 ; ---------------------------------------------------------------------------
 
-Obj_SOZGhostCapsule:
-		lea	ObjDat_SOZGhostCapsule(pc),a1
+; original label: obox08
+; Obj_SOZGhostCapsule:
+SOZ_capsule:
+		lea	SOZ_capsule_init_tbl(pc),a1
 		jsr	(SetUp_ObjAttributes).l
 		move.l	#loc_89C14,(a0)
 		move.b	#3,subtype(a0)
-		lea	ChildObjDat_8F646(pc),a2
+		lea	SOZ_capsule_switch_set_tbl(pc),a2
 		jsr	(CreateChild1_Normal).l
 		tst.b	(Last_star_post_hit).w
-		bne.s	loc_8F424
-		cmpi.b	#2,(Player_1+character_id).w
-		bne.s	locret_8F436
+		bne.s	._100
+		cmpi.b	#2,(Player_1+character_id).w ; Is the player character Knuckles?
+		bne.s	return
 
-loc_8F424:
+; loc_8F424:
+._100:
 		move.l	#loc_89C54,(a0)
 		move.b	#1,mapping_frame(a0)
 		bset	#5,$38(a0)
 
-locret_8F436:
+; locret_8F436:
+return:
 		rts
 ; ---------------------------------------------------------------------------
 
-loc_8F438:
+; loc_8F438:
+SOZ_capsule_switch:
 		lea	(word_86B3E).l,a1
 		jsr	(SetUp_ObjAttributes3).l
 		move.l	#loc_8672A,(a0)
 		tst.b	(Last_star_post_hit).w
-		beq.s	locret_8F45C
+		beq.s	.ret
 		move.l	#loc_86754,(a0)
 		move.b	#$C,mapping_frame(a0)
 
-locret_8F45C:
+; locret_8F45C:
+.ret:
 		rts
 ; ---------------------------------------------------------------------------
 
-loc_8F45E:
+; loc_8F45E:
+SOZ_capsule_Hyudoro:
 		moveq	#0,d0
 		move.b	routine(a0),d0
-		move.w	off_8F488(pc,d0.w),d1
-		jsr	off_8F488(pc,d1.w)
+		move.w	.act_tbl(pc,d0.w),d1
+		jsr	.act_tbl(pc,d1.w)
 		tst.b	subtype(a0)
-		bne.s	loc_8F482
-		lea	DPLCPtr_SOZGhosts(pc),a2
+		bne.s	._100
+		lea	Hyudoro_DPLC_tbl(pc),a2
 		jsr	(Perform_DPLC).l
 		jmp	(Sprite_CheckDeleteSlotted).l
 ; ---------------------------------------------------------------------------
 
-loc_8F482:
+; loc_8F482:
+._100:
 		jmp	(Sprite_CheckDelete).l
 ; ---------------------------------------------------------------------------
-off_8F488:
-		dc.w loc_8F48E-off_8F488
-		dc.w loc_8F4D8-off_8F488
-		dc.w loc_8F4E2-off_8F488
+
+; off_8F488:
+.act_tbl:
+		dc.w SOZ_capsule_Hyudoro_init-.act_tbl
+		dc.w SOZ_capsule_Hyudoro_move0-.act_tbl
+		dc.w SOZ_capsule_Hyudoro_move1-.act_tbl
 ; ---------------------------------------------------------------------------
 
-loc_8F48E:
+; loc_8F48E:
+SOZ_capsule_Hyudoro_init:
 		moveq	#0,d0
 		move.b	subtype(a0),d0
 		add.w	d0,d0
-		lea	word_8F4C0(pc,d0.w),a1
+		lea	.spd_tbl(pc,d0.w),a1
 		move.w	(a1)+,x_vel(a0)
 		move.w	(a1)+,$40(a0)
 		jsr	(Change_FlipXWithVelocity).l
 		tst.w	d0
-		bne.s	loc_8F4B6
-		lea	ObjSlot_SOZGhosts(pc),a1
+		bne.s	._100
+		lea	Hyudoro_init_tbl(pc),a1
 		jmp	(SetUp_ObjAttributesSlotted).l
 ; ---------------------------------------------------------------------------
 
-loc_8F4B6:
-		lea	ObjDat3_8F63A(pc),a1
+; loc_8F4B6:
+._100:
+		lea	SOZ_capsule_Hyudoro_init_tbl(pc),a1
 		jmp	(SetUp_ObjAttributes).l
 ; ---------------------------------------------------------------------------
-word_8F4C0:
+
+; word_8F4C0:
+.spd_tbl:
 		dc.w  -$200,  -$20
 		dc.w   $200,  -$20
 		dc.w  -$280,  -$18
@@ -195336,11 +195420,13 @@ word_8F4C0:
 		dc.w   $300,  -$10
 ; ---------------------------------------------------------------------------
 
-loc_8F4D8:
-		lea	byte_8F68E(pc),a1
+; loc_8F4D8:
+SOZ_capsule_Hyudoro_move0:
+		lea	Hyudoro_pg00(pc),a1
 		jsr	(Animate_RawNoSST).l
 
-loc_8F4E2:
+; loc_8F4E2:
+SOZ_capsule_Hyudoro_move1:
 		move.w	$40(a0),d0
 		add.w	d0,y_vel(a0)
 		jmp	(MoveSprite2).l
@@ -195348,66 +195434,78 @@ loc_8F4E2:
 ; =============== S U B R O U T I N E =======================================
 
 
-sub_8F4F0:
+; sub_8F4F0:
+chk_Hyudoro_limit:
 		move.w	x_pos(a0),d0
 		tst.w	x_vel(a0)
-		bmi.s	loc_8F502
+		bmi.s	.chk_l
+
+.chk_r:
 		cmpi.w	#$1A0,d0
-		bhi.s	loc_8F508
+		bhi.s	.neg
 		rts
 ; ---------------------------------------------------------------------------
 
-loc_8F502:
+; loc_8F502:
+.chk_l:
 		cmpi.w	#$A0,d0
-		bhs.s	locret_8F512
+		bhs.s	.ret
 
-loc_8F508:
+; loc_8F508:
+.neg:
 		bchg	#0,render_flags(a0)
 		neg.w	x_vel(a0)
 
-locret_8F512:
+; locret_8F512:
+.ret:
 		rts
-; End of function sub_8F4F0
-
 ; ---------------------------------------------------------------------------
 
-loc_8F514:
+; loc_8F514:
+set_Hyudoro:
 		move.b	#1,(Last_star_post_hit).w
 		lea	(SOZ2_Start).l,a1
 		move.w	(a1)+,(Saved_X_pos).w
 		move.w	(a1)+,(Saved_Y_pos).w
 		jsr	(Save_Level_Data).l
-		lea	ChildObjDat_8F64E(pc),a2
+		lea	SOZ_capsule_Hyudoro_set_tbl(pc),a2
 		jmp	(CreateChild1_Normal).l
 
 ; =============== S U B R O U T I N E =======================================
 
 
-sub_8F538:
+; sub_8F538:
+set_Hyudoro_body_init:
 		jsr	(Random_Number).l
 		andi.w	#$FF,d0
 		subi.w	#$7F,d0
 		add.w	d0,x_pos(a0)
 		moveq	#0,d1
-		move.b	(_unkF7C3).w,d1
+		move.b	(SOZ_darkness_level).w,d1
 		add.w	d1,d1
-		move.w	word_8F582(pc,d1.w),d2
+		move.w	Hyudoro_init_spd_tbl(pc,d1.w),d2
 		cmpi.w	#$120,d0
-		bhs.s	loc_8F564
+		bhs.s	._100
 		bset	#0,render_flags(a0)
 		neg.w	d2
 
-loc_8F564:
+; loc_8F564:
+._100:
 		move.w	d2,x_vel(a0)
 		andi.w	#$C,d1
-		move.l	off_8F576(pc,d1.w),$30(a0)
-		bra.w	loc_8F58E
+		move.l	.pg_tbl(pc,d1.w),$30(a0)
+		bra.w	set_puka_init
 ; ---------------------------------------------------------------------------
-off_8F576:
-		dc.l byte_8F682
-		dc.l byte_8F695
-		dc.l byte_8F6AA
-word_8F582:
+
+; off_8F576:
+.pg_tbl:
+		dc.l Hyudoro_apar_pg00
+		dc.l Hyudoro_apar_pg01
+		dc.l Hyudoro_apar_pg02
+; ---------------------------------------------------------------------------
+
+; word_8F582:
+Hyudoro_init_spd_tbl:
 		dc.w  -$100
 		dc.w  -$100
 		dc.w  -$100
@@ -195416,49 +195514,54 @@ word_8F582:
 		dc.w  -$200
 ; ---------------------------------------------------------------------------
 
-loc_8F58E:
+; loc_8F58E:
+set_puka_init:
 		moveq	#0,d0
-		move.b	(_unkF7C3).w,d0
+		move.b	(SOZ_darkness_level).w,d0
 		add.w	d0,d0
-		move.w	word_8F582(pc,d0.w),d1
+		move.w	Hyudoro_init_spd_tbl(pc,d0.w),d1
 		tst.w	x_vel(a0)
-		bmi.s	loc_8F5A2
+		bmi.s	._100
 		neg.w	d1
 
-loc_8F5A2:
+; loc_8F5A2:
+._100:
 		move.w	d1,x_vel(a0)
 		add.w	d0,d0
-		movea.l	off_8F5C8(pc,d0.w),a1
+		movea.l	.puka_tbl(pc,d0.w),a1
 		bclr	#0,$38(a0)
 		jsr	(a1)
 		tst.w	y_vel(a0)
-		bpl.s	loc_8F5C2
+		bpl.s	._200
 		bset	#0,$38(a0)
 		neg.w	d0
 
-loc_8F5C2:
+; loc_8F5C2:
+._200:
 		move.w	d0,y_vel(a0)
 		rts
-; End of function sub_8F538
-
-; ---------------------------------------------------------------------------
-off_8F5C8:
-		dc.l loc_8F5E0
-		dc.l loc_8F5E0
-		dc.l loc_8F5E0
-		dc.l loc_8F5F0
-		dc.l loc_8F5F0
-		dc.l loc_8F606
 ; ---------------------------------------------------------------------------
 
-loc_8F5E0:
+; off_8F5C8:
+.puka_tbl:
+		dc.l puka_init_00
+		dc.l puka_init_00
+		dc.l puka_init_00
+		dc.l puka_init_01
+		dc.l puka_init_01
+		dc.l puka_init_02
+; ---------------------------------------------------------------------------
+
+; loc_8F5E0:
+puka_init_00:
 		move.w	#$40,d0
 		move.w	d0,$3E(a0)
 		move.w	#4,$40(a0)
 		rts
 ; ---------------------------------------------------------------------------
 
-loc_8F5F0:
+; loc_8F5F0:
+puka_init_01:
 		move.w	#$80,d0
 		move.w	d0,$3E(a0)
 		move.w	#8,$40(a0)
@@ -195466,14 +195569,17 @@ loc_8F5F0:
 		rts
 ; ---------------------------------------------------------------------------
 
-loc_8F606:
+; loc_8F606:
+puka_init_02:
 		move.w	#$C0,d0
 		move.w	d0,$3E(a0)
 		move.w	#$10,$40(a0)
 		bclr	#0,$38(a0)
 		rts
 ; ---------------------------------------------------------------------------
-ObjSlot_SOZGhosts:
+
+; ObjSlot_SOZGhosts:
+Hyudoro_init_tbl:
 		dc.w 3-1
 		dc.w make_art_tile(ArtTile_SOZGhosts,1,1)
 		dc.w    $12
@@ -195481,50 +195587,68 @@ ObjSlot_SOZGhosts:
 		dc.l Map_SOZGhosts
 		dc.w      0
 		dc.b  $10, $14,   0,   0
-ObjDat_SOZGhostCapsule:
+
+; ObjDat_SOZGhostCapsule:
+SOZ_capsule_init_tbl:
 		dc.l Map_EggCapsule
 		dc.w make_art_tile(ArtTile_SOZGhostCapsule,0,1)
 		dc.w   $180
 		dc.b  $30, $20,   0,   0
-ObjDat3_8F63A:
+
+; ObjDat3_8F63A:
+SOZ_capsule_Hyudoro_init_tbl:
 		dc.l Map_SOZGhosts
 		dc.w make_art_tile(ArtTile_SOZGhosts,1,1)
 		dc.w   $200
 		dc.b  $30, $20,   0,   0
-ChildObjDat_8F646:
+
+; ChildObjDat_8F646:
+SOZ_capsule_switch_set_tbl:
 		dc.w 1-1
-		dc.l loc_8F438
+		dc.l SOZ_capsule_switch
 		dc.b    0,-$24
-ChildObjDat_8F64E:
+
+; ChildObjDat_8F64E:
+SOZ_capsule_Hyudoro_set_tbl:
 		dc.w 6-1
-		dc.l loc_8F45E
+		dc.l SOZ_capsule_Hyudoro
 		dc.b   -8,  -4
-		dc.l loc_8F45E
+		dc.l SOZ_capsule_Hyudoro
 		dc.b    8,  -4
-		dc.l loc_8F45E
+		dc.l SOZ_capsule_Hyudoro
 		dc.b  $10,  -4
-		dc.l loc_8F45E
+		dc.l SOZ_capsule_Hyudoro
 		dc.b -$10,  -4
-		dc.l loc_8F45E
+		dc.l SOZ_capsule_Hyudoro
 		dc.b  $18,  -4
-		dc.l loc_8F45E
+		dc.l SOZ_capsule_Hyudoro
 		dc.b -$18,  -4
-ChildObjDat_8F674:
+
+; ChildObjDat_8F674:
+Hyudoro_body_set_tbl:
 		dc.w 1-1
-		dc.l loc_8F11E
-DPLCPtr_SOZGhosts:
+		dc.l Hyudoro_body
+
+; DPLCPtr_SOZGhosts:
+Hyudoro_DPLC_tbl:
 		dc.l ArtUnc_SOZGhosts
 		dc.l DPLC_SOZGhosts
-byte_8F682:
+
+; byte_8F682:
+Hyudoro_apar_pg00:
 		dc.b  $11,   3
 		dc.b  $11,   3
 		dc.b  $10,   3
 		dc.b   $F,   4
 		dc.b   $E,   4
 		dc.b  $F8,  $C
-byte_8F68E:
+
+; byte_8F68E:
+Hyudoro_pg00:
 		dc.b    0,   3,   1,   3,   2,   4, $FC
-byte_8F695:
+
+; byte_8F695:
+Hyudoro_apar_pg01:
 		dc.b  $11,   3
 		dc.b  $11,   3
 		dc.b  $10,   3
@@ -195532,12 +195656,15 @@ byte_8F695:
 		dc.b   $E,   4
 		dc.b   $D,   4
 		dc.b  $F8,  $E
-		; unused
+
+Hyudoro_pg01:
 		dc.b    5,   3
 		dc.b    6,   3
 		dc.b    7,   4
 		dc.b  $FC
-byte_8F6AA:
+
+; byte_8F6AA:
+Hyudoro_apar_pg02:
 		dc.b  $11,   3
 		dc.b  $11,   3
 		dc.b  $10,   3
@@ -195545,12 +195672,15 @@ byte_8F6AA:
 		dc.b   $E,   4
 		dc.b   $D,   4
 		dc.b  $F8,  $E
-		; unused
+
+Hyudoro_pg02:
 		dc.b   $A,   3
 		dc.b   $B,   3
 		dc.b   $C,   4
 		dc.b  $FC
-byte_8F6BF:
+
+; byte_8F6BF:
+Hyudoro_away_pg00:
 		dc.b   $D,   4
 		dc.b   $D,   4
 		dc.b   $E,   4
@@ -195558,16 +195688,21 @@ byte_8F6BF:
 		dc.b  $10,   3
 		dc.b  $11,   3
 		dc.b  $F4
-byte_8F6CC:
+
+; byte_8F6CC:
+Hyudoro_chg_pg00:
 		dc.b    3,   7
 		dc.b    3,   7
 		dc.b    4,   7
 		dc.b  $F8, $D7
-byte_8F6D4:
+
+; byte_8F6D4:
+Hyudoro_chg_pg01:
 		dc.b    8,   7
 		dc.b    8,   7
 		dc.b    9,   7
 		dc.b  $F8, $E4
+
 DPLC_SOZGhosts:
 		include "General/Sprites/SOZ Ghosts/DPLC - SOZ Ghosts.asm"
 ; ---------------------------------------------------------------------------
