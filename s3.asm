@@ -5779,7 +5779,7 @@ loc_4C78:
 loc_4CAC:
 		move.w	#0,(a5)
 		lea	$80(a5),a5
-		cmpa.l	#Player_1,a5
+		cmpa.l	#Sprite_table_input_end,a5
 		blo.s	loc_4CAC
 
 loc_4CBC:
@@ -13411,7 +13411,7 @@ SRAM_Load:
 		lea	(SRAM_competition).l,a0
 		lea	(SRAM_competition_backup).l,a1
 		lea	(Competition_saved_data).w,a2
-		moveq	#$29,d0
+		moveq	#bytesToWcnt(SRAM_competition_size),d0
 		move.w	#$4C44,d1		; RAM integrity value
 		jsr	Get_From_SRAM(pc)
 		beq.s	loc_B674		; If the data read was successful, branch
@@ -13428,7 +13428,7 @@ loc_B674:
 		lea	(SRAM_S3game).l,a0
 		lea	(SRAM_S3game_backup).l,a1
 		lea	(Saved_data).w,a2
-		moveq	#$19,d0
+		moveq	#bytesToWcnt(SRAM_S3game_size),d0
 		move.w	#$4244,d1		; RAM integrity value for save game data
 		jsr	Get_From_SRAM(pc)
 		beq.s	loc_B6A4		; If the data read was not successful, branch
@@ -13560,7 +13560,7 @@ Write_SaveGeneral:
 		lea	(SRAM_competition).l,a0		; Save general SRAM
 		lea	(SRAM_competition_backup).l,a1		; Save general Backup SRAM
 		lea	(Competition_saved_data).w,a2	; Save general RAM
-		moveq	#$2A-1,d0
+		moveq	#bytesToWcnt(SRAM_competition_size),d0
 		bsr.s	Write_SRAM
 		move.w	(sp)+,d7
 		movea.l	(sp)+,a0
@@ -13577,7 +13577,7 @@ Write_SaveGame:
 		lea	(SRAM_S3game).l,a0		; Save game SRAM
 		lea	(SRAM_S3game_backup).l,a1		; Save game backup SRAM
 		lea	(Saved_data).w,a2	; Save game RAM
-		moveq	#$1A-1,d0
+		moveq	#bytesToWcnt(SRAM_S3game_size),d0
 		bsr.s	Write_SRAM
 		move.w	(sp)+,d7
 		movea.l	(sp)+,a0
@@ -28972,8 +28972,9 @@ loc_19034:
 	if FixBugs
 		move.w	$30(a0),d0
 	else
-		; Bug: probably meant to be $30(a0), as Test_Ring_Collisions_AttractRing
-		; stores the ring's address in the ring status table there
+		; Bug: Probably meant to be $30(a0), as Test_Ring_Collisions_AttractRing
+		; stores the ring's address in the ring status table there.
+		; This is corrected in Sonic & Knuckles Collection.
 		move.w	$30,d0
 	endif
 		beq.s	loc_19040
@@ -29509,7 +29510,7 @@ Render_Sprites_NextLevel:
 
 loc_1946A:
 		lea	$80(a5),a5	; load next priority level
-		cmpa.l	#Player_1,a5
+		cmpa.l	#Sprite_table_input_end,a5
 		blo.w	loc_193B8
 		move.w	d7,d6
 		bmi.s	loc_19486
@@ -30083,7 +30084,7 @@ loc_19924:
 
 loc_1992A:
 		lea	$80(a5),a5
-		cmpa.l	#Player_1,a5
+		cmpa.l	#Sprite_table_input_end,a5
 		blo.w	loc_1987E
 		tst.w	d7
 		bmi.s	loc_19946
@@ -30187,7 +30188,7 @@ loc_19A24:
 
 loc_19A2C:
 		lea	$80(a5),a5
-		cmpa.l	#Player_1,a5
+		cmpa.l	#Sprite_table_input_end,a5
 		blo.w	loc_19980
 		tst.w	d7
 		bmi.s	loc_19A48

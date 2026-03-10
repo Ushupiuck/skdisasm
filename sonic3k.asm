@@ -7826,7 +7826,7 @@ loc_6696:
 loc_66CA:
 		move.w	#0,(a5)
 		lea	$80(a5),a5
-		cmpa.l	#Player_1,a5
+		cmpa.l	#Sprite_table_input_end,a5
 		blo.s	loc_66CA
 
 loc_66DA:
@@ -15357,7 +15357,7 @@ SRAM_Load:
 		lea	(SRAM_competition).l,a0
 		lea	(SRAM_competition_backup).l,a1
 		lea	(Competition_saved_data).w,a2
-		moveq	#$29,d0
+		moveq	#bytesToWcnt(SRAM_competition_size),d0
 		move.w	#$4C44,d1		; RAM integrity value
 		jsr	Get_From_SRAM(pc)
 		beq.s	loc_C190		; If the data read was successful, branch
@@ -15374,7 +15374,7 @@ loc_C190:
 		lea	(SRAM_SKgame).l,a0
 		lea	(SRAM_SKgame_backup).l,a1
 		lea	(Saved_data).w,a2
-		moveq	#$29,d0
+		moveq	#bytesToWcnt(SRAM_SKgame_size),d0
 		move.w	#$4244,d1		; RAM integrity value for save game data
 		jsr	Get_From_SRAM(pc)
 		bne.s	loc_C1C0		; If the data read was not successful, branch
@@ -15398,7 +15398,7 @@ loc_C1CA:
 		lea	(SRAM_S3game).l,a0
 		lea	(SRAM_S3game_backup).l,a1
 		lea	($FF0000).l,a2		; Attempt to see if there's any existing S3 save data
-		moveq	#$19,d0
+		moveq	#bytesToWcnt(SRAM_S3game_size),d0
 		move.w	#$4244,d1
 		jsr	Get_From_SRAM(pc)
 		bne.s	loc_C252		; If write was not successful, branch
@@ -15608,7 +15608,7 @@ Write_SaveGeneral2:
 		lea	(SRAM_competition).l,a0		; Save general SRAM
 		lea	(SRAM_competition_backup).l,a1		; Save general Backup SRAM
 		lea	(Competition_saved_data).w,a2	; Save general RAM
-		moveq	#$2A-1,d0
+		moveq	#bytesToWcnt(SRAM_competition_size),d0
 		bsr.s	Write_SRAM
 		move.w	(sp)+,d7
 		movea.l	(sp)+,a0
@@ -15625,7 +15625,7 @@ Write_SaveGame:
 		lea	(SRAM_SKgame).l,a0		; Save game SRAM
 		lea	(SRAM_SKgame_backup).l,a1		; Save game backup SRAM
 		lea	(Saved_data).w,a2	; Save game RAM
-		moveq	#$2A-1,d0
+		moveq	#bytesToWcnt(SRAM_SKgame_size),d0
 		jsr	Write_SRAM(pc)
 		move.w	(sp)+,d7
 		movea.l	(sp)+,a0
@@ -35525,8 +35525,9 @@ loc_1A8F0:
 	if FixBugs
 		move.w	$30(a0),d0
 	else
-		; Bug: probably meant to be $30(a0), as Test_Ring_Collisions_AttractRing
-		; stores the ring's address in the ring status table there
+		; Bug: Probably meant to be $30(a0), as Test_Ring_Collisions_AttractRing
+		; stores the ring's address in the ring status table there.
+		; This is corrected in Sonic & Knuckles Collection.
 		move.w	$30,d0
 	endif
 		beq.s	loc_1A8FC
@@ -36160,7 +36161,7 @@ Render_Sprites_NextLevel:
 
 loc_1ADFC:
 		lea	$80(a5),a5	; load next priority level
-		cmpa.l	#Player_1,a5
+		cmpa.l	#Sprite_table_input_end,a5
 		blo.w	loc_1AD4A
 		move.w	d7,d6
 		bmi.s	loc_1AE18
@@ -36740,7 +36741,7 @@ loc_1B2C2:
 
 loc_1B2C8:
 		lea	$80(a5),a5
-		cmpa.l	#Player_1,a5
+		cmpa.l	#Sprite_table_input_end,a5
 		blo.w	loc_1B21C
 		tst.w	d7
 		bmi.s	loc_1B2E4
@@ -36844,7 +36845,7 @@ loc_1B3C2:
 
 loc_1B3CA:
 		lea	$80(a5),a5
-		cmpa.l	#Player_1,a5
+		cmpa.l	#Sprite_table_input_end,a5
 		blo.w	loc_1B31E
 		tst.w	d7
 		bmi.s	loc_1B3E6
