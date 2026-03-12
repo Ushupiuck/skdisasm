@@ -8292,13 +8292,13 @@ Handle_Onscreen_Water_Height:
 		tst.b	(Water_flag).w
 		beq.w	loc_6C9C
 		tst.b	(Deform_lock).w
-		bne.s	loc_6C52
+		bne.s	.setheight
 		cmpi.b	#6,(Player_1+routine).w
-		bhs.s	loc_6C52
-		bsr.w	sub_6F4A
+		bhs.s	.setheight
+		bsr.w	WindTunnels
 		bsr.w	DynamicWaterHeight
 
-loc_6C52:
+.setheight:
 		clr.b	(Water_full_screen_flag).w
 		moveq	#0,d0
 		add.w	(Mean_water_level).w,d0
@@ -8615,28 +8615,26 @@ locret_6F2A:
 loc_6F2C:
 		move.w	(Camera_X_pos).w,d0
 
-loc_6F30:
-		move.l	(a1)+,d1
+-		move.l	(a1)+,d1
 		cmp.w	d1,d0
-		bhi.s	loc_6F30
+		bhi.s	-
 		swap	d1
 		tst.w	d1
-		bpl.s	loc_6F44
+		bpl.s	+
 		andi.w	#$7FFF,d1
 		move.w	d1,(Mean_water_level).w
-
-loc_6F44:
++
 		move.w	d1,(Target_water_level).w
-		rts
+.quit:		rts
 
 ; =============== S U B R O U T I N E =======================================
 
 
-sub_6F4A:
+WindTunnels:
 		tst.w	(Debug_placement_mode).w
-		bne.w	locret_705A
+		bne.s	loc_6F2C.quit
 		cmpi.b	#1,(Current_zone).w
-		bne.w	locret_705A
+		bne.s	loc_6F2C.quit
 		cmpi.w	#2,(Player_mode).w
 		beq.s	loc_6F82
 		lea	(WindTunnel_flag).w,a3
@@ -8656,7 +8654,7 @@ loc_6F82:
 		lea	(Player_1).w,a1
 		move.b	(Ctrl_1_held_logical).w,d6
 		moveq	#0,d5
-; End of function sub_6F4A
+; End of function WindTunnels
 
 
 ; =============== S U B R O U T I N E =======================================
@@ -8682,10 +8680,11 @@ loc_6FA4:
 		blo.w	loc_7046
 		cmp.w	6(a2),d1
 		bhs.s	loc_7046
+
 		cmpi.b	#4,routine(a1)
 		bhs.w	loc_7058
-		btst	d5,(_unkF7C7).w
-		bne.s	locret_702E
+		btst	d5,(_unkF7C7).w	; Old test for water tunnels enabled? but it's now a btst...
+		bne.s	.quit
 		tst.b	object_control(a1)
 		bne.s	loc_7058
 		move.b	#1,(a3)
@@ -8705,15 +8704,14 @@ loc_6FA4:
 		tst.b	$C(a2)
 		bne.s	loc_7030
 		btst	#button_up,d6
-		beq.s	loc_7024
+		beq.s	+
 		subq.w	#1,y_pos(a1)
-
-loc_7024:
++
 		btst	#button_down,d6
-		beq.s	locret_702E
+		beq.s	.quit
 		addq.w	#1,y_pos(a1)
 
-locret_702E:
+.quit:
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -8724,10 +8722,10 @@ loc_7030:
 
 loc_703A:
 		btst	#button_right,d6
-		beq.s	locret_7044
+		beq.s	.quit
 		addq.w	#1,x_pos(a1)
 
-locret_7044:
+.quit:
 		rts
 ; ---------------------------------------------------------------------------
 
@@ -8735,13 +8733,13 @@ loc_7046:
 		adda.w	#$E,a2
 		dbf	d2,loc_6FA4
 		tst.b	(a3)
-		beq.s	locret_705A
+		beq.s	loc_7058.quit
 		move.b	#$1A,anim(a1)
 
 loc_7058:
 		clr.b	(a3)
 
-locret_705A:
+.quit:
 		rts
 ; End of function HCZ_WaterTunnels
 
@@ -98331,8 +98329,8 @@ Obj_Sonic_RotatingSlotBonus:
 		move.w	(Ctrl_1).w,(Ctrl_1_logical).w
 		tst.w	(Debug_placement_mode).w
 		beq.s	loc_4B96E
-		jsr	(DebugMode).l
-		bra.w	sub_4BBF4
+		bsr.w	sub_4BBF4
+		jmp	(DebugMode).l
 ; ---------------------------------------------------------------------------
 
 loc_4B96E:
