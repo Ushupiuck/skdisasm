@@ -36077,8 +36077,6 @@ locret_1AD1E:
 
 
 Render_Sprites:
-		tst.w	(Competition_mode).w
-		bne.w	Render_Sprites_CompetitionMode
 		moveq	#$50-1,d7
 		moveq	#0,d6
 		lea	(Sprite_table_input).w,a5
