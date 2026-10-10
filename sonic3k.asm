@@ -27583,7 +27583,7 @@ loc_14A16:
 		beq.s	loc_14A6C
 		movea.w	interact(a0),a1
 		tst.b	status(a1)
-		bmi.s	loc_14AA0
+		bmi.s	Tails_Duck
 		moveq	#0,d1
 		move.b	width_pixels(a1),d1
 		move.w	d1,d2
@@ -27595,14 +27595,14 @@ loc_14A16:
 		blt.s	loc_14A92
 		cmp.w	d2,d1
 		bge.s	loc_14A82
-		bra.s	loc_14AA0
+		bra.s	Tails_Duck
 ; ---------------------------------------------------------------------------
 
 loc_14A6C:
 		move.w	x_pos(a0),d3
 		bsr.w	ChooseChkFloorEdge
 		cmpi.w	#$C,d1
-		blt.s	loc_14AA0
+		blt.s	Tails_Duck
 		cmpi.b	#3,next_tilt(a0)
 		bne.s	loc_14A8A
 
@@ -27613,7 +27613,7 @@ loc_14A82:
 
 loc_14A8A:
 		cmpi.b	#3,tilt(a0)
-		bne.s	loc_14AA0
+		bne.s	Tails_Duck
 
 loc_14A92:
 		bset	#Status_Facing,status(a0)
@@ -27623,9 +27623,9 @@ loc_14A98:
 		bra.s	loc_14B14
 ; ---------------------------------------------------------------------------
 
-loc_14AA0:
+Tails_Duck:
 		btst	#button_down,(Ctrl_2_held_logical).w
-		beq.s	loc_14ADA
+		beq.s	Tails_LookUp
 		move.b	#8,anim(a0)
 		addq.b	#1,scroll_delay_counter(a0)
 		cmpi.b	#2*60,scroll_delay_counter(a0)
@@ -27646,7 +27646,7 @@ loc_14AD0:
 		bra.s	loc_14B26
 ; ---------------------------------------------------------------------------
 
-loc_14ADA:
+Tails_LookUp:
 		btst	#button_up,(Ctrl_2_logical).w
 		beq.s	loc_14B14
 		move.b	#7,anim(a0)
@@ -60392,47 +60392,47 @@ locret_2C516:
 
 Obj_Button:
 		tst.w	(Competition_mode).w
-		bne.w	loc_2C696
+		bne.w	Button2P
 		move.l	#Map_Button,mappings(a0)
 		move.w	#make_art_tile(ArtTile_GrayButton,0,0),art_tile(a0)
 		cmpi.b	#1,(Current_zone).w
-		bne.s	loc_2C544
+		bne.s	.notHCZ
 		move.l	#Map_HCZButton,mappings(a0)
 		move.w	#make_art_tile(ArtTile_HCZButton,1,0),art_tile(a0)
 
-loc_2C544:
+.notHCZ:
 		cmpi.b	#3,(Current_zone).w
-		bne.s	loc_2C55A
+		bne.s	.notCNZ
 		move.l	#Map_CNZButton,mappings(a0)
 		move.w	#make_art_tile(ArtTile_CNZMisc+$C9,2,0),art_tile(a0)
 
-loc_2C55A:
+.notCNZ:
 		cmpi.b	#4,(Current_zone).w
-		bne.s	loc_2C568
+		bne.s	.notFBZ
 		move.w	#make_art_tile(ArtTile_FBZButton,0,0),art_tile(a0)
 
-loc_2C568:
+.notFBZ:
 		cmpi.b	#9,(Current_zone).w
-		bne.s	loc_2C58A
+		bne.s	.notLRZ
 		move.l	#Map_LRZButton,mappings(a0)
 		move.w	#make_art_tile(ArtTile_LRZMisc,3,0),art_tile(a0)
 		tst.b	(Current_act).w
-		beq.s	loc_2C58A
+		beq.s	.notLRZ
 		move.w	#make_art_tile(ArtTile_LRZ2Misc+$1C,1,0),art_tile(a0)
 
-loc_2C58A:
+.notLRZ:
 		move.b	#4,render_flags(a0)
 		move.b	#$10,width_pixels(a0)
 		move.b	#8,height_pixels(a0)
 		move.w	#$200,priority(a0)
 		addq.w	#4,y_pos(a0)
-		btst	#5,subtype(a0)
-		beq.s	loc_2C5B8
-		move.l	#loc_2C62C,(a0)
-		bra.w	loc_2C62C
+		btst	#5,subtype(a0)	; is byte 5 set?
+		beq.s	.button_solid	; if not, branch
+		move.l	#loc_2C62C,(a0)	; this button is top solid only
+		bra.w	loc_2C62C	; (Top solid buttons used by hydrocity and Flying Battery)
 ; ---------------------------------------------------------------------------
 
-loc_2C5B8:
+.button_solid:
 		move.l	#loc_2C5BE,(a0)
 
 loc_2C5BE:
@@ -60443,33 +60443,34 @@ loc_2C5BE:
 		move.w	#5,d3
 		move.w	x_pos(a0),d4
 		jsr	(SolidObjectFull).l
-		move.b	#0,mapping_frame(a0)
+		move.b	#0,mapping_frame(a0)	; unpressed
 		move.b	subtype(a0),d0
 		andi.w	#$F,d0
 		lea	(Level_trigger_array).w,a3
 		lea	(a3,d0.w),a3
 		moveq	#0,d3
-		btst	#6,subtype(a0)
-		beq.s	loc_2C5FC
-		moveq	#7,d3
-
-loc_2C5FC:
+		; Leftover from Sonic 1; This alters the target bit in the switch status array to be 7 instead of 0
+		; if subtype 6 is set. It goes completely unused in the entire game.
+		btst	#6,subtype(a0)		; is "alternate flag" state set? (unused)
+		beq.s	+			; if not, branch
+		moveq	#7,d3			; use bit 7 for the pressed state flag instead
++
 		move.b	status(a0),d0
 		andi.b	#standing_mask,d0
 		bne.s	loc_2C612
 		btst	#4,subtype(a0)
 		bne.s	loc_2C626
 		bclr	d3,(a3)
-		bra.s	loc_2C626
+		jmp	(Sprite_OnScreen_Test).l	; AKA MarkObjGone
 ; ---------------------------------------------------------------------------
 
 loc_2C612:
 		tst.b	(a3)
-		bne.s	loc_2C61E
+		bne.s	.depress
 		moveq	#signextendB(sfx_Switch),d0
 		jsr	(Play_SFX).l
 
-loc_2C61E:
+.pressed:
 		bset	d3,(a3)
 		move.b	#1,mapping_frame(a0)
 
@@ -60479,46 +60480,33 @@ loc_2C626:
 
 loc_2C62C:
 		tst.b	render_flags(a0)
-		bpl.s	loc_2C690
+		bpl.s	.check
 		move.w	#$10,d1
 		move.w	#6,d3
 		move.w	x_pos(a0),d4
 		jsr	(SolidObjectTop).l
-		move.b	#0,mapping_frame(a0)
+		clr.b	mapping_frame(a0)
 		move.b	subtype(a0),d0
 		andi.w	#$F,d0
 		lea	(Level_trigger_array).w,a3
 		lea	(a3,d0.w),a3
 		moveq	#0,d3
-		btst	#6,subtype(a0)
-		beq.s	loc_2C666
-		moveq	#7,d3
-
-loc_2C666:
+		; Leftover from Sonic 1; This alters the target bit in the switch status array to be 7 instead of 0
+		; if subtype 6 is set. It goes completely unused in the entire game.
+		btst	#6,subtype(a0)		; is "alternate flag" state set? (unused)
+		beq.s	+			; if not, branch
+		moveq	#7,d3			; use bit 7 for the pressed state flag instead
++
 		move.b	status(a0),d0
 		andi.b	#standing_mask,d0
-		bne.s	loc_2C67C
+		bne.s	loc_2C612
 		btst	#4,subtype(a0)
-		bne.s	loc_2C690
+		bne.s	.check
 		bclr	d3,(a3)
-		bra.s	loc_2C690
+.check:		jmp	(Sprite_OnScreen_Test).l
 ; ---------------------------------------------------------------------------
 
-loc_2C67C:
-		tst.b	(a3)
-		bne.s	loc_2C688
-		moveq	#signextendB(sfx_Switch),d0
-		jsr	(Play_SFX).l
-
-loc_2C688:
-		bset	d3,(a3)
-		move.b	#1,mapping_frame(a0)
-
-loc_2C690:
-		jmp	(Sprite_OnScreen_Test).l
-; ---------------------------------------------------------------------------
-
-loc_2C696:
+Button2P:
 		move.l	#Map_2PButton,mappings(a0)
 		move.w	#make_art_tile(ArtTile_2PArt_1,0,0),art_tile(a0)
 		move.b	#4,render_flags(a0)
@@ -60533,33 +60521,32 @@ loc_2C6C0:
 		move.w	#5,d3
 		move.w	x_pos(a0),d4
 		jsr	(SolidObjectFull).l
-		move.b	#0,mapping_frame(a0)
+		clr.b	mapping_frame(a0)
 		move.b	subtype(a0),d0
 		andi.w	#$F,d0
 		lea	(Level_trigger_array).w,a3
 		lea	(a3,d0.w),a3
 		moveq	#0,d3
+		; Funnily enough, the 2P variant removes the leftover check
 		move.b	status(a0),d0
 		andi.b	#standing_mask,d0
 		bne.s	loc_2C704
 		btst	#4,subtype(a0)
-		bne.s	loc_2C718
+		bne.s	.draw
 		bclr	d3,(a3)
-		bra.s	loc_2C718
+.draw:		jmp	(Draw_Sprite).l	; no MarkObjGone Checks for 2p mode
 ; ---------------------------------------------------------------------------
 
 loc_2C704:
 		tst.b	(a3)
-		bne.s	loc_2C710
+		bne.s	.depress
 		moveq	#signextendB(sfx_Switch),d0
 		jsr	(Play_SFX).l
 
-loc_2C710:
+.depress:	; unsure if this is pressing or depressing
 		bset	d3,(a3)
 		move.b	#1,mapping_frame(a0)
-
-loc_2C718:
-		jmp	(Draw_Sprite).l
+		jmp	(Draw_Sprite).l	; no MarkObjGone Checks for 2p mode
 ; ---------------------------------------------------------------------------
 Map_Button:
 		include "General/Sprites/Buttons/Map - Button.asm"
